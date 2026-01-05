@@ -163,8 +163,8 @@ describe('AnalyticsService', () => {
 
     expect(formatted).toContain('Analytics Report');
     expect(formatted).toContain('Overall Summary');
-    expect(formatted).toContain('Teams: 1');
-    expect(formatted).toContain('Projects: 1');
+    expect(formatted).toContain('**Teams**: 1');
+    expect(formatted).toContain('**Projects**: 1');
   });
 
   it('should format team report', async () => {

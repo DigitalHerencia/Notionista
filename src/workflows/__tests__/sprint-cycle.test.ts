@@ -195,7 +195,7 @@ describe('SprintCycleWorkflow', () => {
         milestone: 'M1',
         phase: 'P1.1',
       },
-    } as any;
+    } as SprintProposal;
 
     const formatted = workflow.formatForReview(mockProposal);
 

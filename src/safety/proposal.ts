@@ -74,7 +74,7 @@ export class ProposalManager {
   async propose<T>(change: Omit<ChangeProposal<T>, 'id' | 'createdAt' | 'status'>): Promise<ChangeProposal<T>> {
     const proposal: ChangeProposal<T> = {
       ...change,
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2) + Date.now().toString(36),
       status: 'pending',
       createdAt: new Date(),
     };

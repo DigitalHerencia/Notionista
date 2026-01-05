@@ -263,12 +263,14 @@ export class SprintCycleWorkflow {
 
     for (let i = 0; i < proposal.tasks.length; i++) {
       const task = proposal.tasks[i];
-      lines.push(`${i + 1}. **${task.proposedState.name}**`);
-      if (task.proposedState.priority) {
-        lines.push(`   - Priority: ${task.proposedState.priority}`);
-      }
-      if (task.proposedState.due) {
-        lines.push(`   - Due: ${task.proposedState.due}`);
+      if (task) {
+        lines.push(`${i + 1}. **${task.proposedState.name}**`);
+        if (task.proposedState.priority) {
+          lines.push(`   - Priority: ${task.proposedState.priority}`);
+        }
+        if (task.proposedState.due) {
+          lines.push(`   - Due: ${task.proposedState.due}`);
+        }
       }
     }
 

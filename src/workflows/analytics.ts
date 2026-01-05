@@ -1,4 +1,4 @@
-import type { Team, Project, Task } from '../schemas';
+import type { Project, Task } from '../schemas';
 import type {
   ITeamRepository,
   IProjectRepository,
