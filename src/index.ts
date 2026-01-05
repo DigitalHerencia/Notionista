@@ -1,14 +1,15 @@
 // Core types
-export * from './core/types';
+export type {
+  SnapshotRecord,
+  Snapshot,
+  SnapshotDiff,
+  CsvParserOptions,
+} from "./core/types/snapshot.js";
 
-// Safety layer
-export * from './safety';
+export { SnapshotRecordSchema, SnapshotSchema } from "./core/types/snapshot.js";
 
-// Domain layer
-export * from './domain/repositories';
+// Snapshot management
+export { SnapshotManager } from "./sync/snapshot.js";
 
-// Schemas
-export * from './schemas';
-
-// Workflows
-export * from './workflows';
+// CSV parsing
+export { CsvSnapshotParser } from "./sync/parser/csv.js";

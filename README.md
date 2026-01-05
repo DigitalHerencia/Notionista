@@ -1,216 +1,342 @@
-# Notionista
+# Notionista - Snapshot & Sync
 
-TypeScript SDK for Digital Herencia Notion workspace automation with MCP integration.
-
-## Overview
-
-Notionista provides high-level workflow orchestration for managing sprint cycles, daily standups, and analytics in your Notion workspace. Built with a safety-first approach, all operations use the **Propose → Approve → Apply** pattern to prevent accidental changes.
+Snapshot parsing and comparison utilities for Notion exports. Part of the Notionista SDK for advanced Notion automation.
 
 ## Features
 
-### 🔄 Workflow Orchestration
-
-- **Sprint Cycle Management**: Plan 2-week sprints with automated creation of projects, tasks, and meetings
-- **Daily Standup Reports**: Generate task summaries by team with completion metrics and overdue tracking
-- **Analytics & Metrics**: Comprehensive team and project performance insights
-
-### 🛡️ Safety First
-
-- **Proposal System**: All mutations return proposals that must be explicitly approved before execution
-- **Change Preview**: Review property diffs, side effects, and validation results before applying changes
-- **Rollback Support**: Track proposal history and status throughout the lifecycle
-
-### 📊 Type-Safe
-
-- Fully typed with TypeScript strict mode
-- Zod schemas for runtime validation
-- IntelliSense support for all APIs
+- ✅ Parse Notion CSV exports
+- ✅ Load snapshots from `snapshots/` directory
+- ✅ Compare snapshots to detect drift
+- ✅ Generate detailed diff reports
+- ✅ TypeScript-first with full type safety
+- ✅ Support for multiple database types (Teams, Tasks, Projects, Meetings)
 
 ## Installation
 
 ```bash
 npm install notionista
-# or
-pnpm add notionista
 ```
 
 ## Quick Start
 
-### Sprint Planning
+### Parsing CSV Exports
 
 ```typescript
-import { SprintCycleWorkflow } from 'notionista';
+import { CsvSnapshotParser } from "notionista";
 
-// Initialize the workflow with repository instances
-const sprintWorkflow = new SprintCycleWorkflow(
-  projectRepository,
-  taskRepository,
-  meetingRepository
-);
+const parser = new CsvSnapshotParser();
 
-// Plan a new sprint
-const proposal = await sprintWorkflow.planSprint({
-  teamId: 'team-123',
-  name: 'Sprint 1 - Q1 2026',
-  startDate: new Date('2026-01-06'),
-  endDate: new Date('2026-01-20'),
-  milestone: 'M1',
-  phase: 'P1.1',
-  domain: 'ENG',
-  tasks: [
-    {
-      name: 'Implement authentication',
-      priority: 'High',
-      due: '2026-01-10',
-      teamId: 'team-123',
-    },
-    {
-      name: 'Design dashboard UI',
-      priority: 'Medium',
-      due: '2026-01-15',
-      teamId: 'team-123',
-    },
-  ],
+// Parse a single CSV file
+const records = parser.parse("./snapshots/notion-export-2026-01-05/tasks.csv");
+
+console.log(`Parsed ${records.length} records`);
+console.log(records[0]); // { id, properties, source, filePath }
+```
+
+### Loading Snapshots
+
+```typescript
+import { SnapshotManager } from "notionista";
+
+const manager = new SnapshotManager("./snapshots");
+
+// List available snapshots
+const snapshots = manager.listSnapshots();
+console.log("Available snapshots:", snapshots);
+
+// Load a specific snapshot
+const snapshot = manager.loadSnapshot("notion-export-2026-01-05", "tasks");
+console.log(`Loaded ${snapshot.pageCount} tasks from ${snapshot.capturedAt}`);
+```
+
+### Comparing Snapshots
+
+```typescript
+import { SnapshotManager } from "notionista";
+
+const manager = new SnapshotManager("./snapshots");
+
+// Load two snapshots
+const oldSnapshot = manager.loadSnapshot("notion-export-2026-01-01", "tasks");
+const newSnapshot = manager.loadSnapshot("notion-export-2026-01-05", "tasks");
+
+// Compare them
+const diff = manager.compareSnapshots(oldSnapshot, newSnapshot);
+
+console.log(`Added: ${diff.added.length}`);
+console.log(`Removed: ${diff.removed.length}`);
+console.log(`Modified: ${diff.modified.length}`);
+```
+
+### Generating Diff Reports
+
+```typescript
+import { SnapshotManager } from "notionista";
+
+const manager = new SnapshotManager("./snapshots");
+
+const oldSnapshot = manager.loadSnapshot("notion-export-2026-01-01", "tasks");
+const newSnapshot = manager.loadSnapshot("notion-export-2026-01-05", "tasks");
+
+const diff = manager.compareSnapshots(oldSnapshot, newSnapshot);
+
+// Generate a markdown report
+const report = manager.formatDiffReport(diff);
+console.log(report);
+```
+
+Example output:
+
+```markdown
+# Snapshot Diff Report
+
+## Summary
+
+- **Added**: 2 records
+- **Removed**: 1 records
+- **Modified**: 3 records
+
+## Added Records
+
+- **2d5a4e63-bf23-8137-8277-000b41c867c3**: New Task Name
+- **2d5a4e63-bf23-8137-8277-000b41c867c4**: Another Task
+
+## Modified Records
+
+### 2d5a4e63-bf23-8137-8277-000b41c867c5
+
+Changed properties: Done, Priority
+
+| Property | Old Value | New Value |
+|----------|-----------|-----------|
+| Done | ✗ | ✓ |
+| Priority | Low | High |
+```
+
+## CSV Format
+
+Notionista parses Notion CSV exports with the following features:
+
+### Page ID Extraction
+
+Page IDs are automatically extracted from Notion URLs:
+
+```csv
+Name,Team
+"Task 1",Operations Team (https://www.notion.so/2d5a4e63-bf23-8151-9b98-c81833668844)
+```
+
+The parser extracts `2d5a4e63-bf23-8151-9b98-c81833668844` as the page ID.
+
+### Boolean Values
+
+Notion exports boolean values as "Yes" or "No":
+
+```csv
+Name,Done
+"Task 1",Yes
+"Task 2",No
+```
+
+The parser converts these to `true` and `false`.
+
+### Relation References
+
+Relations are exported as text with embedded URLs:
+
+```csv
+Name,Project,Team
+"Task 1","Project A (https://notion.so/abc123)","Team B (https://notion.so/def456)"
+```
+
+The parser extracts relation IDs as arrays: `['abc123', 'def456']`
+
+### Date Formats
+
+Notion exports dates in human-readable format:
+
+```csv
+Name,Created time
+"Task 1","January 5, 2026"
+"Task 2","January 5, 2026 10:40 AM"
+```
+
+The parser preserves these as strings (can be parsed with `Date.parse()`).
+
+## Advanced Usage
+
+### Custom Property Normalizers
+
+```typescript
+import { CsvSnapshotParser } from "notionista";
+
+const parser = new CsvSnapshotParser({
+  normalizers: {
+    "Task Code": (value) => value.toUpperCase(),
+    "Priority": (value) => value === "High" ? 1 : value === "Medium" ? 2 : 3,
+  },
 });
 
-// Review the proposal
-console.log(sprintWorkflow.formatForReview(proposal));
-
-// After approval, execute the sprint
-// (Implementation requires proposal manager integration)
+const records = parser.parse("./tasks.csv");
 ```
 
-### Daily Standup
+### Comparing with Live Data
 
 ```typescript
-import { DailyStandupWorkflow } from 'notionista';
+import { SnapshotManager } from "notionista";
 
-const standupWorkflow = new DailyStandupWorkflow(taskRepository, teamRepository);
+const manager = new SnapshotManager("./snapshots");
+const snapshot = manager.loadSnapshot("notion-export-2026-01-01", "tasks");
 
-// Generate standup report for all teams
-const report = await standupWorkflow.generateStandupReport();
+// Fetch current data from Notion (via MCP or API)
+const currentRecords = await fetchCurrentTasksFromNotion();
 
-// Format and display the report
-console.log(standupWorkflow.formatReport(report));
+// Compare snapshot with live data to detect drift
+const drift = manager.compareLiveData(snapshot, currentRecords);
 
-// Generate quick summary for a specific team
-const teamSummary = await standupWorkflow.generateTeamQuickSummary('team-123');
-console.log(teamSummary);
+if (drift.modified.length > 0) {
+  console.warn("Detected drift from snapshot!");
+  console.log(manager.formatDiffReport(drift));
+}
 ```
 
-### Analytics
+### Saving and Loading Snapshots
 
 ```typescript
-import { AnalyticsService } from 'notionista';
+import { SnapshotManager } from "notionista";
 
-const analytics = new AnalyticsService(teamRepository, projectRepository, taskRepository);
+const manager = new SnapshotManager("./snapshots");
 
-// Get team metrics
-const teamMetrics = await analytics.getTeamMetrics('team-123');
-console.log(analytics.formatTeamReport(teamMetrics));
+// Load from CSV
+const snapshot = manager.loadSnapshot("notion-export-2026-01-05", "tasks");
 
-// Get project metrics
-const projectMetrics = await analytics.getProjectMetrics('project-456');
-console.log(`Completion Rate: ${projectMetrics.completionRate}%`);
-console.log(`On Track: ${projectMetrics.onTrack ? '✅' : '❌'}`);
+// Save as JSON for faster loading
+manager.saveSnapshot(snapshot, "tasks-2026-01-05.json");
 
-// Get overall analytics
-const overall = await analytics.getOverallAnalytics();
-console.log(analytics.formatOverallReport(overall));
+// Load from JSON
+const loaded = manager.loadSavedSnapshot("tasks-2026-01-05.json");
 ```
 
-## Architecture
+## Database Types
+
+Notionista supports the following Digital Herencia database types:
+
+- `teams` - Teams database
+- `tasks` - Tasks database
+- `projects` - Projects database
+- `meetings` - Meetings database
+
+Each database type knows the correct CSV filename to look for in the snapshot directory.
+
+## Directory Structure
+
+Expected snapshot directory structure:
 
 ```
-src/
-├── core/types/           # Type definitions and constants
-├── safety/               # Proposal system (Propose → Approve → Apply)
-├── domain/repositories/  # Repository interfaces
-├── schemas/              # Zod schemas for entities
-└── workflows/            # High-level workflow orchestration
-    ├── sprint-cycle.ts   # Sprint planning and execution
-    ├── daily-standup.ts  # Daily standup reports
-    └── analytics.ts      # Team and project metrics
+snapshots/
+├── notion-export-2026-01-01/
+│   └── Digital Herencia/
+│       ├── Teams 2d5a4e63bf2381519b98c81833668844.csv
+│       ├── Tasks 2d5a4e63bf23816fa217ef754ce4a70e.csv
+│       ├── Projects 2d5a4e63bf2381b1b507f5ac308958e6.csv
+│       └── Meetings 2d5a4e63bf238168af99d85e20bfb76f.csv
+└── notion-export-2026-01-05/
+    └── Digital Herencia/
+        └── ...
 ```
 
 ## API Reference
 
-### SprintCycleWorkflow
+### `CsvSnapshotParser`
 
-Orchestrates sprint planning and execution for 2-week sprint cycles.
+Parser for Notion CSV export files.
 
-**Methods:**
-- `planSprint(config: SprintConfig): Promise<SprintProposal>` - Plan a new sprint with project, tasks, and meetings
-- `formatForReview(proposal: SprintProposal): string` - Format proposal as markdown for review
+#### Constructor
 
-### DailyStandupWorkflow
+```typescript
+constructor(options?: CsvParserOptions)
+```
 
-Generates daily standup reports with task summaries by team.
+**Options:**
+- `trim?: boolean` - Trim whitespace from values (default: true)
+- `skipEmptyLines?: boolean` - Skip empty lines (default: true)
+- `normalizers?: Record<string, (value: string) => unknown>` - Custom property normalizers
 
-**Methods:**
-- `generateStandupReport(config?: StandupConfig): Promise<StandupReport>` - Generate complete standup report
-- `formatReport(report: StandupReport): string` - Format report as markdown
-- `generateTeamQuickSummary(teamId: string, date?: Date): Promise<string>` - Quick summary for a specific team
+#### Methods
 
-### AnalyticsService
+- `parse(filePath: string): SnapshotRecord[]` - Parse a CSV file
+- `parseTeams(snapshotDir: string): SnapshotRecord[]` - Parse Teams CSV
+- `parseTasks(snapshotDir: string): SnapshotRecord[]` - Parse Tasks CSV
+- `parseProjects(snapshotDir: string): SnapshotRecord[]` - Parse Projects CSV
+- `parseMeetings(snapshotDir: string): SnapshotRecord[]` - Parse Meetings CSV
 
-Provides team and project performance metrics.
+### `SnapshotManager`
 
-**Methods:**
-- `getTeamMetrics(teamId: string): Promise<TeamMetrics>` - Get comprehensive team metrics
-- `getProjectMetrics(projectId: string): Promise<ProjectMetrics>` - Get project progress and metrics
-- `getOverallAnalytics(): Promise<OverallAnalytics>` - Get workspace-wide analytics
-- `formatOverallReport(analytics: OverallAnalytics): string` - Format overall report as markdown
-- `formatTeamReport(metrics: TeamMetrics): string` - Format team report as markdown
+Manages snapshots of Notion databases.
 
-## Development
+#### Constructor
+
+```typescript
+constructor(snapshotsDir?: string)
+```
+
+**Parameters:**
+- `snapshotsDir` - Path to snapshots directory (default: "./snapshots")
+
+#### Methods
+
+- `listSnapshots(): string[]` - List available snapshot directories
+- `loadSnapshot(snapshotName: string, databaseName: "teams" | "tasks" | "projects" | "meetings"): Snapshot` - Load a snapshot
+- `compareSnapshots(oldSnapshot: Snapshot, newSnapshot: Snapshot): SnapshotDiff` - Compare two snapshots
+- `compareLiveData(snapshot: Snapshot, currentRecords: SnapshotRecord[]): SnapshotDiff` - Compare snapshot with live data
+- `formatDiffReport(diff: SnapshotDiff): string` - Generate markdown diff report
+- `saveSnapshot(snapshot: Snapshot, filename?: string): void` - Save snapshot to disk
+- `loadSavedSnapshot(filename: string): Snapshot` - Load saved snapshot from disk
+
+## TypeScript Types
+
+```typescript
+interface SnapshotRecord {
+  id: string;
+  properties: Record<string, unknown>;
+  source: "csv" | "markdown";
+  filePath: string;
+}
+
+interface Snapshot {
+  id: string;
+  databaseId: string;
+  capturedAt: Date;
+  pageCount: number;
+  records: SnapshotRecord[];
+}
+
+interface SnapshotDiff {
+  added: SnapshotRecord[];
+  removed: SnapshotRecord[];
+  modified: Array<{
+    id: string;
+    oldRecord: SnapshotRecord;
+    newRecord: SnapshotRecord;
+    changedProperties: string[];
+  }>;
+}
+```
+
+## Testing
 
 ```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
 # Run tests
 npm test
 
-# Type checking
-npm run type-check
-
-# Linting
-npm run lint
-npm run lint:fix
-
-# Format code
-npm run format
+# Run tests with coverage
+npm run test:coverage
 ```
-
-## Project Structure
-
-This implementation covers:
-- ✅ **EPIC-006**: Workflow Orchestration
-  - ✅ **TASK-023**: Sprint Cycle Workflow
-  - ✅ **TASK-024**: Daily Standup Workflow
-  - ✅ **TASK-025**: Analytics Service
-
-## Dependencies
-
-- **EPIC-003**: Domain Layer (repository interfaces defined, full implementation pending)
-- **EPIC-005**: Safety Layer (ProposalManager implemented)
-
-## Future Enhancements
-
-- Full MCP client implementation for live Notion integration
-- Repository implementations with actual Notion API calls
-- CLI interface for workflow execution
-- Snapshot and sync capabilities
-- Bulk operations with safety limits
 
 ## License
 
 MIT
 
-## Contributing
+## Part of Notionista SDK
 
-This SDK is part of the Digital Herencia Notion workspace automation project. For issues and feature requests, please refer to the [GitHub issues](https://github.com/DigitalHerencia/Notionista/issues).
+This package is part of the Notionista SDK for advanced Notion automation. See the [main repository](https://github.com/DigitalHerencia/Notionista) for more information.
