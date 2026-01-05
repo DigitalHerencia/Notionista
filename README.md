@@ -1,143 +1,216 @@
 # Notionista
 
-Type-safe Notion MCP SDK with fluent query builder for advanced workspace automation.
+TypeScript SDK for Digital Herencia Notion workspace automation with MCP integration.
 
-## Status
+## Overview
 
-🚧 **Early Development** - Query Builder (EPIC-004) Complete ✅
+Notionista provides high-level workflow orchestration for managing sprint cycles, daily standups, and analytics in your Notion workspace. Built with a safety-first approach, all operations use the **Propose → Approve → Apply** pattern to prevent accidental changes.
 
 ## Features
 
-### ✅ Query Builder (EPIC-004)
+### 🔄 Workflow Orchestration
 
-Fluent API for constructing type-safe Notion database queries with filters, sorts, and pagination.
+- **Sprint Cycle Management**: Plan 2-week sprints with automated creation of projects, tasks, and meetings
+- **Daily Standup Reports**: Generate task summaries by team with completion metrics and overdue tracking
+- **Analytics & Metrics**: Comprehensive team and project performance insights
 
-```typescript
-import { QueryBuilder, QueryBuilderHelpers } from "./src/query";
+### 🛡️ Safety First
 
-// Simple query
-const query = new QueryBuilder()
-  .where("status", "select", "equals", "Active")
-  .where("priority", "select", "equals", "High")
-  .orderBy("due", "ascending")
-  .limit(50)
-  .build();
+- **Proposal System**: All mutations return proposals that must be explicitly approved before execution
+- **Change Preview**: Review property diffs, side effects, and validation results before applying changes
+- **Rollback Support**: Track proposal history and status throughout the lifecycle
 
-// Using helpers
-const incompleteTasks = QueryBuilderHelpers.incompleteTasks()
-  .orderBy("due", "ascending")
-  .build();
+### 📊 Type-Safe
 
-// Complex nested query
-const complexQuery = new QueryBuilder()
-  .and(qb => {
-    qb.where("status", "select", "equals", "Active")
-      .where("milestone", "select", "equals", "M2")
-  })
-  .or(qb => {
-    qb.where("priority", "select", "equals", "High")
-      .where("priority", "select", "equals", "Critical")
-  })
-  .build();
-```
+- Fully typed with TypeScript strict mode
+- Zod schemas for runtime validation
+- IntelliSense support for all APIs
 
-**Features:**
-- ✅ Fluent API for building queries
-- ✅ All Notion filter operators (40+ operators)
-- ✅ Compound filters (AND/OR)
-- ✅ Pagination with cursors
-- ✅ Convenience methods for common patterns
+## Installation
 
-**Documentation:**
-- [Query Builder README](src/query/README.md) - Complete API reference
-- [Integration Guide](docs/QUERY_BUILDER_INTEGRATION.md) - How to use with MCP/repositories
-- [Examples](src/query/examples.ts) - 22 usage examples
-- [Implementation Summary](EPIC-004-SUMMARY.md) - Technical details
-
-## Roadmap
-
-### Completed
-- ✅ **EPIC-004**: Query Builder with fluent API
-
-### In Progress
-- 🔄 **EPIC-001**: Project Foundation (minimal foundation created)
-
-### Planned
-- ⏳ **EPIC-002**: MCP Client Layer (stdio transport, tool wrappers)
-- ⏳ **EPIC-003**: Domain Layer (repositories, entities)
-- ⏳ **EPIC-005**: Safety Layer (propose → approve → apply)
-- ⏳ **EPIC-006**: Workflow Orchestration (sprint cycles, analytics)
-- ⏳ **EPIC-007**: Snapshot & Sync (CSV parsing, drift detection)
-- ⏳ **EPIC-008**: Documentation & Polish
-
-See [SPEC.md](SPEC.md) for complete architecture details.
-
-## Project Structure
-
-```
-notionista/
-├── src/
-│   ├── core/
-│   │   └── types/
-│   │       └── notion-filters.ts    # Notion API type definitions
-│   ├── query/
-│   │   ├── builder.ts               # QueryBuilder implementation
-│   │   ├── index.ts                 # Module exports
-│   │   ├── README.md                # API documentation
-│   │   ├── builder.test.ts          # Test suite
-│   │   └── examples.ts              # Usage examples
-│   └── index.ts                     # Main SDK entry point
-├── docs/
-│   └── QUERY_BUILDER_INTEGRATION.md # Integration guide
-├── schemas.ts                       # Zod schemas (Team, Project, Task, Meeting)
-├── SPEC.md                          # Architecture specification
-└── EPIC-004-SUMMARY.md              # Query Builder summary
+```bash
+npm install notionista
+# or
+pnpm add notionista
 ```
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 20+
-- TypeScript 5+
-
-### Usage
-
-Since the project is in early development, import directly from source:
+### Sprint Planning
 
 ```typescript
-import { QueryBuilder, QueryBuilderHelpers } from "./src/query";
+import { SprintCycleWorkflow } from 'notionista';
 
-// Build a query
-const query = new QueryBuilder()
-  .where("status", "select", "equals", "Active")
-  .build();
+// Initialize the workflow with repository instances
+const sprintWorkflow = new SprintCycleWorkflow(
+  projectRepository,
+  taskRepository,
+  meetingRepository
+);
 
-// Use with Notion API
-const response = await notion.databases.query({
-  database_id: "your-database-id",
-  ...query,
+// Plan a new sprint
+const proposal = await sprintWorkflow.planSprint({
+  teamId: 'team-123',
+  name: 'Sprint 1 - Q1 2026',
+  startDate: new Date('2026-01-06'),
+  endDate: new Date('2026-01-20'),
+  milestone: 'M1',
+  phase: 'P1.1',
+  domain: 'ENG',
+  tasks: [
+    {
+      name: 'Implement authentication',
+      priority: 'High',
+      due: '2026-01-10',
+      teamId: 'team-123',
+    },
+    {
+      name: 'Design dashboard UI',
+      priority: 'Medium',
+      due: '2026-01-15',
+      teamId: 'team-123',
+    },
+  ],
 });
+
+// Review the proposal
+console.log(sprintWorkflow.formatForReview(proposal));
+
+// After approval, execute the sprint
+// (Implementation requires proposal manager integration)
 ```
 
-## Digital Herencia Workspace
+### Daily Standup
 
-This SDK is designed for the Digital Herencia workspace with predefined:
-- 6 Teams (Engineering, Design, Marketing, Operations, Product, Research)
-- Projects with 2-week sprint cycles
-- Tasks with priority and milestone tracking
-- Meeting types (Standup, Sprint Planning, Post-mortem, Team Sync)
+```typescript
+import { DailyStandupWorkflow } from 'notionista';
 
-See [copilot-instructions.md](.github/copilot-instructions.md) for workspace structure details.
+const standupWorkflow = new DailyStandupWorkflow(taskRepository, teamRepository);
+
+// Generate standup report for all teams
+const report = await standupWorkflow.generateStandupReport();
+
+// Format and display the report
+console.log(standupWorkflow.formatReport(report));
+
+// Generate quick summary for a specific team
+const teamSummary = await standupWorkflow.generateTeamQuickSummary('team-123');
+console.log(teamSummary);
+```
+
+### Analytics
+
+```typescript
+import { AnalyticsService } from 'notionista';
+
+const analytics = new AnalyticsService(teamRepository, projectRepository, taskRepository);
+
+// Get team metrics
+const teamMetrics = await analytics.getTeamMetrics('team-123');
+console.log(analytics.formatTeamReport(teamMetrics));
+
+// Get project metrics
+const projectMetrics = await analytics.getProjectMetrics('project-456');
+console.log(`Completion Rate: ${projectMetrics.completionRate}%`);
+console.log(`On Track: ${projectMetrics.onTrack ? '✅' : '❌'}`);
+
+// Get overall analytics
+const overall = await analytics.getOverallAnalytics();
+console.log(analytics.formatOverallReport(overall));
+```
+
+## Architecture
+
+```
+src/
+├── core/types/           # Type definitions and constants
+├── safety/               # Proposal system (Propose → Approve → Apply)
+├── domain/repositories/  # Repository interfaces
+├── schemas/              # Zod schemas for entities
+└── workflows/            # High-level workflow orchestration
+    ├── sprint-cycle.ts   # Sprint planning and execution
+    ├── daily-standup.ts  # Daily standup reports
+    └── analytics.ts      # Team and project metrics
+```
+
+## API Reference
+
+### SprintCycleWorkflow
+
+Orchestrates sprint planning and execution for 2-week sprint cycles.
+
+**Methods:**
+- `planSprint(config: SprintConfig): Promise<SprintProposal>` - Plan a new sprint with project, tasks, and meetings
+- `formatForReview(proposal: SprintProposal): string` - Format proposal as markdown for review
+
+### DailyStandupWorkflow
+
+Generates daily standup reports with task summaries by team.
+
+**Methods:**
+- `generateStandupReport(config?: StandupConfig): Promise<StandupReport>` - Generate complete standup report
+- `formatReport(report: StandupReport): string` - Format report as markdown
+- `generateTeamQuickSummary(teamId: string, date?: Date): Promise<string>` - Quick summary for a specific team
+
+### AnalyticsService
+
+Provides team and project performance metrics.
+
+**Methods:**
+- `getTeamMetrics(teamId: string): Promise<TeamMetrics>` - Get comprehensive team metrics
+- `getProjectMetrics(projectId: string): Promise<ProjectMetrics>` - Get project progress and metrics
+- `getOverallAnalytics(): Promise<OverallAnalytics>` - Get workspace-wide analytics
+- `formatOverallReport(analytics: OverallAnalytics): string` - Format overall report as markdown
+- `formatTeamReport(metrics: TeamMetrics): string` - Format team report as markdown
 
 ## Development
 
-This project follows a phased development approach with 8 epics. See [issues/notionista-sdk-issues.md](.github/issues/notionista-sdk-issues.md) for all task definitions.
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run tests
+npm test
+
+# Type checking
+npm run type-check
+
+# Linting
+npm run lint
+npm run lint:fix
+
+# Format code
+npm run format
+```
+
+## Project Structure
+
+This implementation covers:
+- ✅ **EPIC-006**: Workflow Orchestration
+  - ✅ **TASK-023**: Sprint Cycle Workflow
+  - ✅ **TASK-024**: Daily Standup Workflow
+  - ✅ **TASK-025**: Analytics Service
+
+## Dependencies
+
+- **EPIC-003**: Domain Layer (repository interfaces defined, full implementation pending)
+- **EPIC-005**: Safety Layer (ProposalManager implemented)
+
+## Future Enhancements
+
+- Full MCP client implementation for live Notion integration
+- Repository implementations with actual Notion API calls
+- CLI interface for workflow execution
+- Snapshot and sync capabilities
+- Bulk operations with safety limits
 
 ## License
 
-[License information to be added]
+MIT
 
 ## Contributing
 
-[Contribution guidelines to be added]
+This SDK is part of the Digital Herencia Notion workspace automation project. For issues and feature requests, please refer to the [GitHub issues](https://github.com/DigitalHerencia/Notionista/issues).

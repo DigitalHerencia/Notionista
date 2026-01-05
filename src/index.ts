@@ -1,31 +1,14 @@
-/**
- * Notionista SDK - Main Entry Point
- * 
- * Type-safe Notion MCP client with query builder and safety workflows
- */
+// Core types
+export * from './core/types';
 
-// Query Builder
-export {
-  QueryBuilder,
-  QueryBuilderHelpers,
-  createQueryBuilder,
-  type PropertyType,
-  type FilterOperator,
-  type FilterValue,
-  type Filter,
-  type PropertyFilter,
-  type CompoundFilter,
-  type Sort,
-  type SortDirection,
-  type QueryParams,
-  type TextFilter,
-  type NumberFilter,
-  type CheckboxFilter,
-  type SelectFilter,
-  type MultiSelectFilter,
-  type DateFilter,
-  type PeopleFilter,
-  type FilesFilter,
-  type RelationFilter,
-  type StatusFilter,
-} from "./query";
+// Safety layer
+export * from './safety';
+
+// Domain layer
+export * from './domain/repositories';
+
+// Schemas
+export * from './schemas';
+
+// Workflows
+export * from './workflows';
