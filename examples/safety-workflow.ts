@@ -254,8 +254,15 @@ async function main() {
     console.log('   4. Batch operations have safety limits (max 50 items)');
     console.log('   5. Proposals can be rejected to prevent unwanted changes');
 
-  } catch (error) {
-    console.error('\n❌ Error:', error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('\n❌ Error:', error.message);
+      if (error.stack) {
+        console.error(error.stack);
+      }
+    } else {
+      console.error('\n❌ Error:', error);
+    }
     process.exit(1);
   } finally {
     console.log('\n🔌 Disconnecting from MCP server...');
