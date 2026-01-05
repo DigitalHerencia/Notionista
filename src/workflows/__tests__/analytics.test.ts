@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { AnalyticsService } from '../analytics';
-import type { ITeamRepository, IProjectRepository, ITaskRepository } from '../../domain/repositories';
+import type {
+  ITeamRepository,
+  IProjectRepository,
+  ITaskRepository,
+} from '../../domain/repositories';
 import type { Team, Project, Task } from '../../schemas';
 
 describe('AnalyticsService', () => {

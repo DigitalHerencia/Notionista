@@ -71,7 +71,9 @@ export class ProposalManager {
    * @param change The proposed change details
    * @returns The created proposal with unique ID
    */
-  async propose<T>(change: Omit<ChangeProposal<T>, 'id' | 'createdAt' | 'status'>): Promise<ChangeProposal<T>> {
+  async propose<T>(
+    change: Omit<ChangeProposal<T>, 'id' | 'createdAt' | 'status'>
+  ): Promise<ChangeProposal<T>> {
     const proposal: ChangeProposal<T> = {
       ...change,
       id: Math.random().toString(36).substring(2) + Date.now().toString(36),
@@ -113,7 +115,9 @@ export class ProposalManager {
       throw new Error(`Proposal ${proposalId} not found`);
     }
     if (proposal.status !== 'approved') {
-      throw new Error(`Proposal ${proposalId} must be approved before applying (status: ${proposal.status})`);
+      throw new Error(
+        `Proposal ${proposalId} must be approved before applying (status: ${proposal.status})`
+      );
     }
 
     try {

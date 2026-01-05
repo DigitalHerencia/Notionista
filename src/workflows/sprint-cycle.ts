@@ -103,10 +103,17 @@ export class SprintCycleWorkflow {
     );
 
     // 3. Create meeting proposals for sprint cycle
-    const meetingProposals = await this.createSprintMeetings(config, projectProposal.proposedState.id);
+    const meetingProposals = await this.createSprintMeetings(
+      config,
+      projectProposal.proposedState.id
+    );
 
     // 4. Generate summary
-    const summary = this.generateSprintSummary(config, taskProposals.length, meetingProposals.length);
+    const summary = this.generateSprintSummary(
+      config,
+      taskProposals.length,
+      meetingProposals.length
+    );
 
     return {
       project: projectProposal,
@@ -219,9 +226,7 @@ export class SprintCycleWorkflow {
 
     // Warn if sprint is not ~2 weeks (10-16 days)
     if (durationDays < 10 || durationDays > 16) {
-      console.warn(
-        `Sprint duration is ${durationDays} days. Recommended: 10-16 days (2 weeks)`
-      );
+      console.warn(`Sprint duration is ${durationDays} days. Recommended: 10-16 days (2 weeks)`);
     }
 
     if (!config.tasks || config.tasks.length === 0) {
@@ -287,7 +292,9 @@ export class SprintCycleWorkflow {
     lines.push(``);
     lines.push(`---`);
     lines.push(``);
-    lines.push(`**Note**: All changes are proposals only. Use \`executeSprint()\` after approval to apply.`);
+    lines.push(
+      `**Note**: All changes are proposals only. Use \`executeSprint()\` after approval to apply.`
+    );
 
     return lines.join('\n');
   }

@@ -1,9 +1,5 @@
 import type { Project, Task } from '../schemas';
-import type {
-  ITeamRepository,
-  IProjectRepository,
-  ITaskRepository,
-} from '../domain/repositories';
+import type { ITeamRepository, IProjectRepository, ITaskRepository } from '../domain/repositories';
 import type { ProjectStatus, Priority } from '../core/types';
 
 /**
@@ -206,11 +202,14 @@ export class AnalyticsService {
       teamName: m.teamName,
       completionRate: m.completionRate,
     }));
-    const bottomPerformingTeams = sortedByCompletion.slice(-3).reverse().map((m) => ({
-      teamId: m.teamId,
-      teamName: m.teamName,
-      completionRate: m.completionRate,
-    }));
+    const bottomPerformingTeams = sortedByCompletion
+      .slice(-3)
+      .reverse()
+      .map((m) => ({
+        teamId: m.teamId,
+        teamName: m.teamName,
+        completionRate: m.completionRate,
+      }));
 
     // Identify critical projects (off-track or with many overdue tasks)
     const projectMetrics = await Promise.all(
@@ -406,9 +405,7 @@ export class AnalyticsService {
     if (completedTasks.length === 0 || projects.length === 0) return 0;
 
     // Find earliest start date and latest end date
-    const dates = projects
-      .filter((p) => p.startDate)
-      .map((p) => new Date(p.startDate!).getTime());
+    const dates = projects.filter((p) => p.startDate).map((p) => new Date(p.startDate!).getTime());
 
     if (dates.length === 0) return 0;
 

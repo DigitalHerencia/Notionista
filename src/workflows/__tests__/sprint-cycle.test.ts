@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { SprintCycleWorkflow } from '../sprint-cycle';
-import type { IProjectRepository, ITaskRepository, IMeetingRepository } from '../../domain/repositories';
+import type {
+  IProjectRepository,
+  ITaskRepository,
+  IMeetingRepository,
+} from '../../domain/repositories';
 import type { ChangeProposal } from '../../safety';
 import type { Project, Task, Meeting } from '../../schemas';
 
