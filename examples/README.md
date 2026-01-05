@@ -60,6 +60,17 @@ npx ts-node examples/query-tasks.ts
 
 ### Safety Workflow
 
+- **[safety-layer-demo.ts](./safety-layer-demo.ts)** - Complete safety layer demonstration
+  ```bash
+  pnpm tsx examples/safety-layer-demo.ts
+  ```
+  Demonstrates:
+  - DiffEngine for computing property changes
+  - Validator for pre-change validation
+  - BatchLimiter for enforcing size limits
+  - ProposalManager lifecycle (Propose → Approve → Apply)
+  - All safety layer components in action
+
 - **[safety-workflow.ts](./safety-workflow.ts)** - Demonstrate Propose → Approve → Apply
   ```bash
   pnpm tsx examples/safety-workflow.ts
@@ -145,9 +156,10 @@ npx ts-node examples/query-tasks.ts
 
 Start with these examples to learn the basics:
 
-1. [query-tasks.ts](./query-tasks.ts) - Simple queries
-2. [safety-workflow.ts](./safety-workflow.ts) - Understanding proposals
-3. [create-sprint.ts](./create-sprint.ts) - Basic workflow
+1. [safety-layer-demo.ts](./safety-layer-demo.ts) - Safety layer components
+2. [query-tasks.ts](./query-tasks.ts) - Simple queries
+3. [safety-workflow.ts](./safety-workflow.ts) - Understanding proposals
+4. [create-sprint.ts](./create-sprint.ts) - Basic workflow
 
 ### For Intermediate Users
 
