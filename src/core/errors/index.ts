@@ -1,144 +1,122 @@
 /**
- * Custom error hierarchy for Notionista SDK
- *
- * @module core/errors
- */
-
-/**
  * Base error class for all Notionista errors
  */
-export class NotionError extends Error {
-  constructor(
-    message: string,
-    public readonly code: string,
-    public readonly details?: unknown
-  ) {
+export class NotionistaError extends Error {
+  public readonly code: string;
+  public override readonly cause?: unknown;
+
+  constructor(message: string, code: string, cause?: unknown) {
     super(message);
-    this.name = 'NotionError';
-    Object.setPrototypeOf(this, NotionError.prototype);
+    this.name = this.constructor.name;
+    this.code = code;
+    this.cause = cause;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 }
 
 /**
- * Validation error - thrown when data validation fails
+ * MCP transport and connection errors
  */
-export class ValidationError extends NotionError {
-  constructor(message: string, details?: unknown) {
-    super(message, 'VALIDATION_ERROR', details);
-    this.name = 'ValidationError';
-    Object.setPrototypeOf(this, ValidationError.prototype);
+export class McpTransportError extends NotionistaError {
+  constructor(message: string, cause?: unknown) {
+    super(message, "MCP_TRANSPORT_ERROR", cause);
+  }
+}
+
+export class McpConnectionError extends NotionistaError {
+  constructor(message: string, cause?: unknown) {
+    super(message, "MCP_CONNECTION_ERROR", cause);
+  }
+}
+
+export class McpTimeoutError extends NotionistaError {
+  constructor(message: string, timeout: number) {
+    super(`${message} (timeout: ${timeout}ms)`, "MCP_TIMEOUT_ERROR");
   }
 }
 
 /**
- * MCP error - thrown when MCP communication fails
+ * JSON-RPC protocol errors
  */
-export class McpError extends NotionError {
-  constructor(message: string, details?: unknown) {
-    super(message, 'MCP_ERROR', details);
-    this.name = 'McpError';
-    Object.setPrototypeOf(this, McpError.prototype);
-  }
-}
-
-/**
- * Transport error - thrown when transport layer fails
- */
-export class TransportError extends NotionError {
-  constructor(message: string, details?: unknown) {
-    super(message, 'TRANSPORT_ERROR', details);
-    this.name = 'TransportError';
-    Object.setPrototypeOf(this, TransportError.prototype);
-  }
-}
-
-/**
- * Timeout error - thrown when a request times out
- */
-export class TimeoutError extends NotionError {
-  constructor(message: string, details?: unknown) {
-    super(message, 'TIMEOUT_ERROR', details);
-    this.name = 'TimeoutError';
-    Object.setPrototypeOf(this, TimeoutError.prototype);
-  }
-}
-
-/**
- * Rate limit error - thrown when rate limit is exceeded
- */
-export class RateLimitError extends NotionError {
+export class JsonRpcError extends NotionistaError {
   constructor(
     message: string,
-    public readonly retryAfter?: number,
-    details?: unknown
+    public readonly rpcCode: number,
+    public readonly rpcData?: unknown
   ) {
-    super(message, 'RATE_LIMIT_ERROR', details);
-    this.name = 'RateLimitError';
-    Object.setPrototypeOf(this, RateLimitError.prototype);
+    super(message, "JSON_RPC_ERROR");
   }
 }
 
 /**
- * Configuration error - thrown when configuration is invalid
+ * MCP tool invocation errors
  */
-export class ConfigurationError extends NotionError {
-  constructor(message: string, details?: unknown) {
-    super(message, 'CONFIGURATION_ERROR', details);
-    this.name = 'ConfigurationError';
-    Object.setPrototypeOf(this, ConfigurationError.prototype);
-  }
-}
-
-/**
- * Not found error - thrown when a resource is not found
- */
-export class NotFoundError extends NotionError {
+export class McpToolError extends NotionistaError {
   constructor(
     message: string,
-    public readonly resourceType: string,
-    public readonly resourceId: string
+    public readonly toolName: string,
+    cause?: unknown
   ) {
-    super(message, 'NOT_FOUND_ERROR', { resourceType, resourceId });
-    this.name = 'NotFoundError';
-    Object.setPrototypeOf(this, NotFoundError.prototype);
+    super(message, "MCP_TOOL_ERROR", cause);
   }
 }
 
 /**
- * Proposal error - thrown when a change proposal is invalid
+ * Rate limiting errors
  */
-export class ProposalError extends NotionError {
-  constructor(message: string, details?: unknown) {
-    super(message, 'PROPOSAL_ERROR', details);
-    this.name = 'ProposalError';
-    Object.setPrototypeOf(this, ProposalError.prototype);
+export class RateLimitError extends NotionistaError {
+  constructor(
+    message: string,
+    public readonly retryAfter?: number
+  ) {
+    super(message, "RATE_LIMIT_ERROR");
   }
 }
 
 /**
- * Type guard to check if an error is a NotionError
+ * Validation errors
  */
-export function isNotionError(error: unknown): error is NotionError {
-  return error instanceof NotionError;
+export class ValidationError extends NotionistaError {
+  constructor(
+    message: string,
+    public readonly validationErrors: Array<{ field: string; message: string }>
+  ) {
+    super(message, "VALIDATION_ERROR");
+  }
 }
 
 /**
- * Type guard to check if an error is a ValidationError
+ * Proposal errors
  */
-export function isValidationError(error: unknown): error is ValidationError {
-  return error instanceof ValidationError;
+export class ProposalNotFoundError extends NotionistaError {
+  constructor(proposalId: string) {
+    super(`Proposal not found: ${proposalId}`, "PROPOSAL_NOT_FOUND");
+  }
+}
+
+export class ProposalStateError extends NotionistaError {
+  constructor(message: string) {
+    super(message, "PROPOSAL_STATE_ERROR");
+  }
 }
 
 /**
- * Type guard to check if an error is an McpError
+ * Repository errors
  */
-export function isMcpError(error: unknown): error is McpError {
-  return error instanceof McpError;
+export class RepositoryError extends NotionistaError {
+  constructor(
+    message: string,
+    public readonly repository: string,
+    cause?: unknown
+  ) {
+    super(message, "REPOSITORY_ERROR", cause);
+  }
 }
 
-/**
- * Type guard to check if an error is a RateLimitError
- */
-export function isRateLimitError(error: unknown): error is RateLimitError {
-  return error instanceof RateLimitError;
+export class EntityNotFoundError extends NotionistaError {
+  constructor(entityType: string, id: string) {
+    super(`${entityType} not found: ${id}`, "ENTITY_NOT_FOUND");
+  }
 }

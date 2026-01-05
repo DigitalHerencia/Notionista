@@ -1,141 +1,19 @@
 /**
- * Notion API type definitions
- *
- * @module core/types/notion
+ * Notion API types (simplified for MCP usage)
  */
 
-/**
- * Notion page object
- */
 export interface NotionPage {
+  object: "page";
   id: string;
-  object: 'page';
   created_time: string;
   last_edited_time: string;
-  archived: boolean;
+  parent: {
+    type: "database_id";
+    database_id: string;
+  };
   properties: Record<string, NotionProperty>;
-  parent:
-    | { type: 'database_id'; database_id: string }
-    | { type: 'page_id'; page_id: string }
-    | { type: 'workspace'; workspace: true };
-  url: string;
 }
 
-/**
- * Base property type
- */
-export interface BaseProperty {
-  id: string;
-  type: string;
-}
-
-/**
- * Title property
- */
-export interface TitleProperty extends BaseProperty {
-  type: 'title';
-  title: Array<{
-    type: 'text';
-    text: { content: string; link: null | { url: string } };
-    plain_text: string;
-  }>;
-}
-
-/**
- * Rich text property
- */
-export interface RichTextProperty extends BaseProperty {
-  type: 'rich_text';
-  rich_text: Array<{
-    type: 'text';
-    text: { content: string; link: null | { url: string } };
-    plain_text: string;
-  }>;
-}
-
-/**
- * Number property
- */
-export interface NumberProperty extends BaseProperty {
-  type: 'number';
-  number: number | null;
-}
-
-/**
- * Select property
- */
-export interface SelectProperty extends BaseProperty {
-  type: 'select';
-  select: { id: string; name: string; color: string } | null;
-}
-
-/**
- * Multi-select property
- */
-export interface MultiSelectProperty extends BaseProperty {
-  type: 'multi_select';
-  multi_select: Array<{ id: string; name: string; color: string }>;
-}
-
-/**
- * Date property
- */
-export interface DateProperty extends BaseProperty {
-  type: 'date';
-  date: {
-    start: string;
-    end: string | null;
-    time_zone: string | null;
-  } | null;
-}
-
-/**
- * Checkbox property
- */
-export interface CheckboxProperty extends BaseProperty {
-  type: 'checkbox';
-  checkbox: boolean;
-}
-
-/**
- * Relation property
- */
-export interface RelationProperty extends BaseProperty {
-  type: 'relation';
-  relation: Array<{ id: string }>;
-}
-
-/**
- * Rollup property
- */
-export interface RollupProperty extends BaseProperty {
-  type: 'rollup';
-  rollup: {
-    type: 'number' | 'date' | 'array';
-    number?: number | null;
-    date?: { start: string; end: string | null } | null;
-    array?: NotionProperty[];
-    function: string;
-  };
-}
-
-/**
- * Formula property
- */
-export interface FormulaProperty extends BaseProperty {
-  type: 'formula';
-  formula: {
-    type: 'string' | 'number' | 'boolean' | 'date';
-    string?: string | null;
-    number?: number | null;
-    boolean?: boolean | null;
-    date?: { start: string; end: string | null } | null;
-  };
-}
-
-/**
- * Union of all property types
- */
 export type NotionProperty =
   | TitleProperty
   | RichTextProperty
@@ -145,47 +23,111 @@ export type NotionProperty =
   | DateProperty
   | CheckboxProperty
   | RelationProperty
-  | RollupProperty
-  | FormulaProperty;
+  | FormulaProperty
+  | RollupProperty;
+
+export interface TitleProperty {
+  type: "title";
+  title: RichText[];
+}
+
+export interface RichTextProperty {
+  type: "rich_text";
+  rich_text: RichText[];
+}
+
+export interface RichText {
+  type: "text";
+  text: {
+    content: string;
+  };
+  plain_text: string;
+}
+
+export interface NumberProperty {
+  type: "number";
+  number: number | null;
+}
+
+export interface SelectProperty {
+  type: "select";
+  select: {
+    name: string;
+    color?: string;
+  } | null;
+}
+
+export interface MultiSelectProperty {
+  type: "multi_select";
+  multi_select: Array<{
+    name: string;
+    color?: string;
+  }>;
+}
+
+export interface DateProperty {
+  type: "date";
+  date: {
+    start: string;
+    end?: string | null;
+  } | null;
+}
+
+export interface CheckboxProperty {
+  type: "checkbox";
+  checkbox: boolean;
+}
+
+export interface RelationProperty {
+  type: "relation";
+  relation: Array<{
+    id: string;
+  }>;
+}
+
+export interface FormulaProperty {
+  type: "formula";
+  formula:
+    | { type: "string"; string: string | null }
+    | { type: "number"; number: number | null }
+    | { type: "boolean"; boolean: boolean | null }
+    | { type: "date"; date: { start: string; end?: string | null } | null };
+}
+
+export interface RollupProperty {
+  type: "rollup";
+  rollup:
+    | { type: "number"; number: number | null }
+    | { type: "array"; array: NotionProperty[] };
+}
 
 /**
- * Page properties for create/update operations
+ * Query filter types
  */
-export type PageProperties = Record<string, Partial<NotionProperty>>;
 
-/**
- * Query filter condition
- */
 export interface QueryFilter {
-  property: string;
+  and?: QueryFilter[];
+  or?: QueryFilter[];
+  property?: string;
   [key: string]: unknown;
 }
 
-/**
- * Query sort condition
- */
 export interface QuerySort {
   property?: string;
-  timestamp?: 'created_time' | 'last_edited_time';
-  direction: 'ascending' | 'descending';
+  timestamp?: "created_time" | "last_edited_time";
+  direction: "ascending" | "descending";
 }
 
-/**
- * Database query parameters
- */
-export interface QueryDatabaseParams {
+export interface QueryParams {
   database_id: string;
-  filter?: QueryFilter | { and: QueryFilter[] } | { or: QueryFilter[] };
+  filter?: QueryFilter;
   sorts?: QuerySort[];
-  start_cursor?: string;
   page_size?: number;
+  start_cursor?: string;
 }
 
-/**
- * Query response
- */
-export interface QueryDatabaseResponse {
-  object: 'list';
+export interface QueryResult {
+  object: "list";
   results: NotionPage[];
   next_cursor: string | null;
   has_more: boolean;

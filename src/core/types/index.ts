@@ -1,9 +1,7 @@
 /**
- * Core type definitions
- *
- * @module core/types
+ * Core type exports
  */
 
-export * from './databases.js';
-export * from './notion.js';
-export * from './mcp.js';
+export * from "./databases.js";
+export * from "./mcp.js";
+export * from "./notion.js";

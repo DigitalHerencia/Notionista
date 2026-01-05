@@ -1,103 +1,86 @@
 /**
- * MCP (Model Context Protocol) type definitions
- *
- * @module core/types/mcp
+ * JSON-RPC 2.0 protocol types for MCP communication
  */
 
-/**
- * JSON-RPC 2.0 request
- */
 export interface JsonRpcRequest {
-  jsonrpc: '2.0';
-  id: string | number;
+  jsonrpc: "2.0";
+  id: number | string;
   method: string;
-  params?: Record<string, unknown>;
+  params?: unknown;
 }
 
-/**
- * JSON-RPC 2.0 response
- */
 export interface JsonRpcResponse<T = unknown> {
-  jsonrpc: '2.0';
-  id: string | number;
+  jsonrpc: "2.0";
+  id: number | string;
   result?: T;
-  error?: JsonRpcError;
+  error?: JsonRpcErrorObject;
 }
 
-/**
- * JSON-RPC 2.0 error
- */
-export interface JsonRpcError {
+export interface JsonRpcErrorObject {
   code: number;
   message: string;
   data?: unknown;
 }
 
 /**
- * MCP tool names
+ * MCP Tool invocation types
  */
-export const MCP_TOOLS = {
-  // Data sources (databases)
-  LIST_DATA_SOURCE_TEMPLATES: 'list-data-source-templates',
-  RETRIEVE_DATA_SOURCE: 'retrieve-a-data-source',
-  CREATE_DATA_SOURCE: 'create-a-data-source',
-  UPDATE_DATA_SOURCE: 'update-a-data-source',
-  QUERY_DATA_SOURCE: 'query-data-source',
 
-  // Pages
-  POST_PAGE: 'post-page',
-  PATCH_PAGE: 'patch-page',
-  RETRIEVE_PAGE: 'retrieve-a-page',
-  MOVE_PAGE: 'move-page',
+export interface McpToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
 
-  // Blocks
-  GET_BLOCK_CHILDREN: 'get-block-children',
-  RETRIEVE_BLOCK: 'retrieve-a-block',
-  PATCH_BLOCK_CHILDREN: 'patch-block-children',
-  UPDATE_BLOCK: 'update-a-block',
-  DELETE_BLOCK: 'delete-a-block',
-
-  // Comments
-  CREATE_COMMENT: 'create-a-comment',
-  RETRIEVE_COMMENT: 'retrieve-a-comment',
-
-  // Search
-  POST_SEARCH: 'post-search',
-
-  // Users
-  GET_SELF: 'get-self',
-  GET_USER: 'get-user',
-  GET_USERS: 'get-users',
-} as const;
+export interface McpToolResult<T = unknown> {
+  content: T;
+  isError?: boolean;
+}
 
 /**
- * MCP tool name type
+ * MCP Request/Response wrapper types
  */
-export type McpTool = (typeof MCP_TOOLS)[keyof typeof MCP_TOOLS];
 
-/**
- * MCP request wrapper
- */
 export interface McpRequest {
-  tool: McpTool;
+  tool: string;
   params: Record<string, unknown>;
   timestamp: number;
 }
 
-/**
- * MCP response wrapper
- */
 export interface McpResponse<T = unknown> {
   data: T;
   timestamp: number;
+  duration: number;
 }
 
 /**
- * MCP client configuration
+ * MCP Middleware types
  */
-export interface McpClientConfig {
+
+export type McpMiddleware = (
+  req: McpRequest,
+  next: () => Promise<McpResponse>
+) => Promise<McpResponse>;
+
+/**
+ * MCP Client configuration
+ */
+
+export interface McpClientOptions {
   notionToken: string;
   timeout?: number;
   maxRetries?: number;
   rateLimitPerSecond?: number;
+  enableCache?: boolean;
+  enableLogging?: boolean;
+}
+
+/**
+ * MCP Transport interface
+ */
+
+export interface McpTransport {
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  send(request: JsonRpcRequest): Promise<JsonRpcResponse>;
+  isConnected(): boolean;
 }

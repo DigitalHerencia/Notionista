@@ -1,99 +1,182 @@
 # Notionista
 
-> TypeScript SDK for advanced Notion workspace automation with MCP integration
+TypeScript SDK for advanced Notion workspace automation via Model Context Protocol (MCP).
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green)](https://nodejs.org/)
-[![pnpm](https://img.shields.io/badge/pnpm-10.x-orange)](https://pnpm.io/)
+## Overview
 
-Notionista is a TypeScript SDK designed for the Digital Herencia workspace, providing a type-safe, robust interface for automating Notion workflows through the Model Context Protocol (MCP).
+Notionista provides a type-safe, middleware-based client for interacting with Notion databases through the [@notionhq/notion-mcp-server](https://github.com/notionhq/notion-mcp-server). Built for the Digital Herencia workspace structure, it implements the **Propose → Approve → Apply** safety workflow for controlled automation.
 
 ## Features
 
-- 🔒 **Type-Safe**: Strict TypeScript configuration with full IntelliSense support
-- 🎯 **MCP Integration**: Built-in support for @notionhq/notion-mcp-server
-- ✅ **Runtime Validation**: Zod schemas for data validation
-- 🔄 **Safety Workflow**: Propose → Approve → Apply pattern for mutations
-- 📦 **Modern Build**: ESM and CJS outputs with tsup
-- 🧪 **Well Tested**: Comprehensive test coverage with Vitest
-- 📝 **Documented**: JSDoc comments throughout
+- 🔌 **MCP Integration**: Communicates with Notion MCP server via stdio transport
+- 🛡️ **Type Safety**: Full TypeScript support with strict typing
+- 🔄 **Middleware Pipeline**: Rate limiting, retry logic, caching, and logging
+- ⚡ **Performance**: Configurable rate limiting (3 req/sec default) and response caching
+- 🎯 **Domain Model**: Repository pattern for clean data access
+- 🔒 **Safety Layer**: Proposal-based mutations for preventing accidents (coming in EPIC-005)
 
 ## Installation
 
 ```bash
-# Using pnpm (recommended)
-pnpm add notionista
-
-# Using npm
 npm install notionista
-
-# Using yarn
-yarn add notionista
 ```
-
-## Requirements
-
-- Node.js 18.0.0 or higher (LTS recommended)
-- TypeScript 5.0 or higher (for development)
 
 ## Quick Start
 
 ```typescript
-import { DATABASE_IDS, TeamSchema } from 'notionista';
+import { McpClient } from "notionista";
 
-// Use database IDs
-console.log(DATABASE_IDS.TEAMS);
+// Create a client instance
+const client = new McpClient({
+  notionToken: process.env.NOTION_TOKEN!,
+  rateLimitPerSecond: 3,
+  maxRetries: 3,
+  enableCache: true,
+  enableLogging: true,
+});
 
-// Validate data with schemas
-const team = TeamSchema.parse({
-  id: 'team-123',
-  name: 'Engineering Team',
-  meetings: [],
-  projects: [],
-  tasks: [],
+// Connect to the MCP server
+await client.connect();
+
+// Use tool wrappers for type-safe operations
+const databases = await client.databases.queryDatabase({
+  database_id: "your-database-id",
+  filter: {
+    property: "Status",
+    select: { equals: "Active" },
+  },
+});
+
+// Or call tools directly
+const result = await client.callTool("query-data-source", {
+  database_id: "your-database-id",
+});
+
+// Disconnect when done
+await client.disconnect();
+```
+
+## Tool Wrappers
+
+Notionista provides typed wrappers for all MCP tools, organized by category:
+
+### Database Operations
+
+```typescript
+// Query a database
+const pages = await client.databases.queryDatabase({
+  database_id: DATABASE_IDS.TASKS,
+  filter: {
+    property: "Done",
+    checkbox: { equals: false },
+  },
+  sorts: [{ property: "Priority", direction: "ascending" }],
+});
+
+// Get database metadata
+const database = await client.databases.getDatabase(DATABASE_IDS.PROJECTS);
+```
+
+### Page Operations
+
+```typescript
+// Create a page
+const newPage = await client.pages.createPage({
+  parent: { database_id: DATABASE_IDS.TASKS },
+  properties: {
+    Name: { title: [{ text: { content: "New Task" } }] },
+    Done: { checkbox: false },
+    Priority: { select: { name: "High" } },
+  },
+});
+
+// Update a page
+const updatedPage = await client.pages.updatePage({
+  page_id: "page-id",
+  properties: {
+    Done: { checkbox: true },
+  },
+});
+
+// Get a page
+const page = await client.pages.getPage("page-id");
+```
+
+### Search Operations
+
+```typescript
+// Search all pages and databases
+const results = await client.search.search({
+  query: "Sprint Planning",
+});
+
+// Search only pages
+const pages = await client.search.searchPages("task");
+
+// Search only databases
+const databases = await client.search.searchDatabases("team");
+```
+
+### Block Operations
+
+```typescript
+// Get block children
+const children = await client.blocks.getBlockChildren("block-id");
+
+// Append blocks
+await client.blocks.appendBlocks({
+  block_id: "page-id",
+  children: [
+    {
+      object: "block",
+      type: "paragraph",
+      paragraph: {
+        rich_text: [{ text: { content: "New paragraph" } }],
+      },
+    },
+  ],
 });
 ```
 
-## Project Structure
-
-```
-notionista/
-├── src/
-│   ├── core/
-│   │   ├── types/         # TypeScript type definitions
-│   │   ├── errors/        # Custom error hierarchy
-│   │   └── config/        # Configuration system
-│   ├── schemas/           # Zod schemas for validation
-│   ├── mcp/              # MCP client layer (coming soon)
-│   ├── domain/           # Domain entities and repositories (coming soon)
-│   └── workflows/        # Workflow orchestration (coming soon)
-├── config/
-│   └── databases.json    # Database configuration
-└── dist/                 # Build output
-```
-
-## Available Types
-
-### Database IDs
+### Comment Operations
 
 ```typescript
-import { DATABASE_IDS } from 'notionista';
-
-DATABASE_IDS.TEAMS
-DATABASE_IDS.PROJECTS
-DATABASE_IDS.TASKS
-DATABASE_IDS.MEETINGS
-DATABASE_IDS.PROMPTS
-DATABASE_IDS.TECH_STACK
-DATABASE_IDS.TEMPLATES
-DATABASE_IDS.SOPS
-DATABASE_IDS.CALENDAR
+// Create a comment
+await client.comments.createComment({
+  parent: { page_id: "page-id" },
+  rich_text: [{ text: { content: "Great work!" } }],
+});
 ```
 
-### Property Types
+### User Operations
 
 ```typescript
-import type {
+// Get current bot user
+const self = await client.users.getSelf();
+
+// List all users
+const users = await client.users.listUsers();
+```
+
+## Architecture
+
+### MCP Client Layer (EPIC-002) ✅
+
+The foundation of Notionista, implementing reliable communication with the Notion MCP server:
+
+- **Stdio Transport**: Spawns and manages the MCP server process
+- **JSON-RPC 2.0**: Handles message serialization and correlation
+- **Middleware Pipeline**:
+  - Rate Limiter: Prevents API throttling (configurable)
+  - Retry: Automatic retries with exponential backoff
+  - Logger: Debug logging for requests and responses
+  - Cache: Response caching for read-only operations
+
+### Core Types
+
+```typescript
+import {
+  DATABASE_IDS,
   ProjectStatus,
   Milestone,
   Phase,
@@ -101,139 +184,122 @@ import type {
   Priority,
   MeetingType,
   Cadence,
-} from 'notionista';
+} from "notionista";
 ```
 
-### Schemas
-
-```typescript
-import { TeamSchema, ProjectSchema, TaskSchema, MeetingSchema } from 'notionista';
-```
-
-### Errors
+### Error Handling
 
 ```typescript
 import {
-  NotionError,
-  ValidationError,
-  McpError,
-  TransportError,
-  TimeoutError,
+  NotionistaError,
+  McpTransportError,
+  McpConnectionError,
+  McpTimeoutError,
+  JsonRpcError,
+  McpToolError,
   RateLimitError,
-  ConfigurationError,
-  NotFoundError,
-  ProposalError,
-} from 'notionista';
-```
+} from "notionista";
 
-## Development
-
-### Setup
-
-```bash
-# Install dependencies
-pnpm install
-
-# Build the project
-pnpm build
-
-# Run tests
-pnpm test
-
-# Run linter
-pnpm lint
-
-# Type check
-pnpm typecheck
-```
-
-### Scripts
-
-- `pnpm build` - Build the project with tsup
-- `pnpm dev` - Watch mode for development
-- `pnpm test` - Run tests with Vitest
-- `pnpm test:watch` - Run tests in watch mode
-- `pnpm test:coverage` - Generate coverage report
-- `pnpm lint` - Run ESLint
-- `pnpm lint:fix` - Fix linting issues
-- `pnpm format` - Format code with Prettier
-- `pnpm format:check` - Check code formatting
-- `pnpm typecheck` - Run TypeScript type checking
-- `pnpm clean` - Clean build artifacts
-
-## Architecture
-
-Notionista follows a layered architecture:
-
-1. **Core Layer**: Type definitions, errors, and configuration
-2. **MCP Layer**: Communication with Notion MCP server (coming soon)
-3. **Domain Layer**: Business entities and repositories (coming soon)
-4. **Workflow Layer**: High-level automation workflows (coming soon)
-5. **Safety Layer**: Change proposals and validation (coming soon)
-
-## Configuration
-
-Database configuration is stored in `config/databases.json`:
-
-```json
-{
-  "databases": {
-    "teams": {
-      "id": "2d5a4e63-bf23-8151-9b98-c81833668844",
-      "name": "Teams",
-      "url": "https://www.notion.so/..."
-    }
-  },
-  "safetyLimits": {
-    "maxBatchSize": 50,
-    "rateLimitPerSecond": 3,
-    "requireApprovalForBulk": true
+try {
+  await client.callTool("some-tool", params);
+} catch (error) {
+  if (error instanceof McpTimeoutError) {
+    console.error("Request timed out");
+  } else if (error instanceof RateLimitError) {
+    console.error("Rate limit exceeded");
   }
 }
 ```
 
-## Roadmap
+## Configuration
 
-### ✅ Phase 1: Foundation (M1) - COMPLETED
-- [x] TypeScript project setup
-- [x] Core type system
-- [x] Error hierarchy
-- [x] Database configuration
+### Client Options
 
-### 🚧 Phase 2: MCP Client (M1) - IN PROGRESS
-- [ ] stdio transport
-- [ ] MCP client with middleware
-- [ ] Rate limiting and retry logic
-- [ ] Tool wrappers
+```typescript
+interface McpClientOptions {
+  notionToken: string; // Required: Notion API token
+  timeout?: number; // Default: 30000ms
+  maxRetries?: number; // Default: 3
+  rateLimitPerSecond?: number; // Default: 3
+  enableCache?: boolean; // Default: true
+  enableLogging?: boolean; // Default: true
+}
+```
 
-### 📋 Phase 3: Domain Layer (M2)
-- [ ] Base repository pattern
-- [ ] Team, Project, Task, Meeting repositories
-- [ ] Domain entities
+### Custom Middleware
 
-### 📋 Phase 4: Safety & Workflows (M2-M3)
-- [ ] Proposal manager
-- [ ] Workflow orchestration
-- [ ] Snapshot and sync
+```typescript
+import type { McpMiddleware } from "notionista";
+
+const customMiddleware: McpMiddleware = async (req, next) => {
+  console.log(`Calling tool: ${req.tool}`);
+  const response = await next();
+  console.log(`Tool completed in ${response.duration}ms`);
+  return response;
+};
+
+client.use(customMiddleware);
+```
+
+## Digital Herencia Workspace
+
+This SDK is optimized for the Digital Herencia workspace structure:
+
+### Core Databases
+
+| Database     | ID                                     |
+| ------------ | -------------------------------------- |
+| Teams        | `2d5a4e63-bf23-816b-9f75-000b219f7713` |
+| Projects     | `2d5a4e63-bf23-8115-a70f-000bc1ef9d05` |
+| Tasks        | `2d5a4e63-bf23-8137-8277-000b41c867c3` |
+| Meetings     | `2caa4e63-bf23-815a-8981-000bbdbb7f0b` |
+| Prompts      | `2d5a4e63-bf23-81ad-ab3f-000bfbb91ed9` |
+| Tech Stack   | `276a4e63-bf23-80e2-bbae-000b2fa9662a` |
+| Templates    | `2d5a4e63-bf23-8189-943d-000bdd7af066` |
+| SOPs         | `2d8a4e63-bf23-80d1-8167-000bb402c275` |
+| Calendar     | `2d5a4e63-bf23-8140-b0d7-000b33493b7e` |
+
+## Development Status
+
+### Completed ✅
+
+- **EPIC-001**: Project Foundation
+  - TypeScript configuration
+  - Build tooling (tsup)
+  - Testing framework (Vitest)
+  - Linting (ESLint + Prettier)
+  - Core type system
+  - Error hierarchy
+
+- **EPIC-002**: MCP Client Layer
+  - Stdio transport
+  - MCP client with middleware
+  - Rate limiter middleware
+  - Retry middleware
+  - Logger middleware
+  - Cache middleware
+
+### In Progress 🚧
+
+- **EPIC-003**: Domain Layer (repositories and entities)
+- **EPIC-004**: Query Builder
+- **EPIC-005**: Safety Layer (Propose → Approve → Apply)
+
+### Planned 📋
+
+- **EPIC-006**: Workflow Orchestration
+- **EPIC-007**: Snapshot & Sync
+- **EPIC-008**: Documentation & Examples
 
 ## Contributing
 
-This project follows strict TypeScript and ESLint configurations. Before submitting a PR:
-
-1. Run `pnpm test` to ensure all tests pass
-2. Run `pnpm lint` to check for linting errors
-3. Run `pnpm typecheck` to verify types
-4. Run `pnpm build` to ensure the project builds
+This project follows the architecture defined in [SPEC.md](./SPEC.md). See the [issues](./github/issues/notionista-sdk-issues.md) for the full task breakdown.
 
 ## License
 
 MIT
 
-## Author
-
-Digital Herencia
-
-## Related Projects
+## Related
 
 - [@notionhq/notion-mcp-server](https://github.com/notionhq/notion-mcp-server) - Official Notion MCP server
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification
