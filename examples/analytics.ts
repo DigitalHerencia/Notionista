@@ -99,10 +99,15 @@ async function main() {
           console.log(`Remaining: ${report.remainingDays} days`);
         }
         
-        // Progress bar
+        // Progress bar (uses Unicode blocks by default; fall back to ASCII on
+        // terminals that may not render block characters correctly)
         const barLength = 40;
         const filled = Math.round((report.progressPercent / 100) * barLength);
-        const bar = '█'.repeat(filled) + '░'.repeat(barLength - filled);
+        const useAsciiBar =
+          process.env.TERM === 'dumb' || process.env.CI === 'true';
+        const filledChar = useAsciiBar ? '#' : '█';
+        const emptyChar = useAsciiBar ? '-' : '░';
+        const bar = filledChar.repeat(filled) + emptyChar.repeat(barLength - filled);
         console.log(`[${bar}] ${report.progressPercent.toFixed(1)}%`);
       }
     }
