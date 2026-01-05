@@ -238,7 +238,6 @@ async function main() {
     const teamProjects = await sdk.projects.findMany({
       where: { teamId: engineeringTeam.id },
     });
-    const sprintProject = teamProjects.find(p => p.id === sprintResult.project.id);
     console.log(`✓ Project is linked to ${engineeringTeam.name}`);
 
     // Verify meetings → project relation
