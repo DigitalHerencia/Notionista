@@ -23,27 +23,37 @@ export function createRateLimiter(options: RateLimiterOptions): McpMiddleware {
     }
 
     processing = true;
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTime;
 
-    if (timeSinceLastRequest >= minInterval) {
-      // Execute next request immediately
-      lastRequestTime = now;
-      const next = queue.shift();
+    const run = (): void => {
+      while (queue.length > 0) {
+        const now = Date.now();
+        const timeSinceLastRequest = now - lastRequestTime;
+
+        if (timeSinceLastRequest >= minInterval) {
+          // Execute next request immediately
+          lastRequestTime = now;
+          const next = queue.shift();
+          next?.();
+          // Loop to check if we can process another immediately
+        } else {
+          // Wait before executing next request
+          const delay = minInterval - timeSinceLastRequest;
+          setTimeout(() => {
+            lastRequestTime = Date.now();
+            const next = queue.shift();
+            next?.();
+            // After executing one delayed request, continue processing
+            run();
+          }, delay);
+          return;
+        }
+      }
+
+      // No more queued requests; allow processing to be restarted
       processing = false;
-      next?.();
-      processQueue(); // Process next if any
-    } else {
-      // Wait before executing next request
-      const delay = minInterval - timeSinceLastRequest;
-      setTimeout(() => {
-        lastRequestTime = Date.now();
-        const next = queue.shift();
-        processing = false;
-        next?.();
-        processQueue();
-      }, delay);
-    }
+    };
+
+    run();
   };
 
   return async (_req: McpRequest, next: () => Promise<McpResponse>): Promise<McpResponse> => {

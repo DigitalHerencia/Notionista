@@ -6,15 +6,15 @@
  */
 
 export const DATABASE_IDS = {
-  TEAMS: "2d5a4e63-bf23-816b-9f75-000b219f7713",
-  PROJECTS: "2d5a4e63-bf23-8115-a70f-000bc1ef9d05",
-  TASKS: "2d5a4e63-bf23-8137-8277-000b41c867c3",
-  MEETINGS: "2caa4e63-bf23-815a-8981-000bbdbb7f0b",
-  PROMPTS: "2d5a4e63-bf23-81ad-ab3f-000bfbb91ed9",
+  TEAMS: "2d5a4e63-bf23-8151-9b98-c81833668844",
+  PROJECTS: "2d5a4e63-bf23-81b1-b507-f5ac308958e6",
+  TASKS: "2d5a4e63-bf23-816f-a217-ef754ce4a70e",
+  MEETINGS: "2d5a4e63-bf23-8168-af99-d85e20bfb76f",
+  PROMPTS: "2d5a4e63-bf23-81fa-9ca8-f6368bcda19a",
   TECH_STACK: "276a4e63-bf23-80e2-bbae-000b2fa9662a",
-  TEMPLATES: "2d5a4e63-bf23-8189-943d-000bdd7af066",
-  SOPS: "2d8a4e63-bf23-80d1-8167-000bb402c275",
-  CALENDAR: "2d5a4e63-bf23-8140-b0d7-000b33493b7e",
+  TEMPLATES: "2d5a4e63-bf23-8162-8db4-fcce1bbe3471",
+  SOPS: "2d8a4e63-bf23-801e-b6ac-e52358ee91dc",
+  CALENDAR: "2d5a4e63-bf23-8130-acc7-f5ee01d15f22",
 } as const;
 
 export type DatabaseId = (typeof DATABASE_IDS)[keyof typeof DATABASE_IDS];
