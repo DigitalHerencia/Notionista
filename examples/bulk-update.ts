@@ -9,7 +9,6 @@
  */
 
 import { NotionistaSdk } from '../src';
-import { BulkOperationManager } from '../src/domain/bulk-operations';
 
 // Initialize the SDK
 const sdk = new NotionistaSdk({
