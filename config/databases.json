@@ -1,0 +1,183 @@
+{
+  "databases": {
+    "teams": {
+      "id": "2d5a4e63-bf23-8151-9b98-c81833668844",
+      "name": "Teams",
+      "url": "https://www.notion.so/2d5a4e63bf2381519b98c81833668844",
+      "properties": {
+        "name": {
+          "type": "title",
+          "required": true
+        },
+        "meetings": {
+          "type": "relation",
+          "target": "meetings"
+        },
+        "projects": {
+          "type": "relation",
+          "target": "projects"
+        },
+        "projectsComplete": {
+          "type": "rollup",
+          "computed": true
+        },
+        "tasks": {
+          "type": "relation",
+          "target": "tasks"
+        },
+        "tasksCompleted": {
+          "type": "rollup",
+          "computed": true
+        }
+      }
+    },
+    "projects": {
+      "id": "2d5a4e63-bf23-81b1-b507-f5ac308958e6",
+      "name": "Projects",
+      "url": "https://www.notion.so/2d5a4e63bf2381b1b507f5ac308958e6",
+      "properties": {
+        "name": {
+          "type": "title",
+          "required": true
+        },
+        "status": {
+          "type": "select",
+          "options": ["Active", "Completed", "On Hold", "Cancelled"]
+        },
+        "milestone": {
+          "type": "select",
+          "options": ["M1", "M2", "M3"]
+        },
+        "phase": {
+          "type": "select",
+          "options": ["P1.1", "P1.2", "P1.3", "P2.1", "P2.2", "P2.3", "P3.1", "P3.2", "P3.3"]
+        },
+        "domain": {
+          "type": "select",
+          "options": ["OPS", "PROD", "DES", "ENG", "MKT", "RES"]
+        },
+        "startDate": {
+          "type": "date"
+        },
+        "endDate": {
+          "type": "date"
+        },
+        "team": {
+          "type": "relation",
+          "target": "teams"
+        },
+        "tasks": {
+          "type": "relation",
+          "target": "tasks"
+        }
+      }
+    },
+    "tasks": {
+      "id": "2d5a4e63-bf23-816f-a217-ef754ce4a70e",
+      "name": "Tasks",
+      "url": "https://www.notion.so/2d5a4e63bf23816fa217ef754ce4a70e",
+      "properties": {
+        "name": {
+          "type": "title",
+          "required": true
+        },
+        "done": {
+          "type": "checkbox"
+        },
+        "taskCode": {
+          "type": "formula",
+          "computed": true
+        },
+        "due": {
+          "type": "date"
+        },
+        "priority": {
+          "type": "select",
+          "options": ["High", "Medium", "Low"]
+        },
+        "project": {
+          "type": "relation",
+          "target": "projects"
+        },
+        "team": {
+          "type": "relation",
+          "target": "teams"
+        }
+      }
+    },
+    "meetings": {
+      "id": "2d5a4e63-bf23-8168-af99-d85e20bfb76f",
+      "name": "Meetings",
+      "url": "https://www.notion.so/2d5a4e63bf238168af99d85e20bfb76f",
+      "properties": {
+        "name": {
+          "type": "title",
+          "required": true
+        },
+        "type": {
+          "type": "select",
+          "options": ["Standup", "Sprint Planning", "Post-mortem", "Team Sync", "Ad Hoc"]
+        },
+        "cadence": {
+          "type": "select",
+          "options": ["Daily", "Weekly", "Biweekly", "Monthly", "Ad Hoc"]
+        },
+        "date": {
+          "type": "date"
+        },
+        "attendees": {
+          "type": "relation",
+          "target": "teams"
+        },
+        "actionItems": {
+          "type": "relation",
+          "target": "tasks"
+        },
+        "projects": {
+          "type": "relation",
+          "target": "projects"
+        },
+        "teams": {
+          "type": "relation",
+          "target": "teams"
+        }
+      }
+    },
+    "prompts": {
+      "id": "2d5a4e63-bf23-81fa-9ca8-f6368bcda19a",
+      "name": "Prompts",
+      "url": "https://www.notion.so/2d5a4e63bf2381fa9ca8f6368bcda19a"
+    },
+    "techStack": {
+      "id": "276a4e63-bf23-80e2-bbae-000b2fa9662a",
+      "name": "Tech Stack",
+      "url": "https://www.notion.so/276a4e63bf2380e2bbae0025cc95d009"
+    },
+    "templates": {
+      "id": "2d5a4e63-bf23-8162-8db4-fcce1bbe3471",
+      "name": "Templates",
+      "url": "https://www.notion.so/2d5a4e63bf2381628db4fcce1bbe3471"
+    },
+    "sops": {
+      "id": "2d8a4e63-bf23-801e-b6ac-e52358ee91dc",
+      "name": "SOPs",
+      "url": "https://www.notion.so/2d8a4e63bf23801eb6ace52358ee91dc"
+    },
+    "calendar": {
+      "id": "2d5a4e63-bf23-8130-acc7-f5ee01d15f22",
+      "name": "Calendar",
+      "url": "https://www.notion.so/2d5a4e63bf238130acc7f5ee01d15f22"
+    }
+  },
+  "safetyLimits": {
+    "maxBatchSize": 50,
+    "rateLimitPerSecond": 3,
+    "requireApprovalForBulk": true
+  },
+  "mcp": {
+    "serverCommand": "npx",
+    "serverArgs": ["-y", "@notionhq/notion-mcp-server"],
+    "defaultTimeout": 30000,
+    "maxRetries": 3
+  }
+}
