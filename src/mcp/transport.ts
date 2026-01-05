@@ -9,6 +9,7 @@ import { spawn, type ChildProcess } from "child_process";
 import { EventEmitter } from "events";
 import type { JsonRpcRequest, JsonRpcResponse, McpTransport } from "../core/types/mcp.js";
 import { McpTransportError, McpConnectionError } from "../core/errors/index.js";
+import { MCP_SERVER } from "../core/constants/index.js";
 
 export interface StdioTransportOptions {
   notionToken: string;
@@ -40,8 +41,8 @@ export class StdioTransport extends EventEmitter implements McpTransport {
       return Promise.resolve();
     }
 
-    const command = this.options.serverCommand ?? "npx";
-    const args = this.options.serverArgs ?? ["-y", "@notionhq/notion-mcp-server"];
+    const command = this.options.serverCommand ?? MCP_SERVER.COMMAND;
+    const args = this.options.serverArgs ?? MCP_SERVER.ARGS;
 
     try {
       this.process = spawn(command, args, {

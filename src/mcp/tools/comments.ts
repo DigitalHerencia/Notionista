@@ -63,15 +63,17 @@ export class CommentTools {
   }
 
   /**
-   * Get comments on a page
+   * Get comments on a page or block
+   * Note: The actual MCP tool name may vary - verify against @notionhq/notion-mcp-server
    */
-  async getPageComments(pageId: string): Promise<{
+  async getComments(blockId: string, startCursor?: string): Promise<{
     results: Comment[];
     next_cursor: string | null;
     has_more: boolean;
   }> {
-    return this.client.callTool("retrieve-a-comment", {
-      block_id: pageId,
+    return this.client.callTool("retrieve-comments", {
+      block_id: blockId,
+      start_cursor: startCursor,
     });
   }
 }

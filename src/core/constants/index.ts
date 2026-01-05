@@ -20,8 +20,13 @@ export const NOTION_LIMITS = {
 } as const;
 
 /**
- * JSON-RPC constants
+ * MCP server configuration
  */
+export const MCP_SERVER = {
+  COMMAND: "npx",
+  ARGS: ["-y", "@notionhq/notion-mcp-server"],
+  PACKAGE: "@notionhq/notion-mcp-server",
+} as const;
 
 export const JSON_RPC_VERSION = "2.0";
 

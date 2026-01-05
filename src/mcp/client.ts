@@ -173,38 +173,44 @@ export class McpClient {
       },
     };
 
-    // Create timeout promise
+    // Create timeout promise with cleanup
+    let timeoutHandle: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
+      timeoutHandle = setTimeout(() => {
         reject(new McpTimeoutError(`Request timed out for tool: ${request.tool}`, this.timeout));
       }, this.timeout);
     });
 
-    // Race between request and timeout
-    const response = await Promise.race<JsonRpcResponse>([
-      this.transport.send(rpcRequest),
-      timeoutPromise,
-    ]);
+    try {
+      // Race between request and timeout
+      const response = await Promise.race<JsonRpcResponse>([
+        this.transport.send(rpcRequest),
+        timeoutPromise,
+      ]);
 
-    // Handle JSON-RPC errors
-    if (response.error) {
-      throw new JsonRpcError(
-        response.error.message,
-        response.error.code,
-        response.error.data
-      );
+      // Handle JSON-RPC errors
+      if (response.error) {
+        throw new JsonRpcError(
+          response.error.message,
+          response.error.code,
+          response.error.data
+        );
+      }
+
+      // Handle tool errors
+      const result = response.result as { content?: unknown; isError?: boolean } | undefined;
+      if (result?.isError) {
+        throw new McpToolError(
+          `Tool execution failed: ${request.tool}`,
+          request.tool,
+          result.content
+        );
+      }
+
+      return result?.content;
+    } finally {
+      // Clean up timeout
+      clearTimeout(timeoutHandle!);
     }
-
-    // Handle tool errors
-    const result = response.result as { content?: unknown; isError?: boolean } | undefined;
-    if (result?.isError) {
-      throw new McpToolError(
-        `Tool execution failed: ${request.tool}`,
-        request.tool,
-        result.content
-      );
-    }
-
-    return result?.content;
   }
 }
