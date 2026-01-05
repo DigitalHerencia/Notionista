@@ -107,7 +107,11 @@ async function main() {
       
     } catch (error) {
       console.log('❌ Error caught (as expected):');
-      console.log(`   ${error.message}`);
+      if (error instanceof Error) {
+        console.log(`   ${error.message}`);
+      } else {
+        console.log(`   ${String(error)}`);
+      }
       console.log('   → Batch operations limited to 50 items for safety');
     }
     console.log();
