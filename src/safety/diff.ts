@@ -76,11 +76,11 @@ export class DiffEngine {
   /**
    * Assess the impact level of a property change
    * @param property Property name
-   * @param oldValue Previous value
+   * @param _oldValue Previous value (unused but kept for API consistency)
    * @param newValue New value
    * @returns Impact level
    */
-  assessImpact(property: string, oldValue: unknown, newValue: unknown): ImpactLevel {
+  assessImpact(property: string, _oldValue: unknown, newValue: unknown): ImpactLevel {
     // High impact properties (critical data)
     const highImpactProps = ['id', 'type', 'database', 'pageId', 'status', 'done'];
     if (highImpactProps.includes(property.toLowerCase())) {

@@ -98,6 +98,7 @@ describe('Validator', () => {
 
     it('should validate pattern', () => {
       const entity = { email: 'test@example.com' };
+      // eslint-disable-next-line no-useless-escape
       const rules = [{ field: 'email', pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/ }];
 
       const result = validator.validate(entity, rules);
@@ -107,6 +108,7 @@ describe('Validator', () => {
 
     it('should fail on pattern mismatch', () => {
       const entity = { email: 'invalid-email' };
+      // eslint-disable-next-line no-useless-escape
       const rules = [{ field: 'email', pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/ }];
 
       const result = validator.validate(entity, rules);

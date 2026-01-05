@@ -298,7 +298,7 @@ export class Validator {
   private validateField(
     value: unknown,
     rule: ValidationRule,
-    context?: ValidationContext
+    _context?: ValidationContext
   ): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
 
