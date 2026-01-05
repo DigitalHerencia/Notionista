@@ -7,6 +7,8 @@
  * 2. Load specific snapshots
  * 3. Compare snapshots to detect changes
  * 4. Generate diff reports
+ * 
+ * Note: Run `npm run build` before running this example.
  */
 
 import { SnapshotManager } from "../dist/index.js";

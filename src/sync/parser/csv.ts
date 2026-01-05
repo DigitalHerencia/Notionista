@@ -4,6 +4,12 @@ import { join } from "path";
 import type { SnapshotRecord, CsvParserOptions } from "../../core/types/snapshot.js";
 
 /**
+ * Regular expression patterns for extracting Notion page IDs from URLs
+ */
+const UUID_WITH_HYPHENS_PATTERN = /notion\.so\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i;
+const UUID_COMPACT_PATTERN = /notion\.so\/([a-f0-9]{32})/i;
+
+/**
  * Parser for Notion CSV export files
  * 
  * Handles Notion-specific CSV formats including:
@@ -209,7 +215,7 @@ export class CsvSnapshotParser {
     const ids: string[] = [];
     
     // Match URLs with hyphens
-    const matchesWithHyphens = value.matchAll(/notion\.so\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/gi);
+    const matchesWithHyphens = value.matchAll(new RegExp(UUID_WITH_HYPHENS_PATTERN, "gi"));
     for (const match of matchesWithHyphens) {
       if (match[1]) {
         ids.push(match[1]);
@@ -217,7 +223,7 @@ export class CsvSnapshotParser {
     }
     
     // Match compact format URLs (without hyphens)
-    const matchesCompact = value.matchAll(/notion\.so\/([a-f0-9]{32})/gi);
+    const matchesCompact = value.matchAll(new RegExp(UUID_COMPACT_PATTERN, "gi"));
     for (const match of matchesCompact) {
       if (match[1]) {
         const compact = match[1];

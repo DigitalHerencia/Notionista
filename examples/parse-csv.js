@@ -4,6 +4,8 @@
  * 
  * This example demonstrates how to parse individual CSV files
  * and inspect the extracted data.
+ * 
+ * Note: Run `npm run build` before running this example.
  */
 
 import { CsvSnapshotParser } from "../dist/index.js";
