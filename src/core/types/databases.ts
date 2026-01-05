@@ -6,6 +6,10 @@
 
 /**
  * All database IDs in the Digital Herencia Notion workspace
+ *
+ * Note: These IDs are workspace-specific and are not sensitive credentials.
+ * They reference public database structure in the Digital Herencia workspace.
+ * Notion API access still requires a valid NOTION_TOKEN for authentication.
  */
 export const DATABASE_IDS = {
   TEAMS: '2d5a4e63-bf23-8151-9b98-c81833668844',

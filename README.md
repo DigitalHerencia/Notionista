@@ -33,7 +33,7 @@ yarn add notionista
 
 ## Requirements
 
-- Node.js 20.0.0 or higher
+- Node.js 18.0.0 or higher (LTS recommended)
 - TypeScript 5.0 or higher (for development)
 
 ## Quick Start
