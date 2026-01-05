@@ -1,20 +1,31 @@
-// Core types and constants
-export * from './core/types/schemas';
-export * from './core/types/proposals';
-export * from './core/types/notion';
-export * from './core/constants/databases';
+/**
+ * Notionista SDK - Main Entry Point
+ * 
+ * Type-safe Notion MCP client with query builder and safety workflows
+ */
+
+// Query Builder
 export {
-  NotionistaError,
-  RepositoryError,
-  EntityNotFoundError,
-  ValidationError as DomainValidationError,
-  ProposalNotFoundError,
-  BatchLimitExceededError,
-  McpError,
-} from './core/errors';
-
-// MCP client
-export * from './mcp/client';
-
-// Domain layer
-export * from './domain';
+  QueryBuilder,
+  QueryBuilderHelpers,
+  createQueryBuilder,
+  type PropertyType,
+  type FilterOperator,
+  type FilterValue,
+  type Filter,
+  type PropertyFilter,
+  type CompoundFilter,
+  type Sort,
+  type SortDirection,
+  type QueryParams,
+  type TextFilter,
+  type NumberFilter,
+  type CheckboxFilter,
+  type SelectFilter,
+  type MultiSelectFilter,
+  type DateFilter,
+  type PeopleFilter,
+  type FilesFilter,
+  type RelationFilter,
+  type StatusFilter,
+} from "./query";
