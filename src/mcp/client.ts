@@ -21,12 +21,28 @@ import {
   createLoggerMiddleware,
   createCacheMiddleware,
 } from "./middleware/index.js";
+import {
+  DatabaseTools,
+  PageTools,
+  BlockTools,
+  SearchTools,
+  CommentTools,
+  UserTools,
+} from "./tools/index.js";
 
 export class McpClient {
   private transport: StdioTransport;
   private middlewares: McpMiddleware[] = [];
   private requestId = 0;
   private readonly timeout: number;
+
+  // Tool wrappers
+  public readonly databases: DatabaseTools;
+  public readonly pages: PageTools;
+  public readonly blocks: BlockTools;
+  public readonly search: SearchTools;
+  public readonly comments: CommentTools;
+  public readonly users: UserTools;
 
   constructor(private readonly options: McpClientOptions) {
     this.timeout = options.timeout ?? MCP_DEFAULTS.TIMEOUT;
@@ -35,6 +51,14 @@ export class McpClient {
     this.transport = new StdioTransport({
       notionToken: options.notionToken,
     });
+
+    // Initialize tool wrappers
+    this.databases = new DatabaseTools(this);
+    this.pages = new PageTools(this);
+    this.blocks = new BlockTools(this);
+    this.search = new SearchTools(this);
+    this.comments = new CommentTools(this);
+    this.users = new UserTools(this);
 
     // Set up default middleware pipeline
     this.setupDefaultMiddleware();

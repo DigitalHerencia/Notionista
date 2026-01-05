@@ -38,13 +38,124 @@ const client = new McpClient({
 // Connect to the MCP server
 await client.connect();
 
-// Call a tool
-const databases = await client.callTool("query-data-source", {
+// Use tool wrappers for type-safe operations
+const databases = await client.databases.queryDatabase({
+  database_id: "your-database-id",
+  filter: {
+    property: "Status",
+    select: { equals: "Active" },
+  },
+});
+
+// Or call tools directly
+const result = await client.callTool("query-data-source", {
   database_id: "your-database-id",
 });
 
 // Disconnect when done
 await client.disconnect();
+```
+
+## Tool Wrappers
+
+Notionista provides typed wrappers for all MCP tools, organized by category:
+
+### Database Operations
+
+```typescript
+// Query a database
+const pages = await client.databases.queryDatabase({
+  database_id: DATABASE_IDS.TASKS,
+  filter: {
+    property: "Done",
+    checkbox: { equals: false },
+  },
+  sorts: [{ property: "Priority", direction: "ascending" }],
+});
+
+// Get database metadata
+const database = await client.databases.getDatabase(DATABASE_IDS.PROJECTS);
+```
+
+### Page Operations
+
+```typescript
+// Create a page
+const newPage = await client.pages.createPage({
+  parent: { database_id: DATABASE_IDS.TASKS },
+  properties: {
+    Name: { title: [{ text: { content: "New Task" } }] },
+    Done: { checkbox: false },
+    Priority: { select: { name: "High" } },
+  },
+});
+
+// Update a page
+const updatedPage = await client.pages.updatePage({
+  page_id: "page-id",
+  properties: {
+    Done: { checkbox: true },
+  },
+});
+
+// Get a page
+const page = await client.pages.getPage("page-id");
+```
+
+### Search Operations
+
+```typescript
+// Search all pages and databases
+const results = await client.search.search({
+  query: "Sprint Planning",
+});
+
+// Search only pages
+const pages = await client.search.searchPages("task");
+
+// Search only databases
+const databases = await client.search.searchDatabases("team");
+```
+
+### Block Operations
+
+```typescript
+// Get block children
+const children = await client.blocks.getBlockChildren("block-id");
+
+// Append blocks
+await client.blocks.appendBlocks({
+  block_id: "page-id",
+  children: [
+    {
+      object: "block",
+      type: "paragraph",
+      paragraph: {
+        rich_text: [{ text: { content: "New paragraph" } }],
+      },
+    },
+  ],
+});
+```
+
+### Comment Operations
+
+```typescript
+// Create a comment
+await client.comments.createComment({
+  parent: { page_id: "page-id" },
+  rich_text: [{ text: { content: "Great work!" } }],
+});
+```
+
+### User Operations
+
+```typescript
+// Get current bot user
+const self = await client.users.getSelf();
+
+// List all users
+const users = await client.users.listUsers();
 ```
 
 ## Architecture

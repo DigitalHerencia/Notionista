@@ -17,6 +17,9 @@ export type { StdioTransportOptions } from "./mcp/transport.js";
 // Middleware exports
 export * from "./mcp/middleware/index.js";
 
+// Tool wrapper exports
+export * from "./mcp/tools/index.js";
+
 // Domain exports (placeholders for future epics)
 export * from "./domain/entities/index.js";
 export * from "./domain/repositories/index.js";
