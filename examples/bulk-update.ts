@@ -186,7 +186,11 @@ async function main() {
         }
 
       } catch (error) {
-        console.error('❌ Bulk update failed:', error.message);
+        if (error instanceof Error) {
+          console.error('❌ Bulk update failed:', error.message);
+        } else {
+          console.error('❌ Bulk update failed:', String(error));
+        }
       }
     }
     console.log();
