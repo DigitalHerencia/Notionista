@@ -1,19 +1,21 @@
 /**
- * Notion API types (simplified for MCP usage)
+ * Notion page object structure
  */
-
 export interface NotionPage {
-  object: "page";
   id: string;
   created_time: string;
   last_edited_time: string;
   parent: {
-    type: "database_id";
-    database_id: string;
+    type: string;
+    database_id?: string;
   };
   properties: Record<string, NotionProperty>;
+  url: string;
 }
 
+/**
+ * Notion property types
+ */
 export type NotionProperty =
   | TitleProperty
   | RichTextProperty
@@ -23,88 +25,87 @@ export type NotionProperty =
   | DateProperty
   | CheckboxProperty
   | RelationProperty
-  | FormulaProperty
-  | RollupProperty;
+  | RollupProperty
+  | FormulaProperty;
 
 export interface TitleProperty {
-  type: "title";
-  title: RichText[];
+  type: 'title';
+  title: Array<{ plain_text: string }>;
 }
 
 export interface RichTextProperty {
-  type: "rich_text";
-  rich_text: RichText[];
-}
-
-export interface RichText {
-  type: "text";
-  text: {
-    content: string;
-  };
-  plain_text: string;
+  type: 'rich_text';
+  rich_text: Array<{ plain_text: string }>;
 }
 
 export interface NumberProperty {
-  type: "number";
+  type: 'number';
   number: number | null;
 }
 
 export interface SelectProperty {
-  type: "select";
-  select: {
-    name: string;
-    color?: string;
-  } | null;
+  type: 'select';
+  select: { name: string } | null;
 }
 
 export interface MultiSelectProperty {
-  type: "multi_select";
-  multi_select: Array<{
-    name: string;
-    color?: string;
-  }>;
+  type: 'multi_select';
+  multi_select: Array<{ name: string }>;
 }
 
 export interface DateProperty {
-  type: "date";
-  date: {
-    start: string;
-    end?: string | null;
-  } | null;
+  type: 'date';
+  date: { start: string; end?: string } | null;
 }
 
 export interface CheckboxProperty {
-  type: "checkbox";
+  type: 'checkbox';
   checkbox: boolean;
 }
 
 export interface RelationProperty {
-  type: "relation";
-  relation: Array<{
-    id: string;
-  }>;
-}
-
-export interface FormulaProperty {
-  type: "formula";
-  formula:
-    | { type: "string"; string: string | null }
-    | { type: "number"; number: number | null }
-    | { type: "boolean"; boolean: boolean | null }
-    | { type: "date"; date: { start: string; end?: string | null } | null };
+  type: 'relation';
+  relation: Array<{ id: string }>;
 }
 
 export interface RollupProperty {
-  type: "rollup";
-  rollup:
-    | { type: "number"; number: number | null }
-    | { type: "array"; array: NotionProperty[] };
+  type: 'rollup';
+  rollup: {
+    type: string;
+    number?: number;
+    array?: unknown[];
+  };
+}
+
+export interface FormulaProperty {
+  type: 'formula';
+  formula: {
+    type: 'string' | 'number' | 'boolean' | 'date';
+    string?: string;
+    number?: number;
+    boolean?: boolean;
+    date?: { start: string };
+  };
 }
 
 /**
- * Query filter types
+ * Properties for creating/updating pages
  */
+export type PageProperties = Record<string, PropertyValue>;
 
+export type PropertyValue =
+  | { title: Array<{ text: { content: string } }> }
+  | { rich_text: Array<{ text: { content: string } }> }
+  | { number: number | null }
+  | { select: { name: string } | null }
+  | { multi_select: Array<{ name: string }> }
+  | { date: { start: string; end?: string } | null }
+  | { checkbox: boolean }
+  | { relation: Array<{ id: string }> };
+
+/**
+ * Query filter structure
+ */
 export interface QueryFilter {
   and?: QueryFilter[];
   or?: QueryFilter[];
@@ -112,12 +113,18 @@ export interface QueryFilter {
   [key: string]: unknown;
 }
 
+/**
+ * Query sort structure
+ */
 export interface QuerySort {
   property?: string;
-  timestamp?: "created_time" | "last_edited_time";
-  direction: "ascending" | "descending";
+  timestamp?: 'created_time' | 'last_edited_time';
+  direction: 'ascending' | 'descending';
 }
 
+/**
+ * Query parameters for database queries
+ */
 export interface QueryParams {
   database_id: string;
   filter?: QueryFilter;
@@ -126,9 +133,11 @@ export interface QueryParams {
   start_cursor?: string;
 }
 
+/**
+ * Query result with pagination
+ */
 export interface QueryResult {
-  object: "list";
   results: NotionPage[];
-  next_cursor: string | null;
   has_more: boolean;
+  next_cursor: string | null;
 }

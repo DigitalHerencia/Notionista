@@ -1,305 +1,316 @@
-# Notionista
+# Notionista - TypeScript SDK for Digital Herencia Notion Workspace
 
-TypeScript SDK for advanced Notion workspace automation via Model Context Protocol (MCP).
-
-## Overview
-
-Notionista provides a type-safe, middleware-based client for interacting with Notion databases through the [@notionhq/notion-mcp-server](https://github.com/notionhq/notion-mcp-server). Built for the Digital Herencia workspace structure, it implements the **Propose → Approve → Apply** safety workflow for controlled automation.
+A type-safe TypeScript SDK for automating Digital Herencia's Notion workspace using the Model Context Protocol (MCP).
 
 ## Features
 
-- 🔌 **MCP Integration**: Communicates with Notion MCP server via stdio transport
-- 🛡️ **Type Safety**: Full TypeScript support with strict typing
-- 🔄 **Middleware Pipeline**: Rate limiting, retry logic, caching, and logging
-- ⚡ **Performance**: Configurable rate limiting (3 req/sec default) and response caching
-- 🎯 **Domain Model**: Repository pattern for clean data access
-- 🔒 **Safety Layer**: Proposal-based mutations for preventing accidents (coming in EPIC-005)
+- **Type-Safe Domain Layer**: Strongly-typed entities for Teams, Projects, Tasks, and Meetings
+- **Repository Pattern**: Clean abstraction over MCP operations with CRUD methods
+- **Safety Workflow**: All mutations return `ChangeProposal` objects (Propose → Approve → Apply pattern)
+- **Relation Traversal**: Navigate between related entities (teams, projects, tasks)
+- **Computed Properties**: Automatic rollup calculations (completion rates, metrics)
+- **Property Diff**: Track changes between current and proposed states
+- **Side Effect Detection**: Understand the impact of changes before applying them
 
 ## Installation
 
 ```bash
-npm install notionista
+npm install
 ```
 
-## Quick Start
+## Project Structure
 
-```typescript
-import { McpClient } from "notionista";
-
-// Create a client instance
-const client = new McpClient({
-  notionToken: process.env.NOTION_TOKEN!,
-  rateLimitPerSecond: 3,
-  maxRetries: 3,
-  enableCache: true,
-  enableLogging: true,
-});
-
-// Connect to the MCP server
-await client.connect();
-
-// Use tool wrappers for type-safe operations
-const databases = await client.databases.queryDatabase({
-  database_id: "your-database-id",
-  filter: {
-    property: "Status",
-    select: { equals: "Active" },
-  },
-});
-
-// Or call tools directly
-const result = await client.callTool("query-data-source", {
-  database_id: "your-database-id",
-});
-
-// Disconnect when done
-await client.disconnect();
+```
+notionista/
+├── src/
+│   ├── core/
+│   │   ├── constants/      # Database IDs and type definitions
+│   │   ├── errors/         # Custom error hierarchy
+│   │   └── types/          # TypeScript type definitions
+│   │       ├── schemas.ts  # Zod schemas for entities
+│   │       ├── proposals.ts # ChangeProposal types
+│   │       └── notion.ts   # Notion API types
+│   ├── mcp/
+│   │   └── client.ts       # MCP client interface
+│   └── domain/
+│       └── repositories/   # Repository implementations
+│           ├── base.repository.ts
+│           ├── team.repository.ts
+│           ├── project.repository.ts
+│           ├── task.repository.ts
+│           └── meeting.repository.ts
 ```
 
-## Tool Wrappers
+## Usage
 
-Notionista provides typed wrappers for all MCP tools, organized by category:
-
-### Database Operations
+### Basic Repository Operations
 
 ```typescript
-// Query a database
-const pages = await client.databases.queryDatabase({
-  database_id: DATABASE_IDS.TASKS,
-  filter: {
-    property: "Done",
-    checkbox: { equals: false },
-  },
-  sorts: [{ property: "Priority", direction: "ascending" }],
-});
+import { TeamRepository, MockMcpClient } from 'notionista';
 
-// Get database metadata
-const database = await client.databases.getDatabase(DATABASE_IDS.PROJECTS);
+// Initialize repository with MCP client
+const client = new MockMcpClient();
+const teamRepo = new TeamRepository(client);
+
+// Find all teams
+const teams = await teamRepo.findMany();
+
+// Find a specific team
+const team = await teamRepo.findById('team-id');
+
+// Search teams by name
+const engineeringTeams = await teamRepo.findByName('engineering');
 ```
 
-### Page Operations
+### Safety Workflow (Propose → Approve → Apply)
+
+All create and update operations return a `ChangeProposal` instead of executing immediately:
 
 ```typescript
-// Create a page
-const newPage = await client.pages.createPage({
-  parent: { database_id: DATABASE_IDS.TASKS },
-  properties: {
-    Name: { title: [{ text: { content: "New Task" } }] },
-    Done: { checkbox: false },
-    Priority: { select: { name: "High" } },
-  },
+import { TeamRepository, MockMcpClient } from 'notionista';
+
+const teamRepo = new TeamRepository(new MockMcpClient());
+
+// Step 1: Create a proposal
+const proposal = await teamRepo.create({
+  name: 'Engineering Team'
 });
 
-// Update a page
-const updatedPage = await client.pages.updatePage({
-  page_id: "page-id",
-  properties: {
-    Done: { checkbox: true },
-  },
-});
+// Step 2: Review the proposal
+console.log('Type:', proposal.type); // 'create'
+console.log('Proposed state:', proposal.proposedState);
+console.log('Property diffs:', proposal.diff);
+console.log('Side effects:', proposal.sideEffects);
+console.log('Validation:', proposal.validation);
 
-// Get a page
-const page = await client.pages.getPage("page-id");
+// Step 3: Apply the proposal (after approval)
+const newTeam = await teamRepo.executeCreate(proposal);
+console.log('Created team:', newTeam);
 ```
 
-### Search Operations
+### Update Operations
 
 ```typescript
-// Search all pages and databases
-const results = await client.search.search({
-  query: "Sprint Planning",
+// Step 1: Get current state and create update proposal
+const updateProposal = await teamRepo.update('team-id', {
+  name: 'Updated Team Name'
 });
 
-// Search only pages
-const pages = await client.search.searchPages("task");
+// Step 2: Review changes
+console.log('Current:', updateProposal.currentState);
+console.log('Proposed:', updateProposal.proposedState);
+console.log('Diffs:', updateProposal.diff);
 
-// Search only databases
-const databases = await client.search.searchDatabases("team");
+// Step 3: Apply the update
+const updatedTeam = await teamRepo.executeUpdate(updateProposal);
 ```
 
-### Block Operations
+### Project Repository
 
 ```typescript
-// Get block children
-const children = await client.blocks.getBlockChildren("block-id");
+import { ProjectRepository, MockMcpClient } from 'notionista';
 
-// Append blocks
-await client.blocks.appendBlocks({
-  block_id: "page-id",
-  children: [
-    {
-      object: "block",
-      type: "paragraph",
-      paragraph: {
-        rich_text: [{ text: { content: "New paragraph" } }],
-      },
-    },
-  ],
+const projectRepo = new ProjectRepository(new MockMcpClient());
+
+// Create a project proposal
+const proposal = await projectRepo.create({
+  name: 'Sprint 1',
+  status: 'Active',
+  milestone: 'M1',
+  phase: 'P1.1',
+  domain: 'ENG',
+  startDate: '2026-01-01',
+  endDate: '2026-01-14',
+  teamId: 'team-id'
 });
+
+// Find projects by status
+const activeProjects = await projectRepo.findActive();
+const completedProjects = await projectRepo.findCompleted();
+
+// Find by milestone
+const m1Projects = await projectRepo.findByMilestone('M1');
+
+// Find by team
+const teamProjects = await projectRepo.findByTeam('team-id');
 ```
 
-### Comment Operations
+### Task Repository
 
 ```typescript
-// Create a comment
-await client.comments.createComment({
-  parent: { page_id: "page-id" },
-  rich_text: [{ text: { content: "Great work!" } }],
+import { TaskRepository, MockMcpClient } from 'notionista';
+
+const taskRepo = new TaskRepository(new MockMcpClient());
+
+// Create a task proposal
+const proposal = await taskRepo.create({
+  name: 'Implement feature X',
+  done: false,
+  priority: 'High',
+  due: '2026-01-15',
+  projectId: 'project-id',
+  teamId: 'team-id'
 });
+
+// Find incomplete tasks
+const incompleteTasks = await taskRepo.findIncomplete();
+
+// Find high priority tasks
+const highPriorityTasks = await taskRepo.findHighPriority();
+
+// Find overdue tasks
+const overdueTasks = await taskRepo.findOverdue();
+
+// Calculate completion rate
+const completionRate = await taskRepo.getProjectCompletionRate('project-id');
+console.log(`Project is ${completionRate}% complete`);
 ```
 
-### User Operations
+### Meeting Repository
 
 ```typescript
-// Get current bot user
-const self = await client.users.getSelf();
+import { MeetingRepository, MockMcpClient } from 'notionista';
 
-// List all users
-const users = await client.users.listUsers();
+const meetingRepo = new MeetingRepository(new MockMcpClient());
+
+// Create a meeting proposal
+const proposal = await meetingRepo.create({
+  name: 'Sprint Planning 2026-01-15',
+  type: 'Sprint Planning',
+  cadence: 'Biweekly',
+  date: '2026-01-15T10:00:00Z',
+  attendeeTeamIds: ['team-1', 'team-2'],
+  projectIds: ['project-1']
+});
+
+// Find meetings by type
+const standups = await meetingRepo.findStandups();
+const sprintPlannings = await meetingRepo.findSprintPlannings();
+
+// Find upcoming meetings
+const upcomingMeetings = await meetingRepo.findUpcoming();
+```
+
+## ChangeProposal Structure
+
+```typescript
+interface ChangeProposal<T> {
+  id: string;                    // Unique proposal ID
+  type: 'create' | 'update';     // Operation type
+  target: {
+    database: DatabaseId;        // Target database
+    pageId?: string;             // Page ID (for updates)
+  };
+  currentState: T | null;        // Current state (null for creates)
+  proposedState: T;              // Proposed new state
+  diff: PropertyDiff[];          // Property-level changes
+  sideEffects: SideEffect[];     // Related impacts
+  validation: ValidationResult;  // Validation status
+  createdAt: Date;              // Proposal timestamp
+}
+```
+
+## Property Diffs
+
+Each proposal includes detailed diffs showing what changed:
+
+```typescript
+interface PropertyDiff {
+  property: string;              // Property name
+  oldValue: unknown;            // Current value
+  newValue: unknown;            // Proposed value
+  impact: 'low' | 'medium' | 'high'; // Change impact
+}
+```
+
+## Database IDs
+
+The following databases are configured:
+
+- **TEAMS**: `2d5a4e63-bf23-8151-9b98-c81833668844`
+- **PROJECTS**: `2d5a4e63-bf23-81b1-b507-f5ac308958e6`
+- **TASKS**: `2d5a4e63-bf23-816f-a217-ef754ce4a70e`
+- **MEETINGS**: `2d5a4e63-bf23-8168-af99-d85e20bfb76f`
+
+## Development
+
+### Build
+
+```bash
+npm run build
+```
+
+### Test
+
+```bash
+npm test
+```
+
+### Type Check
+
+```bash
+npm run type-check
+```
+
+### Lint
+
+```bash
+npm run lint
 ```
 
 ## Architecture
 
-### MCP Client Layer (EPIC-002) ✅
+This SDK follows a layered architecture:
 
-The foundation of Notionista, implementing reliable communication with the Notion MCP server:
+1. **Core Layer**: Type definitions, constants, and error handling
+2. **MCP Layer**: Abstract interface for MCP client operations
+3. **Domain Layer**: Repository pattern with entity mappings
+4. **Safety Layer**: ChangeProposal system for mutation safety
 
-- **Stdio Transport**: Spawns and manages the MCP server process
-- **JSON-RPC 2.0**: Handles message serialization and correlation
-- **Middleware Pipeline**:
-  - Rate Limiter: Prevents API throttling (configurable)
-  - Retry: Automatic retries with exponential backoff
-  - Logger: Debug logging for requests and responses
-  - Cache: Response caching for read-only operations
+## Type Safety
 
-### Core Types
+All entities are validated using Zod schemas with TypeScript type inference:
 
 ```typescript
-import {
-  DATABASE_IDS,
-  ProjectStatus,
-  Milestone,
-  Phase,
-  Domain,
-  Priority,
-  MeetingType,
-  Cadence,
-} from "notionista";
+import { Team, Project, Task, Meeting } from 'notionista';
+
+// All types are automatically inferred
+const team: Team = {
+  id: 'team-id',
+  name: 'Engineering Team',
+  projects: ['project-1', 'project-2'],
+  tasks: ['task-1', 'task-2'],
+  meetings: ['meeting-1'],
+  projectsComplete: 5,
+  tasksCompleted: 23
+};
 ```
 
-### Error Handling
+## Error Handling
+
+Custom error hierarchy for better error handling:
 
 ```typescript
 import {
   NotionistaError,
-  McpTransportError,
-  McpConnectionError,
-  McpTimeoutError,
-  JsonRpcError,
-  McpToolError,
-  RateLimitError,
-} from "notionista";
+  RepositoryError,
+  EntityNotFoundError,
+  DomainValidationError
+} from 'notionista';
 
 try {
-  await client.callTool("some-tool", params);
+  const team = await teamRepo.findByIdOrThrow('non-existent');
 } catch (error) {
-  if (error instanceof McpTimeoutError) {
-    console.error("Request timed out");
-  } else if (error instanceof RateLimitError) {
-    console.error("Rate limit exceeded");
+  if (error instanceof EntityNotFoundError) {
+    console.error('Team not found:', error.message);
   }
 }
 ```
-
-## Configuration
-
-### Client Options
-
-```typescript
-interface McpClientOptions {
-  notionToken: string; // Required: Notion API token
-  timeout?: number; // Default: 30000ms
-  maxRetries?: number; // Default: 3
-  rateLimitPerSecond?: number; // Default: 3
-  enableCache?: boolean; // Default: true
-  enableLogging?: boolean; // Default: true
-}
-```
-
-### Custom Middleware
-
-```typescript
-import type { McpMiddleware } from "notionista";
-
-const customMiddleware: McpMiddleware = async (req, next) => {
-  console.log(`Calling tool: ${req.tool}`);
-  const response = await next();
-  console.log(`Tool completed in ${response.duration}ms`);
-  return response;
-};
-
-client.use(customMiddleware);
-```
-
-## Digital Herencia Workspace
-
-This SDK is optimized for the Digital Herencia workspace structure:
-
-### Core Databases
-
-| Database     | ID                                     |
-| ------------ | -------------------------------------- |
-| Teams        | `2d5a4e63-bf23-816b-9f75-000b219f7713` |
-| Projects     | `2d5a4e63-bf23-8115-a70f-000bc1ef9d05` |
-| Tasks        | `2d5a4e63-bf23-8137-8277-000b41c867c3` |
-| Meetings     | `2caa4e63-bf23-815a-8981-000bbdbb7f0b` |
-| Prompts      | `2d5a4e63-bf23-81ad-ab3f-000bfbb91ed9` |
-| Tech Stack   | `276a4e63-bf23-80e2-bbae-000b2fa9662a` |
-| Templates    | `2d5a4e63-bf23-8189-943d-000bdd7af066` |
-| SOPs         | `2d8a4e63-bf23-80d1-8167-000bb402c275` |
-| Calendar     | `2d5a4e63-bf23-8140-b0d7-000b33493b7e` |
-
-## Development Status
-
-### Completed ✅
-
-- **EPIC-001**: Project Foundation
-  - TypeScript configuration
-  - Build tooling (tsup)
-  - Testing framework (Vitest)
-  - Linting (ESLint + Prettier)
-  - Core type system
-  - Error hierarchy
-
-- **EPIC-002**: MCP Client Layer
-  - Stdio transport
-  - MCP client with middleware
-  - Rate limiter middleware
-  - Retry middleware
-  - Logger middleware
-  - Cache middleware
-
-### In Progress 🚧
-
-- **EPIC-003**: Domain Layer (repositories and entities)
-- **EPIC-004**: Query Builder
-- **EPIC-005**: Safety Layer (Propose → Approve → Apply)
-
-### Planned 📋
-
-- **EPIC-006**: Workflow Orchestration
-- **EPIC-007**: Snapshot & Sync
-- **EPIC-008**: Documentation & Examples
-
-## Contributing
-
-This project follows the architecture defined in [SPEC.md](./SPEC.md). See the [issues](./github/issues/notionista-sdk-issues.md) for the full task breakdown.
 
 ## License
 
 MIT
 
-## Related
+## Contributing
 
-- [@notionhq/notion-mcp-server](https://github.com/notionhq/notion-mcp-server) - Official Notion MCP server
-- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification
+This SDK is designed to work with Digital Herencia's specific Notion workspace structure. See `SPEC.md` for architecture details.

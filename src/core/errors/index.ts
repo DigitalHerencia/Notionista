@@ -2,121 +2,66 @@
  * Base error class for all Notionista errors
  */
 export class NotionistaError extends Error {
-  public readonly code: string;
-  public override readonly cause?: unknown;
-
-  constructor(message: string, code: string, cause?: unknown) {
+  constructor(message: string, public readonly code: string) {
     super(message);
     this.name = this.constructor.name;
-    this.code = code;
-    this.cause = cause;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 
 /**
- * MCP transport and connection errors
+ * Error thrown when a repository operation fails
  */
-export class McpTransportError extends NotionistaError {
-  constructor(message: string, cause?: unknown) {
-    super(message, "MCP_TRANSPORT_ERROR", cause);
-  }
-}
-
-export class McpConnectionError extends NotionistaError {
-  constructor(message: string, cause?: unknown) {
-    super(message, "MCP_CONNECTION_ERROR", cause);
-  }
-}
-
-export class McpTimeoutError extends NotionistaError {
-  constructor(message: string, timeout: number) {
-    super(`${message} (timeout: ${timeout}ms)`, "MCP_TIMEOUT_ERROR");
+export class RepositoryError extends NotionistaError {
+  constructor(message: string, code = 'REPOSITORY_ERROR') {
+    super(message, code);
   }
 }
 
 /**
- * JSON-RPC protocol errors
+ * Error thrown when an entity is not found
  */
-export class JsonRpcError extends NotionistaError {
-  constructor(
-    message: string,
-    public readonly rpcCode: number,
-    public readonly rpcData?: unknown
-  ) {
-    super(message, "JSON_RPC_ERROR");
+export class EntityNotFoundError extends RepositoryError {
+  constructor(entityType: string, id: string) {
+    super(`${entityType} with id '${id}' not found`, 'ENTITY_NOT_FOUND');
   }
 }
 
 /**
- * MCP tool invocation errors
- */
-export class McpToolError extends NotionistaError {
-  constructor(
-    message: string,
-    public readonly toolName: string,
-    cause?: unknown
-  ) {
-    super(message, "MCP_TOOL_ERROR", cause);
-  }
-}
-
-/**
- * Rate limiting errors
- */
-export class RateLimitError extends NotionistaError {
-  constructor(
-    message: string,
-    public readonly retryAfter?: number
-  ) {
-    super(message, "RATE_LIMIT_ERROR");
-  }
-}
-
-/**
- * Validation errors
+ * Error thrown when validation fails
  */
 export class ValidationError extends NotionistaError {
   constructor(
     message: string,
-    public readonly validationErrors: Array<{ field: string; message: string }>
+    public readonly errors: Array<{ field: string; message: string }>
   ) {
-    super(message, "VALIDATION_ERROR");
+    super(message, 'VALIDATION_ERROR');
   }
 }
 
 /**
- * Proposal errors
+ * Error thrown when a proposal is not found
  */
 export class ProposalNotFoundError extends NotionistaError {
   constructor(proposalId: string) {
-    super(`Proposal not found: ${proposalId}`, "PROPOSAL_NOT_FOUND");
-  }
-}
-
-export class ProposalStateError extends NotionistaError {
-  constructor(message: string) {
-    super(message, "PROPOSAL_STATE_ERROR");
+    super(`Proposal '${proposalId}' not found`, 'PROPOSAL_NOT_FOUND');
   }
 }
 
 /**
- * Repository errors
+ * Error thrown when batch size exceeds limit
  */
-export class RepositoryError extends NotionistaError {
-  constructor(
-    message: string,
-    public readonly repository: string,
-    cause?: unknown
-  ) {
-    super(message, "REPOSITORY_ERROR", cause);
+export class BatchLimitExceededError extends NotionistaError {
+  constructor(actual: number, limit: number) {
+    super(`Batch size ${actual} exceeds limit of ${limit}`, 'BATCH_LIMIT_EXCEEDED');
   }
 }
 
-export class EntityNotFoundError extends NotionistaError {
-  constructor(entityType: string, id: string) {
-    super(`${entityType} not found: ${id}`, "ENTITY_NOT_FOUND");
+/**
+ * Error thrown when MCP operation fails
+ */
+export class McpError extends NotionistaError {
+  constructor(message: string, public readonly operation: string) {
+    super(message, 'MCP_ERROR');
   }
 }

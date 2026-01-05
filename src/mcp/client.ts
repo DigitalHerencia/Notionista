@@ -1,216 +1,160 @@
+import type { NotionPage, PageProperties, QueryParams, QueryResult } from '../core/types/notion';
+import type { DatabaseId } from '../core/constants/databases';
+
 /**
- * MCP Client
- * 
- * Main interface for invoking MCP tools with middleware support.
+ * Interface for MCP client operations
+ * Abstracts the MCP tool calls for Notion operations
  */
-
-import type {
-  JsonRpcRequest,
-  JsonRpcResponse,
-  McpClientOptions,
-  McpMiddleware,
-  McpRequest,
-  McpResponse,
-} from "../core/types/mcp.js";
-import { StdioTransport } from "./transport.js";
-import { McpTimeoutError, McpToolError, JsonRpcError } from "../core/errors/index.js";
-import { MCP_DEFAULTS, JSON_RPC_VERSION } from "../core/constants/index.js";
-import {
-  createRateLimiter,
-  createRetryMiddleware,
-  createLoggerMiddleware,
-  createCacheMiddleware,
-} from "./middleware/index.js";
-import {
-  DatabaseTools,
-  PageTools,
-  BlockTools,
-  SearchTools,
-  CommentTools,
-  UserTools,
-} from "./tools/index.js";
-
-export class McpClient {
-  private transport: StdioTransport;
-  private middlewares: McpMiddleware[] = [];
-  private requestId = 0;
-  private readonly timeout: number;
-
-  // Tool wrappers
-  public readonly databases: DatabaseTools;
-  public readonly pages: PageTools;
-  public readonly blocks: BlockTools;
-  public readonly search: SearchTools;
-  public readonly comments: CommentTools;
-  public readonly users: UserTools;
-
-  constructor(private readonly options: McpClientOptions) {
-    this.timeout = options.timeout ?? MCP_DEFAULTS.TIMEOUT;
-
-    // Initialize transport
-    this.transport = new StdioTransport({
-      notionToken: options.notionToken,
-    });
-
-    // Initialize tool wrappers
-    this.databases = new DatabaseTools(this);
-    this.pages = new PageTools(this);
-    this.blocks = new BlockTools(this);
-    this.search = new SearchTools(this);
-    this.comments = new CommentTools(this);
-    this.users = new UserTools(this);
-
-    // Set up default middleware pipeline
-    this.setupDefaultMiddleware();
-  }
-
+export interface IMcpClient {
   /**
-   * Set up default middleware stack
+   * Query a database with filters and sorting
    */
-  private setupDefaultMiddleware(): void {
-    // Rate limiter (first to prevent overwhelming the server)
-    const rateLimit = this.options.rateLimitPerSecond ?? MCP_DEFAULTS.RATE_LIMIT_PER_SECOND;
-    this.use(createRateLimiter({ requestsPerSecond: rateLimit }));
-
-    // Retry middleware (for transient failures)
-    const maxRetries = this.options.maxRetries ?? MCP_DEFAULTS.MAX_RETRIES;
-    this.use(createRetryMiddleware({ maxRetries }));
-
-    // Logger middleware (for debugging)
-    if (this.options.enableLogging !== false) {
-      this.use(createLoggerMiddleware());
-    }
-
-    // Cache middleware (for read-only operations)
-    if (this.options.enableCache !== false) {
-      this.use(createCacheMiddleware());
-    }
-  }
-
+  queryDatabase(params: QueryParams): Promise<QueryResult>;
+  
   /**
-   * Add a middleware to the pipeline
+   * Retrieve a single page by ID
    */
-  use(middleware: McpMiddleware): this {
-    this.middlewares.push(middleware);
-    return this;
-  }
-
+  getPage(pageId: string): Promise<NotionPage>;
+  
   /**
-   * Connect to the MCP server
+   * Create a new page in a database
    */
-  async connect(): Promise<void> {
-    await this.transport.connect();
-  }
-
+  createPage(databaseId: DatabaseId, properties: PageProperties): Promise<NotionPage>;
+  
   /**
-   * Disconnect from the MCP server
+   * Update properties of an existing page
    */
-  async disconnect(): Promise<void> {
-    await this.transport.disconnect();
-  }
-
+  updatePage(pageId: string, properties: PageProperties): Promise<NotionPage>;
+  
   /**
-   * Check if client is connected
+   * Delete a page (archive it in Notion)
    */
-  isConnected(): boolean {
-    return this.transport.isConnected();
-  }
-
+  deletePage(pageId: string): Promise<void>;
+  
   /**
-   * Call an MCP tool
+   * Search for pages by title
    */
-  async callTool<T = unknown>(tool: string, params: Record<string, unknown> = {}): Promise<T> {
-    const request: McpRequest = {
-      tool,
-      params,
-      timestamp: Date.now(),
-    };
+  search(query: string): Promise<NotionPage[]>;
+}
 
-    // Build middleware chain
-    const chain = this.buildMiddlewareChain(request);
-
-    // Execute the chain
-    const response = await chain();
-
-    return response.data as T;
-  }
-
-  /**
-   * Build the middleware chain with the final executor
-   */
-  private buildMiddlewareChain(request: McpRequest): () => Promise<McpResponse> {
-    // Final executor that calls the transport
-    const executor = async (): Promise<McpResponse> => {
-      const startTime = Date.now();
-      const result = await this.executeRequest(request);
-      const endTime = Date.now();
-
-      return {
-        data: result,
-        timestamp: endTime,
-        duration: endTime - startTime,
-      };
-    };
-
-    // Build chain from right to left
-    return this.middlewares.reduceRight<() => Promise<McpResponse>>(
-      (next, middleware) => () => middleware(request, next),
-      executor
+/**
+ * Mock MCP client for testing
+ */
+export class MockMcpClient implements IMcpClient {
+  private pages: Map<string, NotionPage> = new Map();
+  
+  async queryDatabase(params: QueryParams): Promise<QueryResult> {
+    const pages = Array.from(this.pages.values()).filter(
+      page => page.parent.database_id === params.database_id
     );
-  }
-
-  /**
-   * Execute the actual request via transport
-   */
-  private async executeRequest(request: McpRequest): Promise<unknown> {
-    const rpcRequest: JsonRpcRequest = {
-      jsonrpc: JSON_RPC_VERSION,
-      id: ++this.requestId,
-      method: "tools/call",
-      params: {
-        name: request.tool,
-        arguments: request.params,
-      },
+    return {
+      results: pages,
+      has_more: false,
+      next_cursor: null,
     };
-
-    // Create timeout promise with cleanup
-    let timeoutHandle: NodeJS.Timeout;
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutHandle = setTimeout(() => {
-        reject(new McpTimeoutError(`Request timed out for tool: ${request.tool}`, this.timeout));
-      }, this.timeout);
-    });
-
-    try {
-      // Race between request and timeout
-      const response = await Promise.race<JsonRpcResponse>([
-        this.transport.send(rpcRequest),
-        timeoutPromise,
-      ]);
-
-      // Handle JSON-RPC errors
-      if (response.error) {
-        throw new JsonRpcError(
-          response.error.message,
-          response.error.code,
-          response.error.data
-        );
-      }
-
-      // Handle tool errors
-      const result = response.result as { content?: unknown; isError?: boolean } | undefined;
-      if (result?.isError) {
-        throw new McpToolError(
-          `Tool execution failed: ${request.tool}`,
-          request.tool,
-          result.content
-        );
-      }
-
-      return result?.content;
-    } finally {
-      // Clean up timeout
-      clearTimeout(timeoutHandle!);
+  }
+  
+  async getPage(pageId: string): Promise<NotionPage> {
+    const page = this.pages.get(pageId);
+    if (!page) {
+      throw new Error(`Page not found: ${pageId}`);
     }
+    return page;
+  }
+  
+  async createPage(databaseId: DatabaseId, properties: PageProperties): Promise<NotionPage> {
+    const page: NotionPage = {
+      id: `mock-${Date.now()}`,
+      created_time: new Date().toISOString(),
+      last_edited_time: new Date().toISOString(),
+      parent: {
+        type: 'database_id',
+        database_id: databaseId,
+      },
+      properties: this.convertToNotionProperties(properties),
+      url: `https://notion.so/mock-${Date.now()}`,
+    };
+    this.pages.set(page.id, page);
+    return page;
+  }
+  
+  async updatePage(pageId: string, properties: PageProperties): Promise<NotionPage> {
+    const page = await this.getPage(pageId);
+    page.properties = {
+      ...page.properties,
+      ...this.convertToNotionProperties(properties),
+    };
+    page.last_edited_time = new Date().toISOString();
+    return page;
+  }
+  
+  async deletePage(pageId: string): Promise<void> {
+    this.pages.delete(pageId);
+  }
+  
+  async search(query: string): Promise<NotionPage[]> {
+    return Array.from(this.pages.values()).filter(page => {
+      const titleProp = Object.values(page.properties).find((p: any) => p.type === 'title');
+      if (titleProp && titleProp.type === 'title') {
+        return titleProp.title.some((t: any) => t.plain_text.includes(query));
+      }
+      return false;
+    });
+  }
+  
+  private convertToNotionProperties(properties: PageProperties): Record<string, any> {
+    const result: Record<string, any> = {};
+    
+    for (const [key, value] of Object.entries(properties)) {
+      if ('title' in value) {
+        result[key] = {
+          type: 'title',
+          title: value.title.map((t: any) => ({
+            ...t,
+            plain_text: t.text.content,
+          })),
+        };
+      } else if ('rich_text' in value) {
+        result[key] = {
+          type: 'rich_text',
+          rich_text: value.rich_text.map((t: any) => ({
+            ...t,
+            plain_text: t.text.content,
+          })),
+        };
+      } else if ('number' in value) {
+        result[key] = {
+          type: 'number',
+          number: value.number,
+        };
+      } else if ('select' in value) {
+        result[key] = {
+          type: 'select',
+          select: value.select,
+        };
+      } else if ('multi_select' in value) {
+        result[key] = {
+          type: 'multi_select',
+          multi_select: value.multi_select,
+        };
+      } else if ('date' in value) {
+        result[key] = {
+          type: 'date',
+          date: value.date,
+        };
+      } else if ('checkbox' in value) {
+        result[key] = {
+          type: 'checkbox',
+          checkbox: value.checkbox,
+        };
+      } else if ('relation' in value) {
+        result[key] = {
+          type: 'relation',
+          relation: value.relation,
+        };
+      }
+    }
+    
+    return result;
   }
 }
