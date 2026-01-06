@@ -8,16 +8,16 @@
 
 ## Overview
 
-Notionista SDK provides a type-safe, developer-friendly interface for interacting with Notion workspaces via the official `@notionhq/notion-mcp-server`. Built specifically for the Digital Herencia team workspace, it abstracts MCP protocol complexity and enforces safe mutation workflows.
+Notionista SDK provides a type-safe, developer-friendly interface for interacting with Notion workspaces via the official `@notionhq/notion-mcp-server`. It abstracts MCP protocol complexity and enforces safe mutation workflows for enterprise workspace automation.
 
 ### Key Features
 
-- 🔒 **Safety First**: Built-in Propose → Approve → Apply workflow prevents accidental data loss
-- 🎯 **Type Safety**: Full TypeScript support with IntelliSense for all database schemas
-- 🔄 **Repository Pattern**: Clean abstraction over raw MCP tool calls
-- 📊 **Workflow Orchestration**: High-level APIs for sprint cycles, task management, and analytics
-- 🎨 **Fluent Query Builder**: Intuitive API for constructing complex database queries
-- 🛡️ **Batch Protection**: Automatic limits on bulk operations (max 50 items)
+- **Safety First**: Built-in Propose - Approve - Apply workflow prevents accidental data loss
+- **Type Safety**: Full TypeScript support with IntelliSense for all database schemas
+- **Repository Pattern**: Clean abstraction over raw MCP tool calls
+- **Workflow Orchestration**: High-level APIs for sprint cycles, task management, and analytics
+- **Fluent Query Builder**: Intuitive API for constructing complex database queries
+- **Batch Protection**: Automatic limits on bulk operations (max 50 items)
 
 ## Quick Start (< 5 minutes)
 
@@ -81,7 +81,7 @@ await sdk.disconnect();
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                   Application Layer                      │
 │  (Workflows, CLI, Scripts, Copilot Agents)              │
@@ -150,23 +150,23 @@ Each Notion database has a corresponding repository:
 const teams = await sdk.teams.findMany();
 const engineeringTeam = await sdk.teams.findById('team-id');
 
-// Project Repository  
+// Project Repository
 const activeProjects = await sdk.projects.findMany({
   where: { status: 'Active' },
 });
 
 // Task Repository
 const highPriorityTasks = await sdk.tasks.findMany({
-  where: { 
+  where: {
     priority: 'High',
-    done: false 
+    done: false,
   },
 });
 
 // Meeting Repository
 const upcomingMeetings = await sdk.meetings.findMany({
-  where: { 
-    date: { after: new Date() } 
+  where: {
+    date: { after: new Date() },
   },
 });
 ```
@@ -221,40 +221,30 @@ await workflow.executeSprint(sprintProposal);
 
 ## Database Schema
 
-The SDK is configured for the Digital Herencia workspace with the following databases:
+The SDK supports configurable database schemas for custom workspace layouts.
 
-| Database | ID | Properties |
-|----------|----|-----------| 
-| **Teams** | `2d5a4e63-bf23-816b-9f75-000b219f7713` | Name, Projects, Tasks, Metrics |
-| **Projects** | `2d5a4e63-bf23-8115-a70f-000bc1ef9d05` | Name, Status, Milestone, Phase, Domain, Dates |
-| **Tasks** | `2d5a4e63-bf23-8137-8277-000b41c867c3` | Name, Done, Priority, Due, Project, Team |
-| **Meetings** | `2caa4e63-bf23-815a-8981-000bbdbb7f0b` | Name, Type, Cadence, Date, Attendees |
-| **Prompts** | `2d5a4e63-bf23-81ad-ab3f-000bfbb91ed9` | Name, Control Layer, Use Case |
-| **Tech Stack** | `276a4e63-bf23-80e2-bbae-000b2fa9662a` | Name, Category, Languages, Tags |
-| **Templates** | `2d5a4e63-bf23-8189-943d-000bdd7af066` | Name, Type, Content |
-| **SOPs** | `2d8a4e63-bf23-80d1-8167-000bb402c275` | Name, Category, Content |
-| **Calendar** | `2d5a4e63-bf23-8140-b0d7-000b33493b7e` | Name, Date, Type |
+### Standard Database Types
+
+| Type          | Purpose                                     |
+| ------------- | ------------------------------------------- |
+| **Teams**     | Team organization and members               |
+| **Projects**  | Project tracking with status and milestones |
+| **Tasks**     | Task management and assignments             |
+| **Meetings**  | Meeting coordination and scheduling         |
+| **Prompts**   | Prompt templates and management             |
+| **Templates** | Reusable content templates                  |
 
 ### Property Types
 
 ```typescript
-// Status values for projects
-type ProjectStatus = 'Active' | 'Completed' | 'On Hold' | 'Cancelled';
-
-// Milestones
-type Milestone = 'M1' | 'M2' | 'M3';
-
-// Development phases
-type Phase = 'P1.1' | 'P1.2' | 'P1.3' | 'P2.1' | 'P2.2' | 'P2.3' | 'P3.1' | 'P3.2' | 'P3.3';
-
-// Domain areas
-type Domain = 'OPS' | 'PROD' | 'DES' | 'ENG' | 'MKT' | 'RES';
+// Status values
+type Status = 'Active' | 'Completed' | 'On Hold' | 'Cancelled';
 
 // Priority levels
 type Priority = 'High' | 'Medium' | 'Low';
 
 // Meeting types
-type MeetingType = 'Standup' | 'Sprint Planning' | 'Post-mortem' | 'Team Sync' | 'Ad Hoc';
+type MeetingType = 'Standup' | 'Planning' | 'Review' | 'Sync' | 'Other';
 ```
 
 ## Advanced Features
@@ -313,21 +303,21 @@ client.use(retryMiddleware({ maxRetries: 3, backoff: 'exponential' }));
 client.use(customLoggingMiddleware);
 ```
 
-### Analytics & Reporting
+### Practical Example
 
-Generate team and project metrics:
+Create complete workflows for complex operations:
 
 ```typescript
-import { AnalyticsService } from 'notionista/domain';
+const project = await sdk.projects.create({
+  name: 'Q1 2026 Initiative',
+  status: 'Active',
+  startDate: new Date('2026-01-06'),
+  endDate: new Date('2026-03-31'),
+});
 
-const analytics = new AnalyticsService(sdk);
-
-const metrics = await analytics.getTeamMetrics('engineering-team-id');
-
-console.log(`Total Tasks: ${metrics.totalTasks}`);
-console.log(`Completed: ${metrics.completedTasks}`);
-console.log(`Completion Rate: ${metrics.completionRate.toFixed(1)}%`);
-console.log(`Overdue: ${metrics.overdueTasks}`);
+console.log(project.formatForReview());
+await project.approve();
+const result = await project.apply();
 ```
 
 ## Examples
@@ -359,21 +349,10 @@ RATE_LIMIT=3  # Requests per second (default: 3)
 
 ```typescript
 const sdk = new NotionistaSdk({
-  // Required
   notionToken: process.env.NOTION_TOKEN!,
-  
-  // Optional
-  mcpServerPath: '/custom/path/to/mcp-server',
   logLevel: 'debug',
   cacheTtl: 300,
   rateLimit: 3,
-  
-  // Database ID overrides (if using different workspace)
-  databaseIds: {
-    teams: 'custom-teams-db-id',
-    projects: 'custom-projects-db-id',
-    // ... other databases
-  },
 });
 ```
 
@@ -388,7 +367,7 @@ class NotionistaSdk {
   // Lifecycle
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  
+
   // Repositories
   teams: TeamRepository;
   projects: ProjectRepository;
@@ -396,11 +375,11 @@ class NotionistaSdk {
   meetings: MeetingRepository;
   prompts: PromptsRepository;
   techStack: TechStackRepository;
-  
+
   // Workflows
   sprintCycle: SprintCycleWorkflow;
   analytics: AnalyticsService;
-  
+
   // Low-level access
   mcp: McpClient;
 }
@@ -416,7 +395,7 @@ interface BaseRepository<T> {
   findMany(filter?: QueryFilter): Promise<T[]>;
   findById(id: string): Promise<T | null>;
   query(builder: QueryBuilder): Promise<T[]>;
-  
+
   // Mutations (return proposals)
   create(input: CreateInput): Promise<ChangeProposal<T>>;
   update(id: string, input: UpdateInput): Promise<ChangeProposal<T>>;
@@ -437,7 +416,7 @@ interface ChangeProposal<T> {
   proposedState: T;
   diff: PropertyDiff[];
   status: 'pending' | 'approved' | 'applied' | 'rejected';
-  
+
   // Methods
   approve(): Promise<void>;
   reject(): Promise<void>;
@@ -473,19 +452,19 @@ import { mockMcpClient } from 'notionista/testing';
 
 describe('TaskRepository', () => {
   let sdk: NotionistaSdk;
-  
+
   beforeEach(() => {
-    sdk = new NotionistaSdk({ 
+    sdk = new NotionistaSdk({
       notionToken: 'test-token',
       mcpClient: mockMcpClient(),
     });
   });
-  
+
   it('should query incomplete tasks', async () => {
     const tasks = await sdk.tasks.findMany({
       where: { done: false },
     });
-    
+
     expect(tasks).toHaveLength(10);
     expect(tasks[0].done).toBe(false);
   });
@@ -519,7 +498,7 @@ pnpm typecheck
 
 ### Project Structure
 
-```
+```text
 notionista/
 ├── src/                      # Source code
 │   ├── core/                 # Core types and constants
@@ -577,11 +556,8 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## Support
 
-- 📧 Email: support@digitalherencia.com
-- 🐛 Issues: [GitHub Issues](https://github.com/DigitalHerencia/Notionista/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/DigitalHerencia/Notionista/discussions)
-- 📖 Docs: [Documentation](https://digitalherencia.github.io/Notionista)
+For issues, feature requests, or questions, please visit [GitHub Issues](https://github.com/DigitalHerencia/Notionista/issues).
 
 ---
 
-**Made with ❤️ by the Digital Herencia Team**
+This project is maintained as part of the Notion automation ecosystem.

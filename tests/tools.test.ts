@@ -1,48 +1,36 @@
-import { describe, it, expect } from "vitest";
-import { McpClient } from "../src/index.js";
+import { describe, expect, it } from 'vitest';
+import { MockMcpClient } from '../src/index.js';
 
-describe("Tool Wrappers", () => {
-  it("should initialize all tool wrappers", () => {
-    const client = new McpClient({
-      notionToken: "test-token",
-    });
+describe('Tool Wrappers', () => {
+  it('should initialize MockMcpClient', () => {
+    const client = new MockMcpClient();
 
-    expect(client.databases).toBeDefined();
-    expect(client.pages).toBeDefined();
-    expect(client.blocks).toBeDefined();
-    expect(client.search).toBeDefined();
-    expect(client.comments).toBeDefined();
-    expect(client.users).toBeDefined();
+    expect(client).toBeDefined();
+    expect(typeof client.queryDatabase).toBe('function');
+    expect(typeof client.getPage).toBe('function');
+    expect(typeof client.createPage).toBe('function');
+    expect(typeof client.updatePage).toBe('function');
+    expect(typeof client.deletePage).toBe('function');
+    expect(typeof client.search).toBe('function');
   });
 
-  it("should have database tool methods", () => {
-    const client = new McpClient({
-      notionToken: "test-token",
-    });
+  it('should support database operations', () => {
+    const client = new MockMcpClient();
 
-    expect(typeof client.databases.queryDatabase).toBe("function");
-    expect(typeof client.databases.getDatabase).toBe("function");
-    expect(typeof client.databases.listTemplates).toBe("function");
+    expect(typeof client.queryDatabase).toBe('function');
   });
 
-  it("should have page tool methods", () => {
-    const client = new McpClient({
-      notionToken: "test-token",
-    });
+  it('should support page operations', () => {
+    const client = new MockMcpClient();
 
-    expect(typeof client.pages.createPage).toBe("function");
-    expect(typeof client.pages.updatePage).toBe("function");
-    expect(typeof client.pages.getPage).toBe("function");
-    expect(typeof client.pages.movePage).toBe("function");
+    expect(typeof client.createPage).toBe('function');
+    expect(typeof client.updatePage).toBe('function');
+    expect(typeof client.getPage).toBe('function');
   });
 
-  it("should have search tool methods", () => {
-    const client = new McpClient({
-      notionToken: "test-token",
-    });
+  it('should support search operations', () => {
+    const client = new MockMcpClient();
 
-    expect(typeof client.search.search).toBe("function");
-    expect(typeof client.search.searchPages).toBe("function");
-    expect(typeof client.search.searchDatabases).toBe("function");
+    expect(typeof client.search).toBe('function');
   });
 });

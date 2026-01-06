@@ -11,6 +11,11 @@ export const MCP_DEFAULTS = {
 } as const;
 
 /**
+ * Database IDs
+ */
+export { DATABASE_IDS } from './databases.js';
+
+/**
  * Notion API constants
  */
 
@@ -23,12 +28,12 @@ export const NOTION_LIMITS = {
  * MCP server configuration
  */
 export const MCP_SERVER = {
-  COMMAND: "npx",
-  ARGS: ["-y", "@notionhq/notion-mcp-server"],
-  PACKAGE: "@notionhq/notion-mcp-server",
+  COMMAND: 'npx',
+  ARGS: ['-y', '@notionhq/notion-mcp-server'],
+  PACKAGE: '@notionhq/notion-mcp-server',
 } as const;
 
-export const JSON_RPC_VERSION = "2.0";
+export const JSON_RPC_VERSION = '2.0';
 
 export const JSON_RPC_ERROR_CODES = {
   PARSE_ERROR: -32700,

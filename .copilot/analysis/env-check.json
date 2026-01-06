@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-05T17:29:59.3230466-07:00",
+  "repositoryRoot": "D:\\Notionista",
+  "checks": {
+    "PowerShell": {
+      "version": "7.5.4",
+      "found": true
+    },
+    "Node": {
+      "version": "v24.2.0",
+      "found": true
+    },
+    "pnpm": {
+      "version": "10.24.0",
+      "found": true
+    },
+    "git": {
+      "version": "git version 2.52.0.windows.1",
+      "found": true
+    }
+  },
+  "ok": true
+}

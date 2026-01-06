@@ -72,7 +72,8 @@ export function loadConfig(configData: unknown): Config {
     return ConfigSchema.parse(configData);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      throw new ConfigurationError('Invalid configuration', error.errors);
+      const errorDetails = error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
+      throw new ConfigurationError(`Invalid configuration: ${errorDetails}`);
     }
     throw error;
   }

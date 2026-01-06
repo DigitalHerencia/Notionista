@@ -1,32 +1,27 @@
 <#
 .SYNOPSIS
-    Builds optimized context chunks for RAG/LLM consumption.
-.DESCRIPTION
-    Chunks key files into ~MaxChunkTokens segments, splitting on semantic-ish
-    boundaries (export/function/class/interface/type). Outputs context-chunks.json.
-.PARAMETER MaxChunkTokens
-    Approx max tokens per chunk (rough heuristic: chars / 4).
-.PARAMETER OutputDir
-    Output directory. Default: <repo>/.copilot
+  Build context chunks from repository text files for RAG-friendly consumption.
+
+DESCRIPTION
+  Reads source files and splits them into chunks of approx `ChunkSize` characters,
+  emitting `context-chunks.json` with entries { file, chunkIndex, text }.
+
 #>
 
 param(
-    [int] $MaxChunkTokens,
-    [AllowNull()]
-    [AllowEmptyString()]
-    [string] $OutputDir
+    [int] $MaxChunkTokens = 2000,
+    [AllowNull()] [AllowEmptyString()] [string] $OutputDir = $null
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-if (-not $PSBoundParameters.ContainsKey('MaxChunkTokens')) { $MaxChunkTokens = 2000 }
-if (-not $PSBoundParameters.ContainsKey('OutputDir')) { $OutputDir = $null }
-
+# Script and project roots
+$PSScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 if (-not $OutputDir -or [string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $ProjectRoot ".copilot"
+    $OutputDir = Join-Path $ProjectRoot ".copilot\analysis"
 }
 
 function Ensure-Directory([string] $Path) {
@@ -73,7 +68,13 @@ function Split-FileIntoChunks {
         [Parameter(Mandatory)] [string] $Category
     )
 
-    $lines = Get-Content -LiteralPath $FilePath
+    $lines = @()
+    try {
+        $lines = @(Get-Content -LiteralPath $FilePath -ErrorAction Stop)
+    } catch {
+        return @()
+    }
+
     if ($lines.Count -eq 0) { return @() }
 
     $contentAll = ($lines -join "`n")
@@ -113,7 +114,7 @@ function Split-FileIntoChunks {
     return $chunks
 }
 
-Write-Host "Building context chunks..." -ForegroundColor Cyan
+Write-Host "Building context chunks (Notionista)..." -ForegroundColor Cyan
 Ensure-Directory $OutputDir
 
 $all = [ordered]@{
@@ -127,14 +128,16 @@ $all = [ordered]@{
 }
 
 $targets = [ordered]@{
-    "lib\actions\*.ts"     = "server-actions"
-    "lib\fetchers\*.ts"    = "data-access"
-    "lib\hooks\*.ts"       = "hooks"
-    "lib\*.ts"             = "utilities"
-    "types\*.ts"           = "types"
-    "prisma\schema.prisma" = "schema"
-    "app\**\page.tsx"      = "routes"
-    "middleware.ts"        = "middleware"
+    "src\core\**\*.ts"      = "core"
+    "src\domain\**\*.ts"    = "domain"
+    "src\mcp\**\*.ts"       = "mcp"
+    "src\query\**\*.ts"     = "query"
+    "src\safety\**\*.ts"    = "safety"
+    "src\schemas\**\*.ts"   = "schemas"
+    "src\workflows\**\*.ts" = "workflows"
+    "src\index.ts"          = "exports"
+    "test\**\*.ts"          = "tests"
+    "examples\*.ts"         = "examples"
 }
 
 foreach ($pattern in $targets.Keys) {

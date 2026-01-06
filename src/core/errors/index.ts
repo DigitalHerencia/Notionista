@@ -2,7 +2,10 @@
  * Base error class for all Notionista errors
  */
 export class NotionistaError extends Error {
-  constructor(message: string, public readonly code: string) {
+  constructor(
+    message: string,
+    public readonly code: string
+  ) {
     super(message);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, this.constructor);
@@ -61,7 +64,118 @@ export class BatchLimitExceededError extends NotionistaError {
  * Error thrown when MCP operation fails
  */
 export class McpError extends NotionistaError {
-  constructor(message: string, public readonly operation: string) {
+  constructor(
+    message: string,
+    public readonly operation: string
+  ) {
     super(message, 'MCP_ERROR');
   }
 }
+
+/**
+ * Error thrown when configuration is invalid
+ */
+export class ConfigurationError extends NotionistaError {
+  constructor(message: string) {
+    super(message, 'CONFIGURATION_ERROR');
+  }
+}
+
+/**
+ * Error thrown when MCP transport operation fails
+ */
+export class McpTransportError extends NotionistaError {
+  constructor(
+    message: string,
+    public readonly details?: unknown
+  ) {
+    super(message, 'MCP_TRANSPORT_ERROR');
+  }
+}
+
+/**
+ * Error thrown when MCP connection fails
+ */
+export class McpConnectionError extends NotionistaError {
+  constructor(
+    message: string,
+    public readonly details?: unknown
+  ) {
+    super(message, 'MCP_CONNECTION_ERROR');
+  }
+}
+
+// Backward compatibility error classes with specific codes
+/**
+ * NotionError - Alias for NotionistaError with additional details support
+ */
+export class NotionError extends NotionistaError {
+  constructor(
+    message: string,
+    code: string,
+    public readonly details?: unknown
+  ) {
+    super(message, code);
+  }
+}
+
+/**
+ * TransportError - Error for transport layer failures
+ */
+export class TransportError extends NotionistaError {
+  constructor(message: string) {
+    super(message, 'TRANSPORT_ERROR');
+  }
+}
+
+/**
+ * TimeoutError - Error for timeout failures
+ */
+export class TimeoutError extends NotionistaError {
+  constructor(message: string) {
+    super(message, 'TIMEOUT_ERROR');
+  }
+}
+
+/**
+ * RateLimitError - Error for rate limit failures
+ */
+export class RateLimitError extends NotionistaError {
+  constructor(
+    message: string,
+    public readonly retryAfter?: number
+  ) {
+    super(message, 'RATE_LIMIT_ERROR');
+  }
+}
+
+/**
+ * NotFoundError - Error for resource not found
+ */
+export class NotFoundError extends NotionistaError {
+  constructor(
+    message: string,
+    public readonly resourceType?: string,
+    public readonly resourceId?: string
+  ) {
+    super(message, 'NOT_FOUND_ERROR');
+  }
+}
+
+/**
+ * ProposalError - Error for proposal failures
+ */
+export class ProposalError extends NotionistaError {
+  constructor(message: string) {
+    super(message, 'PROPOSAL_ERROR');
+  }
+}
+
+// Type guards
+export const isNotionError = (error: unknown): error is NotionError =>
+  error instanceof NotionError || error instanceof NotionistaError;
+export const isValidationError = (error: unknown): error is ValidationError =>
+  error instanceof ValidationError;
+export const isMcpError = (error: unknown): error is McpError => error instanceof McpError;
+export const isRateLimitError = (error: unknown): error is RateLimitError =>
+  error instanceof RateLimitError;

@@ -215,7 +215,7 @@ export class CsvSnapshotParser {
     const ids: string[] = [];
     
     // Match URLs with hyphens
-    const matchesWithHyphens = value.matchAll(new RegExp(UUID_WITH_HYPHENS_PATTERN, "gi"));
+    const matchesWithHyphens = Array.from(value.matchAll(new RegExp(UUID_WITH_HYPHENS_PATTERN, "gi")));
     for (const match of matchesWithHyphens) {
       if (match[1]) {
         ids.push(match[1]);
@@ -223,7 +223,7 @@ export class CsvSnapshotParser {
     }
     
     // Match compact format URLs (without hyphens)
-    const matchesCompact = value.matchAll(new RegExp(UUID_COMPACT_PATTERN, "gi"));
+    const matchesCompact = Array.from(value.matchAll(new RegExp(UUID_COMPACT_PATTERN, "gi")));
     for (const match of matchesCompact) {
       if (match[1]) {
         const compact = match[1];

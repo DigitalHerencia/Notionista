@@ -1,0 +1,50 @@
+{
+  "GeneratedAt": "2026-01-05T17:30:07.5026172-07:00",
+  "ProjectRoot": "D:\\Notionista",
+  "TotalFiles": 503,
+  "TotalLines": 920419,
+  "Directories": [
+    {
+      "Directory": "src",
+      "Path": "D:\\Notionista\\src",
+      "Files": 70,
+      "Lines": 10600,
+      "SizeKB": 292.92
+    },
+    {
+      "Directory": "tests",
+      "Path": "D:\\Notionista\\tests",
+      "Files": 8,
+      "Lines": 656,
+      "SizeKB": 22.21
+    },
+    {
+      "Directory": "examples",
+      "Path": "D:\\Notionista\\examples",
+      "Files": 10,
+      "Lines": 2208,
+      "SizeKB": 70.0
+    },
+    {
+      "Directory": "config",
+      "Path": "D:\\Notionista\\config",
+      "Files": 1,
+      "Lines": 183,
+      "SizeKB": 4.8
+    },
+    {
+      "Directory": "snapshots",
+      "Path": "D:\\Notionista\\snapshots",
+      "Files": 377,
+      "Lines": 892432,
+      "SizeKB": 127936.07
+    },
+    {
+      "Directory": ".copilot",
+      "Path": "D:\\Notionista\\.copilot",
+      "Files": 37,
+      "Lines": 14340,
+      "SizeKB": 1051.93
+    }
+  ]
+}
