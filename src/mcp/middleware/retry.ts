@@ -1,15 +1,15 @@
 /**
  * Retry middleware
- * 
+ *
  * Automatically retries failed requests with exponential backoff.
  */
 
-import type { McpMiddleware, McpRequest, McpResponse } from "../../core/types/mcp.js";
-import { MCP_DEFAULTS } from "../../core/constants/index.js";
+import type { McpMiddleware, McpRequest, McpResponse } from '../../core/types/mcp.js';
+import { MCP_DEFAULTS } from '../../core/constants/index.js';
 
 export interface RetryOptions {
   maxRetries?: number;
-  backoff?: "exponential" | "linear";
+  backoff?: 'exponential' | 'linear';
   initialDelay?: number;
   maxDelay?: number;
   shouldRetry?: (error: Error) => boolean;
@@ -18,7 +18,7 @@ export interface RetryOptions {
 export function createRetryMiddleware(options: RetryOptions = {}): McpMiddleware {
   const {
     maxRetries = MCP_DEFAULTS.MAX_RETRIES,
-    backoff = "exponential",
+    backoff = 'exponential',
     initialDelay = MCP_DEFAULTS.RETRY_BACKOFF_BASE,
     maxDelay = MCP_DEFAULTS.RETRY_BACKOFF_MAX,
     shouldRetry = defaultShouldRetry,
@@ -54,14 +54,12 @@ export function createRetryMiddleware(options: RetryOptions = {}): McpMiddleware
 
 function calculateDelay(
   attempt: number,
-  backoff: "exponential" | "linear",
+  backoff: 'exponential' | 'linear',
   initialDelay: number,
   maxDelay: number
 ): number {
   const delay =
-    backoff === "exponential"
-      ? initialDelay * Math.pow(2, attempt - 1)
-      : initialDelay * attempt;
+    backoff === 'exponential' ? initialDelay * Math.pow(2, attempt - 1) : initialDelay * attempt;
 
   return Math.min(delay, maxDelay);
 }
@@ -73,12 +71,12 @@ function sleep(ms: number): Promise<void> {
 function defaultShouldRetry(error: Error): boolean {
   // Retry on network errors and timeouts
   const retryableErrors = [
-    "ECONNRESET",
-    "ENOTFOUND",
-    "ETIMEDOUT",
-    "ECONNREFUSED",
-    "MCP_TIMEOUT_ERROR",
-    "MCP_TRANSPORT_ERROR",
+    'ECONNRESET',
+    'ENOTFOUND',
+    'ETIMEDOUT',
+    'ECONNREFUSED',
+    'MCP_TIMEOUT_ERROR',
+    'MCP_TRANSPORT_ERROR',
   ];
 
   return retryableErrors.some((code) => error.message.includes(code) || error.name.includes(code));

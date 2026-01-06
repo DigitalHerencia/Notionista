@@ -1,13 +1,13 @@
 /**
  * Block tool wrappers
- * 
+ *
  * Typed wrappers for Notion block operations via MCP.
  */
 
-import type { McpClient } from "../client.js";
+import type { McpClient } from '../client.js';
 
 export interface Block {
-  object: "block";
+  object: 'block';
   id: string;
   type: string;
   [key: string]: unknown;
@@ -28,12 +28,15 @@ export class BlockTools {
   /**
    * Get children blocks of a parent block or page
    */
-  async getBlockChildren(blockId: string, startCursor?: string): Promise<{
+  async getBlockChildren(
+    blockId: string,
+    startCursor?: string
+  ): Promise<{
     results: Block[];
     next_cursor: string | null;
     has_more: boolean;
   }> {
-    return this.client.callTool("get-block-children", {
+    return this.client.callTool('get-block-children', {
       block_id: blockId,
       start_cursor: startCursor,
     });
@@ -43,7 +46,7 @@ export class BlockTools {
    * Retrieve a block by ID
    */
   async getBlock(blockId: string): Promise<Block> {
-    return this.client.callTool<Block>("retrieve-a-block", {
+    return this.client.callTool<Block>('retrieve-a-block', {
       block_id: blockId,
     });
   }
@@ -54,21 +57,21 @@ export class BlockTools {
   async appendBlocks(params: AppendBlocksParams): Promise<{
     results: Block[];
   }> {
-    return this.client.callTool("patch-block-children", params);
+    return this.client.callTool('patch-block-children', params);
   }
 
   /**
    * Update a block
    */
   async updateBlock(params: UpdateBlockParams): Promise<Block> {
-    return this.client.callTool<Block>("update-a-block", params);
+    return this.client.callTool<Block>('update-a-block', params);
   }
 
   /**
    * Delete a block
    */
   async deleteBlock(blockId: string): Promise<Block> {
-    return this.client.callTool<Block>("delete-a-block", {
+    return this.client.callTool<Block>('delete-a-block', {
       block_id: blockId,
     });
   }

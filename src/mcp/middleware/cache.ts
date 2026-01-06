@@ -1,10 +1,10 @@
 /**
  * Cache middleware
- * 
+ *
  * Caches responses for read-only operations to reduce API calls.
  */
 
-import type { McpMiddleware, McpRequest, McpResponse } from "../../core/types/mcp.js";
+import type { McpMiddleware, McpRequest, McpResponse } from '../../core/types/mcp.js';
 
 export interface CacheOptions {
   enabled?: boolean;
@@ -33,8 +33,8 @@ export function createCacheMiddleware(options: CacheOptions = {}): McpMiddleware
   }, ttl);
 
   // Clean up interval on process exit
-  if (typeof process !== "undefined") {
-    process.once("beforeExit", () => clearInterval(cleanInterval));
+  if (typeof process !== 'undefined') {
+    process.once('beforeExit', () => clearInterval(cleanInterval));
   }
 
   return async (req: McpRequest, next: () => Promise<McpResponse>): Promise<McpResponse> => {
@@ -74,15 +74,15 @@ export function createCacheMiddleware(options: CacheOptions = {}): McpMiddleware
  */
 function isCacheable(tool: string): boolean {
   const readOnlyTools = [
-    "retrieve-a-data-source",
-    "query-data-source",
-    "retrieve-a-page",
-    "get-block-children",
-    "retrieve-a-block",
-    "post-search",
-    "get-self",
-    "get-user",
-    "get-users",
+    'retrieve-a-data-source',
+    'query-data-source',
+    'retrieve-a-page',
+    'get-block-children',
+    'retrieve-a-block',
+    'post-search',
+    'get-self',
+    'get-user',
+    'get-users',
   ];
 
   return readOnlyTools.includes(tool);

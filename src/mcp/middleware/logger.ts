@@ -1,10 +1,10 @@
 /**
  * Logger middleware
- * 
+ *
  * Logs MCP requests and responses for debugging.
  */
 
-import type { McpMiddleware, McpRequest, McpResponse } from "../../core/types/mcp.js";
+import type { McpMiddleware, McpRequest, McpResponse } from '../../core/types/mcp.js';
 
 export interface LoggerOptions {
   enabled?: boolean;
@@ -22,10 +22,10 @@ export interface Logger {
 }
 
 const defaultLogger: Logger = {
-  debug: (message, data) => console.debug(`[MCP] ${message}`, data ?? ""),
-  info: (message, data) => console.info(`[MCP] ${message}`, data ?? ""),
-  warn: (message, data) => console.warn(`[MCP] ${message}`, data ?? ""),
-  error: (message, data) => console.error(`[MCP] ${message}`, data ?? ""),
+  debug: (message, data) => console.debug(`[MCP] ${message}`, data ?? ''),
+  info: (message, data) => console.info(`[MCP] ${message}`, data ?? ''),
+  warn: (message, data) => console.warn(`[MCP] ${message}`, data ?? ''),
+  error: (message, data) => console.error(`[MCP] ${message}`, data ?? ''),
 };
 
 export function createLoggerMiddleware(options: LoggerOptions = {}): McpMiddleware {

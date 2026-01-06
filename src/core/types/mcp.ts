@@ -3,14 +3,14 @@
  */
 
 export interface JsonRpcRequest {
-  jsonrpc: "2.0";
+  jsonrpc: '2.0';
   id: number | string;
   method: string;
   params?: unknown;
 }
 
 export interface JsonRpcResponse<T = unknown> {
-  jsonrpc: "2.0";
+  jsonrpc: '2.0';
   id: number | string;
   result?: T;
   error?: JsonRpcErrorObject;

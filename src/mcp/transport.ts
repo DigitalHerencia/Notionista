@@ -1,15 +1,15 @@
 /**
  * Stdio transport for communicating with @notionhq/notion-mcp-server
- * 
+ *
  * Spawns the MCP server as a child process and handles JSON-RPC message exchange
  * via stdio (stdin/stdout).
  */
 
-import { spawn, type ChildProcess } from "child_process";
-import { EventEmitter } from "events";
-import type { JsonRpcRequest, JsonRpcResponse, McpTransport } from "../core/types/mcp.js";
-import { McpTransportError, McpConnectionError } from "../core/errors/index.js";
-import { MCP_SERVER } from "../core/constants/index.js";
+import { spawn, type ChildProcess } from 'child_process';
+import { EventEmitter } from 'events';
+import type { JsonRpcRequest, JsonRpcResponse, McpTransport } from '../core/types/mcp.js';
+import { McpTransportError, McpConnectionError } from '../core/errors/index.js';
+import { MCP_SERVER } from '../core/constants/index.js';
 
 export interface StdioTransportOptions {
   notionToken: string;
@@ -20,7 +20,7 @@ export interface StdioTransportOptions {
 export class StdioTransport extends EventEmitter implements McpTransport {
   private process: ChildProcess | null = null;
   private connected = false;
-  private buffer = "";
+  private buffer = '';
   private pendingRequests = new Map<
     number | string,
     {
@@ -50,15 +50,15 @@ export class StdioTransport extends EventEmitter implements McpTransport {
           ...process.env,
           NOTION_TOKEN: this.options.notionToken,
         },
-        stdio: ["pipe", "pipe", "inherit"],
+        stdio: ['pipe', 'pipe', 'inherit'],
       });
 
       this.setupProcessHandlers();
       this.connected = true;
-      this.emit("connected");
+      this.emit('connected');
       return Promise.resolve();
     } catch (error) {
-      throw new McpConnectionError("Failed to spawn MCP server process", error);
+      throw new McpConnectionError('Failed to spawn MCP server process', error);
     }
   }
 
@@ -76,19 +76,19 @@ export class StdioTransport extends EventEmitter implements McpTransport {
         return;
       }
 
-      this.process.once("close", () => {
+      this.process.once('close', () => {
         this.connected = false;
         this.process = null;
-        this.emit("disconnected");
+        this.emit('disconnected');
         resolve();
       });
 
-      this.process.kill("SIGTERM");
+      this.process.kill('SIGTERM');
 
       // Force kill after 5 seconds
       setTimeout(() => {
         if (this.process) {
-          this.process.kill("SIGKILL");
+          this.process.kill('SIGKILL');
         }
       }, 5000);
     });
@@ -99,7 +99,7 @@ export class StdioTransport extends EventEmitter implements McpTransport {
    */
   async send(request: JsonRpcRequest): Promise<JsonRpcResponse> {
     if (!this.connected || !this.process || !this.process.stdin) {
-      throw new McpTransportError("Transport not connected");
+      throw new McpTransportError('Transport not connected');
     }
 
     return new Promise((resolve, reject) => {
@@ -107,11 +107,11 @@ export class StdioTransport extends EventEmitter implements McpTransport {
       this.pendingRequests.set(request.id, { resolve, reject });
 
       // Serialize and send the request
-      const message = JSON.stringify(request) + "\n";
+      const message = JSON.stringify(request) + '\n';
       this.process!.stdin!.write(message, (error) => {
         if (error) {
           this.pendingRequests.delete(request.id);
-          reject(new McpTransportError("Failed to write to stdin", error));
+          reject(new McpTransportError('Failed to write to stdin', error));
         }
       });
     });
@@ -131,23 +131,23 @@ export class StdioTransport extends EventEmitter implements McpTransport {
     if (!this.process) return;
 
     // Handle stdout data (JSON-RPC responses)
-    this.process.stdout?.on("data", (data: Buffer) => {
+    this.process.stdout?.on('data', (data: Buffer) => {
       this.handleStdout(data);
     });
 
     // Handle process errors
-    this.process.on("error", (error) => {
-      this.emit("error", new McpTransportError("Process error", error));
+    this.process.on('error', (error) => {
+      this.emit('error', new McpTransportError('Process error', error));
     });
 
     // Handle process exit
-    this.process.on("close", (code, signal) => {
+    this.process.on('close', (code, signal) => {
       this.connected = false;
-      this.emit("close", { code, signal });
+      this.emit('close', { code, signal });
 
       // Reject all pending requests
       for (const { reject } of this.pendingRequests.values()) {
-        reject(new McpTransportError("Process closed unexpectedly"));
+        reject(new McpTransportError('Process closed unexpectedly'));
       }
       this.pendingRequests.clear();
     });
@@ -155,7 +155,7 @@ export class StdioTransport extends EventEmitter implements McpTransport {
 
   /**
    * Handle stdout data from the child process
-   * 
+   *
    * Messages are newline-delimited JSON-RPC responses.
    * We need to handle partial messages across multiple data events.
    */
@@ -163,10 +163,10 @@ export class StdioTransport extends EventEmitter implements McpTransport {
     this.buffer += data.toString();
 
     // Split by newlines
-    const lines = this.buffer.split("\n");
+    const lines = this.buffer.split('\n');
 
     // Keep the last incomplete line in the buffer
-    this.buffer = lines.pop() ?? "";
+    this.buffer = lines.pop() ?? '';
 
     // Process complete lines
     for (const line of lines) {
@@ -175,7 +175,7 @@ export class StdioTransport extends EventEmitter implements McpTransport {
           const response = JSON.parse(line) as JsonRpcResponse;
           this.handleResponse(response);
         } catch (error) {
-          this.emit("error", new McpTransportError("Failed to parse JSON-RPC response", error));
+          this.emit('error', new McpTransportError('Failed to parse JSON-RPC response', error));
         }
       }
     }
@@ -188,7 +188,10 @@ export class StdioTransport extends EventEmitter implements McpTransport {
     const pending = this.pendingRequests.get(response.id);
 
     if (!pending) {
-      this.emit("error", new McpTransportError(`No pending request for response ID: ${response.id}`));
+      this.emit(
+        'error',
+        new McpTransportError(`No pending request for response ID: ${response.id}`)
+      );
       return;
     }
 

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * A record parsed from a Notion CSV export snapshot
@@ -9,7 +9,7 @@ export interface SnapshotRecord {
   /** Normalized property values */
   properties: Record<string, unknown>;
   /** Source of the snapshot data */
-  source: "csv" | "markdown";
+  source: 'csv' | 'markdown';
   /** Path to the source file */
   filePath: string;
 }
@@ -65,7 +65,7 @@ export interface CsvParserOptions {
 export const SnapshotRecordSchema = z.object({
   id: z.string(),
   properties: z.record(z.unknown()),
-  source: z.enum(["csv", "markdown"]),
+  source: z.enum(['csv', 'markdown']),
   filePath: z.string(),
 });
 

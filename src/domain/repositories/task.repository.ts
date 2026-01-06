@@ -71,9 +71,7 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
     }
 
     if ('due' in input) {
-      properties['Due'] = input.due
-        ? { date: { start: input.due } }
-        : { date: null };
+      properties['Due'] = input.due ? { date: { start: input.due } } : { date: null };
     }
 
     if ('priority' in input) {
@@ -102,7 +100,7 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
    */
   async findByDone(done: boolean): Promise<Task[]> {
     const allTasks = await this.findMany();
-    return allTasks.filter(task => task.done === done);
+    return allTasks.filter((task) => task.done === done);
   }
 
   /**
@@ -124,7 +122,7 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
    */
   async findByProject(projectId: string): Promise<Task[]> {
     const allTasks = await this.findMany();
-    return allTasks.filter(task => task.projectId === projectId);
+    return allTasks.filter((task) => task.projectId === projectId);
   }
 
   /**
@@ -132,7 +130,7 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
    */
   async findByTeam(teamId: string): Promise<Task[]> {
     const allTasks = await this.findMany();
-    return allTasks.filter(task => task.teamId === teamId);
+    return allTasks.filter((task) => task.teamId === teamId);
   }
 
   /**
@@ -140,7 +138,7 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
    */
   async findByPriority(priority: Priority): Promise<Task[]> {
     const allTasks = await this.findMany();
-    return allTasks.filter(task => task.priority === priority);
+    return allTasks.filter((task) => task.priority === priority);
   }
 
   /**
@@ -156,10 +154,8 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
   async findOverdue(): Promise<Task[]> {
     const allTasks = await this.findMany();
     const now = new Date().toISOString();
-    
-    return allTasks.filter(task => 
-      !task.done && task.due && task.due < now
-    );
+
+    return allTasks.filter((task) => !task.done && task.due && task.due < now);
   }
 
   /**
@@ -168,10 +164,8 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
   async findDueToday(): Promise<Task[]> {
     const allTasks = await this.findMany();
     const today = new Date().toISOString().split('T')[0];
-    
-    return allTasks.filter(task => 
-      task.due && task.due.startsWith(today as string)
-    );
+
+    return allTasks.filter((task) => task.due && task.due.startsWith(today as string));
   }
 
   /**
@@ -182,12 +176,12 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
     const now = new Date();
     const futureDate = new Date(now);
     futureDate.setDate(futureDate.getDate() + days);
-    
+
     const nowStr = now.toISOString();
     const futureStr = futureDate.toISOString();
-    
-    return allTasks.filter(task => 
-      !task.done && task.due && task.due >= nowStr && task.due <= futureStr
+
+    return allTasks.filter(
+      (task) => !task.done && task.due && task.due >= nowStr && task.due <= futureStr
     );
   }
 
@@ -197,8 +191,8 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
   async getProjectCompletionRate(projectId: string): Promise<number> {
     const tasks = await this.findByProject(projectId);
     if (tasks.length === 0) return 0;
-    
-    const completed = tasks.filter(t => t.done).length;
+
+    const completed = tasks.filter((t) => t.done).length;
     return (completed / tasks.length) * 100;
   }
 
@@ -208,8 +202,8 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
   async getTeamCompletionRate(teamId: string): Promise<number> {
     const tasks = await this.findByTeam(teamId);
     if (tasks.length === 0) return 0;
-    
-    const completed = tasks.filter(t => t.done).length;
+
+    const completed = tasks.filter((t) => t.done).length;
     return (completed / tasks.length) * 100;
   }
 }

@@ -124,10 +124,7 @@ export class BatchLimiter {
    * @param executor Function to execute on each item
    * @returns Batch execution result
    */
-  async executeBatch<T, R>(
-    items: T[],
-    executor: (item: T) => Promise<R>
-  ): Promise<BatchResult> {
+  async executeBatch<T, R>(items: T[], executor: (item: T) => Promise<R>): Promise<BatchResult> {
     const startTime = Date.now();
     let successful = 0;
     let failed = 0;

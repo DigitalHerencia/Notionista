@@ -1,5 +1,5 @@
 {
-  "GeneratedAt": "2026-01-06T00:30:09Z",
+  "GeneratedAt": "2026-01-06T00:36:05Z",
   "ChunkSettings": {
     "MaxTokens": 2000,
     "MaxChars": 8000,
@@ -897,24 +897,9 @@
         "approxTokens": 304.0
       },
       {
-        "category": "domain",
-        "chunks": 13,
-        "approxTokens": 10688.0
-      },
-      {
-        "category": "query",
-        "chunks": 7,
-        "approxTokens": 9036.0
-      },
-      {
-        "category": "mcp",
-        "chunks": 14,
-        "approxTokens": 7042.0
-      },
-      {
-        "category": "safety",
+        "category": "examples",
         "chunks": 12,
-        "approxTokens": 16556.0
+        "approxTokens": 15581.0
       },
       {
         "category": "workflows",
@@ -922,19 +907,34 @@
         "approxTokens": 12386.0
       },
       {
-        "category": "core",
-        "chunks": 14,
-        "approxTokens": 7643.0
-      },
-      {
-        "category": "examples",
-        "chunks": 12,
-        "approxTokens": 15581.0
+        "category": "query",
+        "chunks": 7,
+        "approxTokens": 9036.0
       },
       {
         "category": "schemas",
         "chunks": 6,
         "approxTokens": 1871.0
+      },
+      {
+        "category": "safety",
+        "chunks": 12,
+        "approxTokens": 16556.0
+      },
+      {
+        "category": "mcp",
+        "chunks": 14,
+        "approxTokens": 7042.0
+      },
+      {
+        "category": "core",
+        "chunks": 14,
+        "approxTokens": 7643.0
+      },
+      {
+        "category": "domain",
+        "chunks": 13,
+        "approxTokens": 10688.0
       }
     ]
   }

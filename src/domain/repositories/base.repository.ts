@@ -1,13 +1,18 @@
 import type { IMcpClient } from '../../mcp/client';
 import type { DatabaseId } from '../../core/constants/databases';
 import type { NotionPage, PageProperties, QueryFilter } from '../../core/types/notion';
-import type { ChangeProposal, PropertyDiff, SideEffect, ValidationResult } from '../../core/types/proposals';
+import type {
+  ChangeProposal,
+  PropertyDiff,
+  SideEffect,
+  ValidationResult,
+} from '../../core/types/proposals';
 import { EntityNotFoundError, ValidationError as DomainValidationError } from '../../core/errors';
 
 /**
  * Abstract base repository implementing the repository pattern
  * All concrete repositories extend this class
- * 
+ *
  * @template TEntity - The domain entity type
  * @template TCreateInput - Input type for creating entities
  * @template TUpdateInput - Input type for updating entities
@@ -163,7 +168,9 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
    * Convert domain input to Notion properties
    * Must be implemented by concrete repositories
    */
-  protected abstract toNotionProperties(input: TCreateInput | TUpdateInput | TEntity): PageProperties;
+  protected abstract toNotionProperties(
+    input: TCreateInput | TUpdateInput | TEntity
+  ): PageProperties;
 
   /**
    * Get the entity name for error messages
@@ -346,7 +353,10 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
   /**
    * Extract number from Notion number/formula/rollup property
    */
-  protected extractNumber(properties: Record<string, any>, propertyName: string): number | undefined {
+  protected extractNumber(
+    properties: Record<string, any>,
+    propertyName: string
+  ): number | undefined {
     const prop = properties[propertyName];
     if (prop?.type === 'number') {
       return prop.number ?? undefined;

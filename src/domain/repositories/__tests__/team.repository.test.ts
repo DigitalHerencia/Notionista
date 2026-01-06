@@ -14,7 +14,7 @@ describe('TeamRepository', () => {
   describe('create', () => {
     it('should return a change proposal for team creation', async () => {
       const input = { name: 'Engineering Team' };
-      
+
       const proposal = await repository.create(input);
 
       expect(proposal).toBeDefined();
@@ -29,10 +29,10 @@ describe('TeamRepository', () => {
 
     it('should include property diffs in the proposal', async () => {
       const input = { name: 'Design Team' };
-      
+
       const proposal = await repository.create(input);
 
-      const nameDiff = proposal.diff.find(d => d.property === 'name');
+      const nameDiff = proposal.diff.find((d) => d.property === 'name');
       expect(nameDiff).toBeDefined();
       expect(nameDiff?.oldValue).toBeNull();
       expect(nameDiff?.newValue).toBe('Design Team');
@@ -62,7 +62,7 @@ describe('TeamRepository', () => {
 
       const updateProposal = await repository.update(createdTeam.id, { name: 'Team B' });
 
-      const nameDiff = updateProposal.diff.find(d => d.property === 'name');
+      const nameDiff = updateProposal.diff.find((d) => d.property === 'name');
       expect(nameDiff).toBeDefined();
       expect(nameDiff?.oldValue).toBe('Team A');
       expect(nameDiff?.newValue).toBe('Team B');
@@ -104,7 +104,7 @@ describe('TeamRepository', () => {
       const createdTeam = await repository.executeCreate(createProposal);
 
       const metrics = await repository.getMetrics(createdTeam.id);
-      
+
       expect(metrics).toBeDefined();
       expect(metrics.team.name).toBe('Metrics Team');
       expect(metrics.totalProjects).toBe(0);

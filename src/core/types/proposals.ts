@@ -7,31 +7,31 @@ import type { DatabaseId } from '../constants/databases';
 export interface ChangeProposal<T> {
   /** Unique identifier for this proposal */
   id: string;
-  
+
   /** Type of operation being proposed */
   type: 'create' | 'update' | 'delete' | 'bulk';
-  
+
   /** Target database and page for the operation */
   target: {
     database: DatabaseId;
     pageId?: string;
   };
-  
+
   /** Current state (null for creates) */
   currentState: T | null;
-  
+
   /** Proposed new state */
   proposedState: T;
-  
+
   /** Property-level differences */
   diff: PropertyDiff[];
-  
+
   /** Related side effects of this change */
   sideEffects: SideEffect[];
-  
+
   /** Validation results */
   validation: ValidationResult;
-  
+
   /** When this proposal was created */
   createdAt: Date;
 }
@@ -42,13 +42,13 @@ export interface ChangeProposal<T> {
 export interface PropertyDiff {
   /** Property name that changed */
   property: string;
-  
+
   /** Current value */
   oldValue: unknown;
-  
+
   /** Proposed value */
   newValue: unknown;
-  
+
   /** Impact level of this change */
   impact: 'low' | 'medium' | 'high';
 }
@@ -59,10 +59,10 @@ export interface PropertyDiff {
 export interface SideEffect {
   /** Type of side effect */
   type: 'relation_update' | 'rollup_recalc' | 'cascade';
-  
+
   /** Human-readable description */
   description: string;
-  
+
   /** IDs of items that will be affected */
   affectedItems: string[];
 }
@@ -73,10 +73,10 @@ export interface SideEffect {
 export interface ValidationResult {
   /** Whether validation passed */
   valid: boolean;
-  
+
   /** List of validation errors */
   errors: ValidationError[];
-  
+
   /** List of validation warnings */
   warnings: ValidationWarning[];
 }
@@ -99,10 +99,10 @@ export interface ValidationWarning {
 export interface ApplyResult<T = unknown> {
   /** Whether the operation succeeded */
   success: boolean;
-  
+
   /** The resulting entity (if successful) */
   result?: T;
-  
+
   /** Error information (if failed) */
   error?: {
     code: string;

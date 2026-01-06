@@ -25,10 +25,7 @@ export class DiffEngine {
    * @param proposed Proposed new state
    * @returns Array of property diffs
    */
-  computeDiff<T extends Record<string, unknown>>(
-    current: T | null,
-    proposed: T
-  ): PropertyDiff[] {
+  computeDiff<T extends Record<string, unknown>>(current: T | null, proposed: T): PropertyDiff[] {
     const diffs: PropertyDiff[] = [];
 
     // If current is null, all properties are additions
@@ -107,10 +104,7 @@ export class DiffEngine {
     }
 
     // Priority/urgency changes are medium impact
-    if (
-      property.toLowerCase().includes('priority') ||
-      property.toLowerCase().includes('urgency')
-    ) {
+    if (property.toLowerCase().includes('priority') || property.toLowerCase().includes('urgency')) {
       return 'medium';
     }
 

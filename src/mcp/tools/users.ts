@@ -1,15 +1,15 @@
 /**
  * User tool wrappers
- * 
+ *
  * Typed wrappers for Notion user operations via MCP.
  */
 
-import type { McpClient } from "../client.js";
+import type { McpClient } from '../client.js';
 
 export interface User {
-  object: "user";
+  object: 'user';
   id: string;
-  type?: "person" | "bot";
+  type?: 'person' | 'bot';
   name?: string;
   avatar_url?: string;
   person?: {
@@ -28,14 +28,14 @@ export class UserTools {
    * Get the current bot user
    */
   async getSelf(): Promise<User> {
-    return this.client.callTool<User>("get-self", {});
+    return this.client.callTool<User>('get-self', {});
   }
 
   /**
    * Get a user by ID
    */
   async getUser(userId: string): Promise<User> {
-    return this.client.callTool<User>("get-user", {
+    return this.client.callTool<User>('get-user', {
       user_id: userId,
     });
   }
@@ -48,7 +48,7 @@ export class UserTools {
     next_cursor: string | null;
     has_more: boolean;
   }> {
-    return this.client.callTool("get-users", {
+    return this.client.callTool('get-users', {
       start_cursor: startCursor,
     });
   }

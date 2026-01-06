@@ -1,10 +1,10 @@
 /**
  * Rate limiter middleware
- * 
+ *
  * Enforces a maximum number of requests per second to prevent API throttling.
  */
 
-import type { McpMiddleware, McpRequest, McpResponse } from "../../core/types/mcp.js";
+import type { McpMiddleware, McpRequest, McpResponse } from '../../core/types/mcp.js';
 
 export interface RateLimiterOptions {
   requestsPerSecond: number;
@@ -59,9 +59,7 @@ export function createRateLimiter(options: RateLimiterOptions): McpMiddleware {
   return async (_req: McpRequest, next: () => Promise<McpResponse>): Promise<McpResponse> => {
     return new Promise((resolve, reject) => {
       queue.push(() => {
-        next()
-          .then(resolve)
-          .catch(reject);
+        next().then(resolve).catch(reject);
       });
       processQueue();
     });

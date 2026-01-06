@@ -1,11 +1,11 @@
 /**
  * Database tool wrappers
- * 
+ *
  * Typed wrappers for Notion database operations via MCP.
  */
 
-import type { McpClient } from "../client.js";
-import type { QueryParams, QueryResult } from "../../core/types/notion.js";
+import type { McpClient } from '../client.js';
+import type { QueryParams, QueryResult } from '../../core/types/notion.js';
 
 export class DatabaseTools {
   constructor(private readonly client: McpClient) {}
@@ -14,7 +14,7 @@ export class DatabaseTools {
    * Query a database with filters, sorts, and pagination
    */
   async queryDatabase(params: QueryParams): Promise<QueryResult> {
-    return this.client.callTool<QueryResult>("query-data-source", {
+    return this.client.callTool<QueryResult>('query-data-source', {
       database_id: params.database_id,
       filter: params.filter,
       sorts: params.sorts,
@@ -27,7 +27,7 @@ export class DatabaseTools {
    * Retrieve database metadata
    */
   async getDatabase(databaseId: string): Promise<unknown> {
-    return this.client.callTool("retrieve-a-data-source", {
+    return this.client.callTool('retrieve-a-data-source', {
       database_id: databaseId,
     });
   }
@@ -36,6 +36,6 @@ export class DatabaseTools {
    * List available data source templates
    */
   async listTemplates(): Promise<unknown> {
-    return this.client.callTool("list-data-source-templates", {});
+    return this.client.callTool('list-data-source-templates', {});
   }
 }

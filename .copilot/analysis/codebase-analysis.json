@@ -1,8 +1,8 @@
 {
-  "GeneratedAt": "2026-01-05T17:30:07.5026172-07:00",
+  "GeneratedAt": "2026-01-05T17:36:04.0137682-07:00",
   "ProjectRoot": "D:\\Notionista",
-  "TotalFiles": 503,
-  "TotalLines": 920419,
+  "TotalFiles": 502,
+  "TotalLines": 917686,
   "Directories": [
     {
       "Directory": "src",
@@ -42,9 +42,9 @@
     {
       "Directory": ".copilot",
       "Path": "D:\\Notionista\\.copilot",
-      "Files": 37,
-      "Lines": 14340,
-      "SizeKB": 1051.93
+      "Files": 36,
+      "Lines": 11607,
+      "SizeKB": 990.79
     }
   ]
 }

@@ -134,14 +134,14 @@ export type Filter = PropertyFilter | CompoundFilter;
 /**
  * Sort direction
  */
-export type SortDirection = "ascending" | "descending";
+export type SortDirection = 'ascending' | 'descending';
 
 /**
  * Sort condition
  */
 export interface Sort {
   property?: string;
-  timestamp?: "created_time" | "last_edited_time";
+  timestamp?: 'created_time' | 'last_edited_time';
   direction: SortDirection;
 }
 

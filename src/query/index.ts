@@ -1,13 +1,13 @@
 /**
  * Query Builder Module
- * 
+ *
  * Fluent API for constructing type-safe Notion database queries
  * with filters, sorts, and pagination.
- * 
+ *
  * @example
  * ```typescript
  * import { QueryBuilder, QueryBuilderHelpers } from './query';
- * 
+ *
  * // Basic query
  * const query = new QueryBuilder()
  *   .where('status', 'select', 'equals', 'Active')
@@ -15,7 +15,7 @@
  *   .orderBy('due', 'ascending')
  *   .limit(50)
  *   .build();
- * 
+ *
  * // Using compound filters
  * const complexQuery = new QueryBuilder()
  *   .and(qb => {
@@ -27,13 +27,13 @@
  *       .where('priority', 'select', 'equals', 'Critical')
  *   })
  *   .build();
- * 
+ *
  * // Using helpers
  * const incompleteTasks = QueryBuilderHelpers.incompleteTasks()
  *   .orderBy('due', 'ascending')
  *   .build();
  * ```
- * 
+ *
  * @module query
  */
 
@@ -44,7 +44,7 @@ export {
   type PropertyType,
   type FilterOperator,
   type FilterValue,
-} from "./builder";
+} from './builder';
 
 export type {
   Filter,
@@ -63,4 +63,4 @@ export type {
   FilesFilter,
   RelationFilter,
   StatusFilter,
-} from "../core/types/notion-filters";
+} from '../core/types/notion-filters';

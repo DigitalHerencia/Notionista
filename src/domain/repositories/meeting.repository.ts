@@ -35,7 +35,11 @@ export interface UpdateMeetingInput {
 /**
  * Repository for Meeting entities
  */
-export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInput, UpdateMeetingInput> {
+export class MeetingRepository extends BaseRepository<
+  Meeting,
+  CreateMeetingInput,
+  UpdateMeetingInput
+> {
   constructor(mcp: any) {
     super(mcp, DATABASE_IDS.MEETINGS);
   }
@@ -60,7 +64,9 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
     };
   }
 
-  protected toNotionProperties(input: CreateMeetingInput | UpdateMeetingInput | Meeting): PageProperties {
+  protected toNotionProperties(
+    input: CreateMeetingInput | UpdateMeetingInput | Meeting
+  ): PageProperties {
     const properties: PageProperties = {};
 
     if ('name' in input && input.name !== undefined) {
@@ -82,32 +88,30 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
     }
 
     if ('date' in input) {
-      properties['Date'] = input.date
-        ? { date: { start: input.date } }
-        : { date: null };
+      properties['Date'] = input.date ? { date: { start: input.date } } : { date: null };
     }
 
     if ('attendeeTeamIds' in input && input.attendeeTeamIds) {
       properties['Attendees'] = {
-        relation: input.attendeeTeamIds.map(id => ({ id })),
+        relation: input.attendeeTeamIds.map((id) => ({ id })),
       };
     }
 
     if ('actionItemTaskIds' in input && input.actionItemTaskIds) {
       properties['Action Items'] = {
-        relation: input.actionItemTaskIds.map(id => ({ id })),
+        relation: input.actionItemTaskIds.map((id) => ({ id })),
       };
     }
 
     if ('projectIds' in input && input.projectIds) {
       properties['Projects'] = {
-        relation: input.projectIds.map(id => ({ id })),
+        relation: input.projectIds.map((id) => ({ id })),
       };
     }
 
     if ('teamIds' in input && input.teamIds) {
       properties['Teams'] = {
-        relation: input.teamIds.map(id => ({ id })),
+        relation: input.teamIds.map((id) => ({ id })),
       };
     }
 
@@ -119,7 +123,7 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
    */
   async findByType(type: MeetingType): Promise<Meeting[]> {
     const allMeetings = await this.findMany();
-    return allMeetings.filter(meeting => meeting.type === type);
+    return allMeetings.filter((meeting) => meeting.type === type);
   }
 
   /**
@@ -148,8 +152,8 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
    */
   async findByTeam(teamId: string): Promise<Meeting[]> {
     const allMeetings = await this.findMany();
-    return allMeetings.filter(meeting => 
-      meeting.teamIds.includes(teamId) || meeting.attendeeTeamIds.includes(teamId)
+    return allMeetings.filter(
+      (meeting) => meeting.teamIds.includes(teamId) || meeting.attendeeTeamIds.includes(teamId)
     );
   }
 
@@ -158,7 +162,7 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
    */
   async findByProject(projectId: string): Promise<Meeting[]> {
     const allMeetings = await this.findMany();
-    return allMeetings.filter(meeting => meeting.projectIds.includes(projectId));
+    return allMeetings.filter((meeting) => meeting.projectIds.includes(projectId));
   }
 
   /**
@@ -166,7 +170,7 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
    */
   async findByCadence(cadence: Cadence): Promise<Meeting[]> {
     const allMeetings = await this.findMany();
-    return allMeetings.filter(meeting => meeting.cadence === cadence);
+    return allMeetings.filter((meeting) => meeting.cadence === cadence);
   }
 
   /**
@@ -181,7 +185,7 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
    */
   async findByDateRange(startDate: string, endDate: string): Promise<Meeting[]> {
     const allMeetings = await this.findMany();
-    return allMeetings.filter(meeting => {
+    return allMeetings.filter((meeting) => {
       if (!meeting.date) return false;
       return meeting.date >= startDate && meeting.date <= endDate;
     });
@@ -193,10 +197,8 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
   async findUpcoming(): Promise<Meeting[]> {
     const allMeetings = await this.findMany();
     const now = new Date().toISOString();
-    
-    return allMeetings.filter(meeting => 
-      meeting.date && meeting.date >= now
-    );
+
+    return allMeetings.filter((meeting) => meeting.date && meeting.date >= now);
   }
 
   /**
@@ -205,16 +207,16 @@ export class MeetingRepository extends BaseRepository<Meeting, CreateMeetingInpu
   async findPast(): Promise<Meeting[]> {
     const allMeetings = await this.findMany();
     const now = new Date().toISOString();
-    
-    return allMeetings.filter(meeting => 
-      meeting.date && meeting.date < now
-    );
+
+    return allMeetings.filter((meeting) => meeting.date && meeting.date < now);
   }
 
   /**
    * Get meeting with action items
    */
-  async findWithActionItems(meetingId: string): Promise<{ meeting: Meeting; actionItemIds: string[] }> {
+  async findWithActionItems(
+    meetingId: string
+  ): Promise<{ meeting: Meeting; actionItemIds: string[] }> {
     const meeting = await this.findByIdOrThrow(meetingId);
     return {
       meeting,

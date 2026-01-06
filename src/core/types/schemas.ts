@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const notionId = z.string();
 const isoDate = z.string(); // ISO 8601
@@ -17,22 +17,12 @@ export type Team = z.infer<typeof Team>;
 export const Project = z.object({
   id: notionId,
   name: z.string(),
-  status: z.enum(["Active", "Completed", "On Hold", "Cancelled"]),
-  milestone: z.enum(["M1", "M2", "M3"]).nullable(),
+  status: z.enum(['Active', 'Completed', 'On Hold', 'Cancelled']),
+  milestone: z.enum(['M1', 'M2', 'M3']).nullable(),
   phase: z
-    .enum([
-      "P1.1",
-      "P1.2",
-      "P1.3",
-      "P2.1",
-      "P2.2",
-      "P2.3",
-      "P3.1",
-      "P3.2",
-      "P3.3",
-    ])
+    .enum(['P1.1', 'P1.2', 'P1.3', 'P2.1', 'P2.2', 'P2.3', 'P3.1', 'P3.2', 'P3.3'])
     .nullable(),
-  domain: z.enum(["OPS", "PROD", "DES", "ENG", "MKT", "RES"]).nullable(),
+  domain: z.enum(['OPS', 'PROD', 'DES', 'ENG', 'MKT', 'RES']).nullable(),
   startDate: isoDate.nullable(),
   endDate: isoDate.nullable(),
   teamId: notionId.optional(),
@@ -46,7 +36,7 @@ export const Task = z.object({
   done: z.boolean(),
   taskCode: z.string().optional(),
   due: isoDate.nullable(),
-  priority: z.enum(["High", "Medium", "Low"]).nullable(),
+  priority: z.enum(['High', 'Medium', 'Low']).nullable(),
   projectId: notionId.optional(),
   teamId: notionId.optional(),
 });
@@ -55,16 +45,8 @@ export type Task = z.infer<typeof Task>;
 export const Meeting = z.object({
   id: notionId,
   name: z.string(),
-  type: z.enum([
-    "Standup",
-    "Sprint Planning",
-    "Post-mortem",
-    "Team Sync",
-    "Ad Hoc",
-  ]),
-  cadence: z
-    .enum(["Daily", "Weekly", "Biweekly", "Monthly", "Ad Hoc"])
-    .nullable(),
+  type: z.enum(['Standup', 'Sprint Planning', 'Post-mortem', 'Team Sync', 'Ad Hoc']),
+  cadence: z.enum(['Daily', 'Weekly', 'Biweekly', 'Monthly', 'Ad Hoc']).nullable(),
   date: isoDate.nullable(),
   attendeeTeamIds: z.array(notionId).default([]),
   actionItemTaskIds: z.array(notionId).default([]),

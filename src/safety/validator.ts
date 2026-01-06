@@ -113,10 +113,7 @@ export class Validator {
    * @param requiredFields Required field names
    * @returns Validation result
    */
-  validateRequired(
-    entity: Record<string, unknown>,
-    requiredFields: string[]
-  ): ValidationResult {
+  validateRequired(entity: Record<string, unknown>, requiredFields: string[]): ValidationResult {
     const errors: string[] = [];
 
     for (const field of requiredFields) {

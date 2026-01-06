@@ -35,7 +35,11 @@ export interface UpdateProjectInput {
 /**
  * Repository for Project entities
  */
-export class ProjectRepository extends BaseRepository<Project, CreateProjectInput, UpdateProjectInput> {
+export class ProjectRepository extends BaseRepository<
+  Project,
+  CreateProjectInput,
+  UpdateProjectInput
+> {
   constructor(mcp: any) {
     super(mcp, DATABASE_IDS.PROJECTS);
   }
@@ -61,7 +65,9 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
     };
   }
 
-  protected toNotionProperties(input: CreateProjectInput | UpdateProjectInput | Project): PageProperties {
+  protected toNotionProperties(
+    input: CreateProjectInput | UpdateProjectInput | Project
+  ): PageProperties {
     const properties: PageProperties = {};
 
     if ('name' in input && input.name !== undefined) {
@@ -83,15 +89,11 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
     }
 
     if ('phase' in input) {
-      properties['Phase'] = input.phase
-        ? { select: { name: input.phase } }
-        : { select: null };
+      properties['Phase'] = input.phase ? { select: { name: input.phase } } : { select: null };
     }
 
     if ('domain' in input) {
-      properties['Domain'] = input.domain
-        ? { select: { name: input.domain } }
-        : { select: null };
+      properties['Domain'] = input.domain ? { select: { name: input.domain } } : { select: null };
     }
 
     if ('startDate' in input) {
@@ -101,9 +103,7 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
     }
 
     if ('endDate' in input) {
-      properties['End Date'] = input.endDate
-        ? { date: { start: input.endDate } }
-        : { date: null };
+      properties['End Date'] = input.endDate ? { date: { start: input.endDate } } : { date: null };
     }
 
     if ('teamId' in input && input.teamId) {
@@ -120,7 +120,7 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
    */
   async findByStatus(status: ProjectStatus): Promise<Project[]> {
     const allProjects = await this.findMany();
-    return allProjects.filter(project => project.status === status);
+    return allProjects.filter((project) => project.status === status);
   }
 
   /**
@@ -128,7 +128,7 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
    */
   async findByTeam(teamId: string): Promise<Project[]> {
     const allProjects = await this.findMany();
-    return allProjects.filter(project => project.teamId === teamId);
+    return allProjects.filter((project) => project.teamId === teamId);
   }
 
   /**
@@ -136,7 +136,7 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
    */
   async findByMilestone(milestone: Milestone): Promise<Project[]> {
     const allProjects = await this.findMany();
-    return allProjects.filter(project => project.milestone === milestone);
+    return allProjects.filter((project) => project.milestone === milestone);
   }
 
   /**
@@ -144,7 +144,7 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
    */
   async findByDomain(domain: Domain): Promise<Project[]> {
     const allProjects = await this.findMany();
-    return allProjects.filter(project => project.domain === domain);
+    return allProjects.filter((project) => project.domain === domain);
   }
 
   /**
@@ -177,7 +177,7 @@ export class ProjectRepository extends BaseRepository<Project, CreateProjectInpu
    */
   async findByDateRange(startDate: string, endDate: string): Promise<Project[]> {
     const allProjects = await this.findMany();
-    return allProjects.filter(project => {
+    return allProjects.filter((project) => {
       if (!project.startDate) return false;
       return project.startDate >= startDate && project.startDate <= endDate;
     });

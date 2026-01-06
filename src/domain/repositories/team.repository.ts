@@ -60,9 +60,7 @@ export class TeamRepository extends BaseRepository<Team, CreateTeamInput, Update
    */
   async findByName(name: string): Promise<Team[]> {
     const allTeams = await this.findMany();
-    return allTeams.filter(team => 
-      team.name.toLowerCase().includes(name.toLowerCase())
-    );
+    return allTeams.filter((team) => team.name.toLowerCase().includes(name.toLowerCase()));
   }
 
   /**
