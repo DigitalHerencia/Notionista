@@ -31,19 +31,21 @@ This document operationalizes safe, controlled edits to your Notion using Model 
 
 ## Digital Herencia Workspace Structure
 
+> **Note**: Database IDs and URLs are maintained in [config/databases.json](config/databases.json). Always reference that file as the authoritative source for current database identifiers.
+
 ### Core Databases
 
-| Database       | Data Source ID                         | URL                                                    |
-| -------------- | -------------------------------------- | ------------------------------------------------------ |
-| **Teams**      | `2d5a4e63-bf23-816b-9f75-000b219f7713` | <https://www.notion.so/2d5a4e63bf2381519b98c81833668844> |
-| **Projects**   | `2d5a4e63-bf23-8115-a70f-000bc1ef9d05` | <https://www.notion.so/2d5a4e63bf2380269d25c9c88bed11e0> |
-| **Tasks**      | `2d5a4e63-bf23-8137-8277-000b41c867c3` | <https://www.notion.so/2d5a4e63bf238089a61ec2ba26f09f99> |
-| **Meetings**   | `2caa4e63-bf23-815a-8981-000bbdbb7f0b` | <https://www.notion.so/2caa4e63bf23815a8981f11ae5a75ebb> |
-| **Prompts**    | `2d5a4e63-bf23-81ad-ab3f-000bfbb91ed9` | <https://www.notion.so/2d5a4e63bf2381fa9ca8f6368bcda19a> |
-| **Tech Stack** | `276a4e63-bf23-80e2-bbae-000b2fa9662a` | <https://www.notion.so/276a4e63bf2380e2bbae0025cc95d009> |
-| **Templates**  | `2d5a4e63-bf23-8189-943d-000bdd7af066` | <https://www.notion.so/2d5a4e63bf2381628db4fcce1bbe3471> |
-| **SOPs**       | `2d8a4e63-bf23-80d1-8167-000bb402c275` | <https://www.notion.so/2d8a4e63bf23801eb6ace52358ee91dc> |
-| **Calendar**   | `2d5a4e63-bf23-8140-b0d7-000b33493b7e` | <https://www.notion.so/2d5a4e63bf238033b0d1c0fca0e72d3e> |
+| Database       | Data Source ID            | URL                       | Notes                         |
+| -------------- | ------------------------- | ------------------------- | ----------------------------- |
+| **Teams**      | See config/databases.json | See config/databases.json | Primary teams database        |
+| **Projects**   | See config/databases.json | See config/databases.json | Company-wide projects         |
+| **Tasks**      | See config/databases.json | See config/databases.json | All tasks across teams        |
+| **Meetings**   | See config/databases.json | See config/databases.json | All meetings and standups     |
+| **Prompts**    | See config/databases.json | See config/databases.json | Prompt templates              |
+| **Tech Stack** | See config/databases.json | See config/databases.json | Technology inventory          |
+| **Templates**  | See config/databases.json | See config/databases.json | Reusable templates            |
+| **SOPs**       | See config/databases.json | See config/databases.json | Standard operating procedures |
+| **Calendar**   | See config/databases.json | See config/databases.json | Team calendar                 |
 
 ### Teams (6 Active)
 
@@ -171,6 +173,7 @@ Teams ─┬─→ Projects ─→ Tasks
   - List/query: `retrieve-a-data-source`, `query-data-source`
   - Create/update: `create-a-data-source`, `update-a-data-source`
   - Templates: `list-data-source-templates`
+  - **Note**: Use database IDs from [config/databases.json](config/databases.json) for all operations
 - Pages/Blocks:
   - Create/update/move: `post-page`, `patch-page`, `move-page`
   - Read/children: `retrieve-a-page`, `get-block-children`, `retrieve-a-block`

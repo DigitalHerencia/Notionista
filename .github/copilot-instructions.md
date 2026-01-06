@@ -31,19 +31,21 @@ This document operationalizes safe, controlled edits to your Notion using Model 
 
 ## Digital Herencia Workspace Structure
 
+> **Note**: Database IDs and URLs are maintained in `config/databases.json` at the root of the workspace. Always reference that file as the authoritative source for current database identifiers.
+
 ### Core Databases
 
-| Database       | Data Source ID                         | URL                                                    |
-| -------------- | -------------------------------------- | ------------------------------------------------------ |
-| **Teams**      | `2d5a4e63-bf23-8151-9b98-c81833668844` | https://www.notion.so/2d5a4e63bf2381519b98c81833668844 |
-| **Projects**   | `2d5a4e63-bf23-81b1-b507-f5ac308958e6` | https://www.notion.so/2d5a4e63bf2381b1b507f5ac308958e6 |
-| **Tasks**      | `2d5a4e63-bf23-816f-a217-ef754ce4a70e` | https://www.notion.so/2d5a4e63bf23816fa217ef754ce4a70e |
-| **Meetings**   | `2d5a4e63-bf23-8168-af99-d85e20bfb76f` | https://www.notion.so/2d5a4e63bf238168af99d85e20bfb76f |
-| **Prompts**    | `2d5a4e63-bf23-81fa-9ca8-f6368bcda19a` | https://www.notion.so/2d5a4e63bf2381fa9ca8f6368bcda19a |
-| **Tech Stack** | `276a4e63-bf23-80e2-bbae-000b2fa9662a` | https://www.notion.so/276a4e63bf2380e2bbae0025cc95d009 |
-| **Templates**  | `2d5a4e63-bf23-8162-8db4-fcce1bbe3471` | https://www.notion.so/2d5a4e63bf2381628db4fcce1bbe3471 |
-| **SOPs**       | `2d8a4e63-bf23-801e-b6ac-e52358ee91dc` | https://www.notion.so/2d8a4e63bf23801eb6ace52358ee91dc |
-| **Calendar**   | `2d5a4e63-bf23-8130-acc7-f5ee01d15f22` | https://www.notion.so/2d5a4e63bf238130acc7f5ee01d15f22 |
+| Database       | Data Source ID            | URL                       | Notes                         |
+| -------------- | ------------------------- | ------------------------- | ----------------------------- |
+| **Teams**      | See config/databases.json | See config/databases.json | Primary teams database        |
+| **Projects**   | See config/databases.json | See config/databases.json | Company-wide projects         |
+| **Tasks**      | See config/databases.json | See config/databases.json | All tasks across teams        |
+| **Meetings**   | See config/databases.json | See config/databases.json | All meetings and standups     |
+| **Prompts**    | See config/databases.json | See config/databases.json | Prompt templates              |
+| **Tech Stack** | See config/databases.json | See config/databases.json | Technology inventory          |
+| **Templates**  | See config/databases.json | See config/databases.json | Reusable templates            |
+| **SOPs**       | See config/databases.json | See config/databases.json | Standard operating procedures |
+| **Calendar**   | See config/databases.json | See config/databases.json | Team calendar                 |
 
 ### Teams (6 Active)
 
@@ -171,6 +173,7 @@ Teams ─┬─→ Projects ─→ Tasks
   - List/query: `retrieve-a-data-source`, `query-data-source`
   - Create/update: `create-a-data-source`, `update-a-data-source`
   - Templates: `list-data-source-templates`
+  - **Note**: Use database IDs from `config/databases.json` at the workspace root for all operations
 - Pages/Blocks:
   - Create/update/move: `post-page`, `patch-page`, `move-page`
   - Read/children: `retrieve-a-page`, `get-block-children`, `retrieve-a-block`

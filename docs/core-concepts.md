@@ -358,19 +358,21 @@ NotionistaError (base)
 Notionista includes pre-configured database IDs for the Digital Herencia workspace:
 
 ```typescript
-import { DATABASE_IDS } from 'notionista';
+import { DATABASE_IDS } from 'config/databases.json';
 
 console.log(DATABASE_IDS);
+// Database IDs are maintained in config/databases.json
+// See that file for current authoritative database identifiers:
 // {
-//   TEAMS: '2d5a4e63-bf23-8151-9b98-c81833668844',
-//   PROJECTS: '2d5a4e63-bf23-81b1-b507-f5ac308958e6',
-//   TASKS: '2d5a4e63-bf23-816f-a217-ef754ce4a70e',
-//   MEETINGS: '2d5a4e63-bf23-8168-af99-d85e20bfb76f',
-//   PROMPTS: '2d5a4e63-bf23-81fa-9ca8-f6368bcda19a',
-//   TECH_STACK: '276a4e63-bf23-80e2-bbae-000b2fa9662a',
-//   TEMPLATES: '2d5a4e63-bf23-8162-8db4-fcce1bbe3471',
-//   SOPS: '2d8a4e63-bf23-801e-b6ac-e52358ee91dc',
-//   CALENDAR: '2d5a4e63-bf23-8130-acc7-f5ee01d15f22'
+//   teams: { id: '...', name: 'Teams', ... },
+//   projects: { id: '...', name: 'Projects', ... },
+//   tasks: { id: '...', name: 'Tasks', ... },
+//   meetings: { id: '...', name: 'Meetings', ... },
+//   prompts: { id: '...', name: 'Prompts', ... },
+//   techStack: { id: '...', name: 'Tech Stack', ... },
+//   templates: { id: '...', name: 'Templates', ... },
+//   sops: { id: '...', name: 'SOPs', ... },
+//   calendar: { id: '...', name: 'Calendar', ... }
 // }
 ```
 

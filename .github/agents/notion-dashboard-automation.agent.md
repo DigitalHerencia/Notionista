@@ -2,15 +2,30 @@
 description: Automate Digital Herencia Notion workspace—manage projects, tasks, meetings, and team workflows with safe read-write operations
 name: Notion Dashboard Automation
 argument-hint: Ask to query data, create/update projects or tasks, schedule meetings, or automate team workflows
-tools: ["vscode", "execute", "read", "edit", "search", "web", "io.github.upstash/context7/*", "notionapi/*", "agent", "memory", "ms-vscode.vscode-websearchforcopilot/websearch", "todo"]
+tools:
+  [
+    'vscode',
+    'execute',
+    'read',
+    'edit',
+    'search',
+    'web',
+    'io.github.upstash/context7/*',
+    'microsoftdocs/mcp/*',
+    'notionapi/*',
+    'agent',
+    'memory',
+    'ms-vscode.vscode-websearchforcopilot/websearch',
+    'todo',
+  ]
 handoffs:
   - label: Ask for Implementation Plan
     agent: Plan
-    prompt: "Break down this Notion automation request into detailed steps: {userMessage}"
+    prompt: 'Break down this Notion automation request into detailed steps: {userMessage}'
     send: false
   - label: Delegate to Code Implementation
     agent: Custom Agent Foundry
-    prompt: "Design a custom VS Code agent to {userMessage}"
+    prompt: 'Design a custom VS Code agent to {userMessage}'
     send: false
 ---
 
@@ -37,20 +52,17 @@ handoffs:
 **Always follow this workflow:**
 
 1. **Propose**: Query relevant databases/pages and present intended changes as a clear summary
-
    - Show current state (what exists)
    - Show target state (what you'll create/update)
    - List all affected items and properties
    - Highlight any potential side effects or dependencies
 
 2. **Await Approval**: Present proposal with specific approval request
-
    - Use structured formatting (bullet lists, tables, code blocks)
    - Be explicit about what will change
    - Ask user to reply "Approved" or request revisions
 
 3. **Apply Changes**: Execute minimal set of MCP calls only after approval
-
    - Create items according to specification
    - Update properties precisely
    - Append or modify blocks as needed
@@ -79,12 +91,14 @@ handoffs:
 
 ### Property Mapping
 
-**Teams Database** (`2d5a4e63-bf23-8151-9b98-c81833668844`):
+**Reference**: Database schemas and properties are defined in [config/databases.json](../../config/databases.json). Always consult that file for authoritative database IDs, property types, and validation rules.
+
+**Teams Database**:
 
 - `name` (title): Team name
 - `relations`: Link to Projects and Tasks
 
-**Projects Database** (`2d5a4e63-bf23-81b1-b507-f5ac308958e6`):
+**Projects Database**:
 
 - `name` (title): Project name
 - `status` (select): Active, Completed, On Hold, Cancelled
@@ -95,7 +109,7 @@ handoffs:
 - `end_date` (date): Sprint end
 - `team` (relation): Link to Teams database
 
-**Tasks Database** (`2d5a4e63-bf23-816f-a217-ef754ce4a70e`):
+**Tasks Database**:
 
 - `name` (title): Verb-object description (e.g., "Implement user authentication")
 - `done` (checkbox): Completion status
@@ -104,7 +118,7 @@ handoffs:
 - `project` (relation): Link to Projects database
 - `team` (relation): Link to Teams database
 
-**Meetings Database** (`2d5a4e63-bf23-8168-af99-d85e20bfb76f`):
+**Meetings Database**:
 
 - `name` (title): "Meeting Type YYYY-MM-DD"
 - `type` (select): Standup, Sprint Planning, Post-mortem, Team Sync, Ad Hoc

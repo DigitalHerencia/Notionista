@@ -141,7 +141,7 @@ Found 15 incomplete tasks
 ## Change Proposal: proposal-1704499200-abc123
 
 **Type**: create
-**Target Database**: 2d5a4e63-bf23-816f-a217-ef754ce4a70e
+**Target Database**: See config/databases.json for current database ID
 **Status**: pending
 **Created**: 2026-01-05T12:00:00.000Z
 
