@@ -1,6 +1,6 @@
-# Notionista SDK
+# Notionista
 
-> Type-safe TypeScript SDK for automating Notion workspaces via MCP (Model Context Protocol)
+> Copilot-governed control plane for Notion workspace automation via natural language
 
 [![CI Status](https://github.com/DigitalHerencia/Notionista/workflows/CI/badge.svg)](https://github.com/DigitalHerencia/Notionista/actions)
 [![npm version](https://badge.fury.io/js/notionista.svg)](https://www.npmjs.com/package/notionista)
@@ -8,220 +8,245 @@
 
 ## Overview
 
-Notionista SDK provides a type-safe, developer-friendly interface for interacting with Notion workspaces via the official `@notionhq/notion-mcp-server`. It abstracts MCP protocol complexity and enforces safe mutation workflows for enterprise workspace automation.
+Notionista is a **governance and reasoning layer** for Copilot-driven Notion automation. It provides type-safe schemas, validation rules, and declarative proposals that GitHub Copilot consumes to orchestrate workspace operations through VS Code's MCP integration.
+
+**Key distinction:** This repository provides the brain (types, schemas, constraints, memory). **Copilot Chat is the operator** that reasons about and proposes changes. **VS Code's MCP client** handles the actual execution.
 
 ### Key Features
 
-- **Safety First**: Built-in Propose - Approve - Apply workflow prevents accidental data loss
-- **Type Safety**: Full TypeScript support with IntelliSense for all database schemas
-- **Repository Pattern**: Clean abstraction over raw MCP tool calls
-- **Workflow Orchestration**: High-level APIs for sprint cycles, task management, and analytics
-- **Fluent Query Builder**: Intuitive API for constructing complex database queries
-- **Batch Protection**: Automatic limits on bulk operations (max 50 items)
+- **Copilot-First Design**: Natural language → governed automation
+- **Safety First**: Declarative Propose → Approve → Apply workflow prevents accidental data loss
+- **Type Safety**: Full TypeScript schemas provide IntelliSense for Copilot reasoning
+- **Control Plane**: Types, constraints, and validation rules (no runtime execution)
+- **MCP Integration**: Works seamlessly with VS Code's native MCP client
+- **Governance Layer**: Batch limits, validation rules, and constraint metadata
 
-## Quick Start (< 5 minutes)
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm (recommended) or npm
-- Notion account with MCP integration configured
+- **VS Code** with GitHub Copilot extension
+- **Notion MCP** configured in VS Code (handled by VS Code, not this repo)
+- Node.js 20+ (for type definitions and local development)
 
 ### Installation
 
 ```bash
-# Using pnpm (recommended)
+# Install for type definitions and schemas
 pnpm add notionista
 
-# Using npm
+# Or using npm
 npm install notionista
-
-# Using yarn
-yarn add notionista
 ```
 
-### Basic Usage
+### Usage with Copilot
+
+Notionista provides the governance layer that Copilot reasons about. You interact through natural language in Copilot Chat, which uses these types and constraints.
+
+**Example conversation with Copilot:**
+
+```
+You: Show me all incomplete high-priority tasks
+
+Copilot: [Uses TaskRepository types and QueryFilter schemas to propose]
+         Found 3 incomplete high-priority tasks:
+         - Update API documentation (due 2026-01-15)
+         - Fix authentication flow (due 2026-01-12)
+         - Add unit tests (due 2026-01-10)
+
+You: Create a new task to review these items
+
+Copilot: [Uses ChangeProposal types to create declarative intent]
+         I'll create a task proposal:
+         
+         ## Change Proposal
+         **Type**: create
+         **Target Database**: Tasks
+         
+         ### Proposed Changes
+         - name: "Review high-priority tasks"
+         - priority: "High"
+         - due: 2026-01-08
+         
+         Approve to proceed?
+
+You: Approved
+
+Copilot: [Executes via VS Code MCP client]
+         ✅ Task created successfully (task-abc123)
+```
+
+### Programmatic Usage (For Type Safety)
+
+If you need programmatic access, import types and create declarative proposals:
 
 ```typescript
-import { NotionistaSdk } from 'notionista';
+import { createTaskUpdateProposal } from 'notionista';
 
-// Initialize the SDK
-const sdk = new NotionistaSdk({
-  notionToken: process.env.NOTION_TOKEN!,
+// Create a declarative proposal (no execution)
+const proposal = createTaskUpdateProposal({
+  taskId: 'abc123',
+  changes: { 
+    done: true,
+    priority: 'Low'
+  }
 });
 
-// Connect to MCP server
-await sdk.connect();
-
-// Query tasks (type-safe)
-const tasks = await sdk.tasks.findMany({
-  where: { done: false },
-  orderBy: { due: 'asc' },
-});
-
-console.log(`Found ${tasks.length} incomplete tasks`);
-
-// Create a new task (returns proposal for review)
-const proposal = await sdk.tasks.create({
-  name: 'Update documentation',
-  priority: 'High',
-  due: new Date('2026-01-15'),
-});
-
-// Review proposal
-console.log(proposal.formatForReview());
-
-// Approve and apply
-await proposal.approve();
-await proposal.apply();
-
-// Cleanup
-await sdk.disconnect();
+// Copilot reviews and executes via MCP
+// This repo does NOT execute - it describes intent
 ```
 
 ## Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
-│                   Application Layer                      │
-│  (Workflows, CLI, Scripts, Copilot Agents)              │
+│                  GitHub Copilot Chat                     │
+│             (Natural Language Operator)                  │
+└─────────────────┬───────────────────────────────────────┘
+                  │ Reasons about
+                  │ types & constraints
+┌─────────────────▼───────────────────────────────────────┐
+│                  Notionista Control Plane                │
+│   (Types, Schemas, Constraints, Validation Rules)       │
+│   • ProposalManager • Validator • DiffEngine            │
+│   • Repository Types • Query Schemas                     │
+│   • Constraint Metadata • Batch Guidance                 │
+└─────────────────┬───────────────────────────────────────┘
+                  │ Declares intent
+                  │ (no execution)
+┌─────────────────▼───────────────────────────────────────┐
+│              VS Code MCP Client                          │
+│        (Owned by VS Code, not this repo)                │
+│   • Executes MCP tool calls                              │
+│   • Handles retry logic & rate limiting                  │
+│   • Manages Notion API transport                         │
 └─────────────────┬───────────────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────────────┐
-│                   Domain Layer                           │
-│  (Repositories: Teams, Projects, Tasks, Meetings)       │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────┐
-│                   Safety Layer                           │
-│  (Proposal Manager, Validator, Diff Engine)             │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────┐
-│                   MCP Client Layer                       │
-│  (Tool Wrappers, Middleware, Rate Limiting)             │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────┐
-│             @notionhq/notion-mcp-server                  │
-│                  (stdio transport)                       │
+│          @notionhq/notion-mcp-server                     │
+│               (stdio transport)                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ## Core Concepts
 
+### Control Plane Model
+
+Notionista provides the **governance layer** for Copilot-driven automation:
+
+- **Types & Schemas**: TypeScript definitions Copilot uses for reasoning
+- **Constraints**: Metadata about batch limits, rate limits, retry policies
+- **Validation Rules**: Declarative rules for data integrity
+- **Proposals**: Immutable change descriptions (not executed by this repo)
+
 ### Safety Workflow: Propose → Approve → Apply
 
-All mutations go through a three-phase workflow to prevent accidental data loss:
+All mutations follow a declarative three-phase workflow:
 
 ```typescript
-// 1. Propose: Generate a change proposal (no execution)
-const proposal = await sdk.projects.create({
+// 1. Propose: Generate a declarative change description
+const proposal = createProjectProposal({
   name: 'Q1 Planning',
   status: 'Active',
   milestone: 'M1',
-  startDate: new Date('2026-01-06'),
-  endDate: new Date('2026-01-20'),
+  startDate: '2026-01-06',
+  endDate: '2026-01-20',
 });
 
 // 2. Review: Inspect proposed changes
 console.log(proposal.formatForReview());
-// Output:
-// Proposal #abc123: Create Project
-// Database: Projects (2d5a4e63-bf23-8115-a70f-000bc1ef9d05)
-// Changes:
-//   + name: "Q1 Planning"
-//   + status: "Active"
-//   + milestone: "M1"
-//   + startDate: 2026-01-06
-//   + endDate: 2026-01-20
+// Output shows:
+// - Target database
+// - Property changes with impact levels
+// - Validation results
+// - Side effects (relations, rollups)
 
-// 3. Approve & Apply: Execute only if approved
-await proposal.approve();
-const result = await proposal.apply();
+// 3. Approve & Apply: Copilot executes via MCP
+// (Execution handled by VS Code MCP client, not this repo)
 ```
 
-### Repository Pattern
+### Type-Safe Schemas
 
-Each Notion database has a corresponding repository:
+Copilot uses repository type definitions for intelligent reasoning:
 
 ```typescript
-// Team Repository
-const teams = await sdk.teams.findMany();
-const engineeringTeam = await sdk.teams.findById('team-id');
+// Team Repository types
+interface Team {
+  id: string;
+  name: string;
+  tasksCompleted: number;
+  projectsComplete: number;
+}
 
-// Project Repository
-const activeProjects = await sdk.projects.findMany({
-  where: { status: 'Active' },
-});
+// Project Repository types
+interface Project {
+  id: string;
+  name: string;
+  status: 'Active' | 'Completed' | 'On Hold' | 'Cancelled';
+  milestone: 'M1' | 'M2' | 'M3' | null;
+  startDate: string | null;
+  endDate: string | null;
+}
 
-// Task Repository
-const highPriorityTasks = await sdk.tasks.findMany({
-  where: {
-    priority: 'High',
-    done: false,
-  },
-});
+// Task Repository types
+interface Task {
+  id: string;
+  name: string;
+  done: boolean;
+  priority: 'High' | 'Medium' | 'Low' | null;
+  due: string | null;
+}
 
-// Meeting Repository
-const upcomingMeetings = await sdk.meetings.findMany({
-  where: {
-    date: { after: new Date() },
-  },
-});
+// Copilot reasons about these types to propose valid changes
 ```
 
-### Query Builder
+### Query Schemas
 
-Construct complex queries with a fluent API:
+Declarative filter schemas for expressing intent:
 
 ```typescript
-import { QueryBuilder } from 'notionista';
+import { QueryFilter } from 'notionista';
 
-const query = new QueryBuilder('tasks')
-  .where('done', 'equals', false)
-  .where('priority', 'equals', 'High')
-  .where('due', 'on_or_before', new Date('2026-01-15'))
-  .orderBy('due', 'ascending')
-  .limit(25);
+// Define query intent (not executed by this repo)
+const taskQuery: QueryFilter = {
+  and: [
+    { property: 'Done', checkbox: { equals: false } },
+    { property: 'Priority', select: { equals: 'High' } },
+    { property: 'Due', date: { on_or_before: '2026-01-15' } }
+  ]
+};
 
-const tasks = await sdk.tasks.query(query);
+// Copilot uses this schema to construct MCP queries
 ```
 
-### Workflow Orchestration
+### Constraint Metadata
 
-High-level workflows for common operations:
+Machine-readable constraints for Copilot reasoning:
 
 ```typescript
-import { SprintCycleWorkflow } from 'notionista/workflows';
+import { DEFAULT_MCP_CONSTRAINTS } from 'notionista';
 
-const workflow = new SprintCycleWorkflow(sdk);
+// Rate limiting (handled by VS Code MCP client)
+const { rateLimit } = DEFAULT_MCP_CONSTRAINTS;
+// rateLimit.requestsPerSecond = 3
+// rateLimit.handledBy = 'vscode-mcp-client'
 
-// Plan a complete sprint (project + tasks + meetings)
-const sprintProposal = await workflow.planSprint({
-  teamId: 'engineering-team-id',
-  name: 'Sprint 2026-W02',
-  startDate: new Date('2026-01-06'),
-  endDate: new Date('2026-01-20'),
-  milestone: 'M1',
-  phase: 'P1.1',
-  domain: 'ENG',
-  tasks: [
-    { name: 'Implement MCP client', priority: 'High', due: new Date('2026-01-10') },
-    { name: 'Write integration tests', priority: 'Medium', due: new Date('2026-01-15') },
-  ],
-});
+// Retry behavior (handled by VS Code MCP client)
+const { retry } = DEFAULT_MCP_CONSTRAINTS;
+// retry.maxRetries = 3
+// retry.backoffStrategy = 'exponential'
+// retry.handledBy = 'vscode-mcp-client'
 
-// Review aggregate proposal
-console.log(sprintProposal.summary);
-
-// Execute all changes
-await workflow.executeSprint(sprintProposal);
+// Batch guidance (used by Copilot for planning)
+const { batch } = DEFAULT_MCP_CONSTRAINTS;
+// batch.maxItemsPerBatch = 50
+// batch.requiresDryRunSummary = true
+// batch.handledBy = 'copilot-agent'
 ```
 
 ## Database Schema
 
-The SDK supports configurable database schemas for custom workspace layouts.
+Notionista provides type definitions for standard Notion workspace databases.
 
 ### Standard Database Types
 
@@ -247,165 +272,147 @@ type Priority = 'High' | 'Medium' | 'Low';
 type MeetingType = 'Standup' | 'Planning' | 'Review' | 'Sync' | 'Other';
 ```
 
-## Advanced Features
+## Governance Features
 
-### Batch Operations
+### Batch Operation Guidance
 
-Safe bulk updates with automatic limits:
+Constraint metadata for safe batch operations:
 
 ```typescript
-import { BulkOperationManager } from 'notionista';
+import { validateBatchSize, splitIntoBatches } from 'notionista';
 
-const bulk = new BulkOperationManager(sdk);
+const items = [...]; // Array of items to process
 
-// Update multiple tasks (max 50)
-const proposal = await bulk.updateMany('tasks', [
-  { id: 'task-1', updates: { priority: 'High' } },
-  { id: 'task-2', updates: { priority: 'High' } },
-  // ... up to 50 items
-]);
+// Validate batch size against recommended limits
+const validation = validateBatchSize(items.length);
+if (!validation.withinLimit) {
+  console.warn(validation.message);
+  // Copilot can use this to plan batch execution
+}
 
-// Throws BatchLimitExceededError if > 50 items
+// Split into manageable chunks
+const batches = splitIntoBatches(items, 50);
+// Copilot coordinates execution via MCP client
 ```
 
-### Snapshot & Sync
+### Validation Rules
 
-Compare live Notion data with local exports:
+Declarative validation for data integrity:
 
 ```typescript
-import { SnapshotManager } from 'notionista/sync';
+import { Validator } from 'notionista';
 
-const snapshots = new SnapshotManager(sdk);
+const validator = new Validator();
 
-// Capture current state
-const snapshot = await snapshots.capture('tasks');
+// Define validation rules
+const taskRules = [
+  { field: 'name', required: true, minLength: 3, maxLength: 100 },
+  { field: 'priority', allowedValues: ['High', 'Medium', 'Low'] },
+  { field: 'due', type: 'date' },
+];
 
-// Later, compare to detect drift
-const diff = await snapshots.diff(snapshot.id);
+// Validate proposed changes
+const result = validator.validate(proposedTask, taskRules);
 
-console.log(`Added: ${diff.added.length}`);
-console.log(`Modified: ${diff.modified.length}`);
-console.log(`Removed: ${diff.removed.length}`);
+if (!result.valid) {
+  console.log('Validation errors:', result.errors);
+  // Copilot uses this to refine proposals
+}
 ```
 
-### Middleware Pipeline
+### Diff Engine
 
-Customize MCP client behavior:
-
-```typescript
-import { McpClient, rateLimiterMiddleware, retryMiddleware } from 'notionista/mcp';
-
-const client = new McpClient({ notionToken: process.env.NOTION_TOKEN! });
-
-// Add custom middleware
-client.use(rateLimiterMiddleware({ requestsPerSecond: 3 }));
-client.use(retryMiddleware({ maxRetries: 3, backoff: 'exponential' }));
-client.use(customLoggingMiddleware);
-```
-
-### Practical Example
-
-Create complete workflows for complex operations:
+Compute property-level differences for change review:
 
 ```typescript
-const project = await sdk.projects.create({
-  name: 'Q1 2026 Initiative',
-  status: 'Active',
-  startDate: new Date('2026-01-06'),
-  endDate: new Date('2026-03-31'),
-});
+import { DiffEngine } from 'notionista';
 
-console.log(project.formatForReview());
-await project.approve();
-const result = await project.apply();
+const engine = new DiffEngine();
+
+const diff = engine.computeDiff(
+  { name: 'Old Project', status: 'Active' },     // current
+  { name: 'New Project', status: 'Completed' }   // proposed
+);
+
+// Output:
+// [
+//   { property: 'name', oldValue: 'Old Project', newValue: 'New Project', impact: 'low' },
+//   { property: 'status', oldValue: 'Active', newValue: 'Completed', impact: 'high' }
+// ]
 ```
 
 ## Examples
 
-See the [examples/](./examples) directory for complete working examples:
+See the [examples/](./examples) directory for type definitions and proposal patterns:
 
-- **[query-tasks.ts](./examples/query-tasks.ts)**: Basic task queries
-- **[create-sprint.ts](./examples/create-sprint.ts)**: Sprint planning workflow
-- **[bulk-update.ts](./examples/bulk-update.ts)**: Safe bulk operations
-- **[safety-workflow.ts](./examples/safety-workflow.ts)**: Proposal workflow demonstration
-- **[analytics.ts](./examples/analytics.ts)**: Team metrics and reporting
+- **[query-tasks.ts](./examples/query-tasks.ts)**: Query filter schemas
+- **[create-sprint.ts](./examples/create-sprint.ts)**: Sprint planning proposals
+- **[bulk-update.ts](./examples/bulk-update.ts)**: Batch operation guidance
+- **[safety-workflow.ts](./examples/safety-workflow.ts)**: Proposal workflow types
+- **[analytics.ts](./examples/analytics.ts)**: Team metrics schemas
 
-## Configuration
+## Type Definitions
 
-### Environment Variables
+For local type checking and Copilot IntelliSense:
 
 ```bash
-# Required
-NOTION_TOKEN=ntn_***  # Your Notion integration token
-
-# Optional
-MCP_SERVER_PATH=/path/to/notion-mcp-server  # Custom MCP server path
-LOG_LEVEL=debug  # Logging verbosity: error, warn, info, debug
-CACHE_TTL=300  # Cache TTL in seconds (default: 300)
-RATE_LIMIT=3  # Requests per second (default: 3)
+# Required for VS Code MCP connection
+NOTION_TOKEN=ntn_***  # Your Notion integration token (for VS Code MCP)
 ```
 
-### SDK Options
+Note: MCP server configuration and runtime behavior are managed by VS Code, not this repository.
+
+### Core Type Exports
 
 ```typescript
-const sdk = new NotionistaSdk({
-  notionToken: process.env.NOTION_TOKEN!,
-  logLevel: 'debug',
-  cacheTtl: 300,
-  rateLimit: 3,
-});
+// Import types for Copilot reasoning
+import type {
+  Team,
+  Project,
+  Task,
+  Meeting,
+  ChangeProposal,
+  QueryFilter,
+  ValidationResult,
+  PropertyDiff
+} from 'notionista';
+
+// Use types for IntelliSense and validation
+const taskProposal: ChangeProposal<Task> = {
+  // ... declarative proposal structure
+};
 ```
 
 ## API Reference
 
-### NotionistaSdk
+### Repository Type Definitions
 
-Main SDK class providing access to all repositories and workflows.
-
-```typescript
-class NotionistaSdk {
-  // Lifecycle
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-
-  // Repositories
-  teams: TeamRepository;
-  projects: ProjectRepository;
-  tasks: TaskRepository;
-  meetings: MeetingRepository;
-  prompts: PromptsRepository;
-  techStack: TechStackRepository;
-
-  // Workflows
-  sprintCycle: SprintCycleWorkflow;
-  analytics: AnalyticsService;
-
-  // Low-level access
-  mcp: McpClient;
-}
-```
-
-### Repository Methods
-
-All repositories extend `BaseRepository<T>` with common methods:
+Type definitions for Copilot to reason about Notion structure:
 
 ```typescript
-interface BaseRepository<T> {
-  // Queries (read-only)
-  findMany(filter?: QueryFilter): Promise<T[]>;
-  findById(id: string): Promise<T | null>;
-  query(builder: QueryBuilder): Promise<T[]>;
-
-  // Mutations (return proposals)
-  create(input: CreateInput): Promise<ChangeProposal<T>>;
-  update(id: string, input: UpdateInput): Promise<ChangeProposal<T>>;
-  delete(id: string): Promise<ChangeProposal<void>>;
+interface TeamRepository {
+  // Query types (describe intent, don't execute)
+  findMany(filter?: QueryFilter): Team[];
+  findById(id: string): Team | null;
 }
+
+interface ProjectRepository {
+  findMany(filter?: QueryFilter): Project[];
+  findById(id: string): Project | null;
+}
+
+interface TaskRepository {
+  findMany(filter?: QueryFilter): Task[];
+  findById(id: string): Task | null;
+}
+
+// These interfaces guide Copilot's reasoning
+// Actual execution happens via VS Code MCP client
 ```
 
 ### ChangeProposal
 
-Represents a proposed change that requires approval:
+Represents a declarative change description:
 
 ```typescript
 interface ChangeProposal<T> {
@@ -415,65 +422,16 @@ interface ChangeProposal<T> {
   currentState: T | null;
   proposedState: T;
   diff: PropertyDiff[];
+  validation: ValidationResult;
   status: 'pending' | 'approved' | 'applied' | 'rejected';
-
-  // Methods
-  approve(): Promise<void>;
-  reject(): Promise<void>;
-  apply(): Promise<ApplyResult>;
-  formatForReview(): string;
 }
-```
 
-## Testing
-
-Run the test suite:
-
-```bash
-# Run all tests
-pnpm test
-
-# Run with coverage
-pnpm test:coverage
-
-# Run in watch mode
-pnpm test:watch
-
-# Run integration tests only
-pnpm test:integration
-```
-
-### Writing Tests
-
-```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-import { NotionistaSdk } from 'notionista';
-import { mockMcpClient } from 'notionista/testing';
-
-describe('TaskRepository', () => {
-  let sdk: NotionistaSdk;
-
-  beforeEach(() => {
-    sdk = new NotionistaSdk({
-      notionToken: 'test-token',
-      mcpClient: mockMcpClient(),
-    });
-  });
-
-  it('should query incomplete tasks', async () => {
-    const tasks = await sdk.tasks.findMany({
-      where: { done: false },
-    });
-
-    expect(tasks).toHaveLength(10);
-    expect(tasks[0].done).toBe(false);
-  });
-});
+// Proposals describe intent - execution delegated to MCP host
 ```
 
 ## Development
 
-### Setup
+### Local Setup
 
 ```bash
 # Clone repository
@@ -483,7 +441,7 @@ cd Notionista
 # Install dependencies
 pnpm install
 
-# Build
+# Build type definitions
 pnpm build
 
 # Run tests
@@ -496,24 +454,44 @@ pnpm lint
 pnpm typecheck
 ```
 
+### Testing Type Definitions
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import type { Task, ChangeProposal } from 'notionista';
+
+describe('Task Types', () => {
+  it('should validate task structure', () => {
+    const task: Task = {
+      id: 'task-123',
+      name: 'Test Task',
+      done: false,
+      priority: 'High',
+      due: '2026-01-15'
+    };
+
+    expect(task).toBeDefined();
+  });
+});
+```
+
 ### Project Structure
 
 ```text
 notionista/
-├── src/                      # Source code
-│   ├── core/                 # Core types and constants
-│   ├── mcp/                  # MCP client layer
-│   ├── domain/               # Domain entities and repositories
-│   ├── safety/               # Safety layer (proposals, validation)
-│   ├── workflows/            # High-level workflow orchestration
-│   └── index.ts              # Public API exports
-├── examples/                 # Example scripts
-├── tests/                    # Test suites
-│   ├── unit/                 # Unit tests
-│   ├── integration/          # Integration tests
-│   └── fixtures/             # Test fixtures
-├── docs/                     # Additional documentation
-└── .copilot/                 # Copilot configuration and reports
+├── src/                      # Type definitions and schemas
+│   ├── core/                 # Core types, constants, constraints
+│   ├── domain/               # Entity types and repository interfaces
+│   ├── safety/               # Proposal types, validation schemas
+│   ├── workflows/            # Workflow type definitions
+│   └── index.ts              # Public type exports
+├── examples/                 # Usage examples for Copilot
+├── tests/                    # Type validation tests
+├── docs/                     # Documentation
+└── .copilot/                 # Copilot configuration
+    ├── agents/               # Custom Copilot agents
+    └── prompts/              # Reusable prompts
+```
     ├── agents/               # Custom Copilot agents
     ├── prompts/              # Reusable prompts
     └── reports/              # Design docs and requirements
@@ -550,8 +528,9 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## Acknowledgments
 
-- Built on top of [@notionhq/notion-mcp-server](https://github.com/notionhq/notion-mcp-server)
-- Inspired by the [Model Context Protocol](https://modelcontextprotocol.io/)
+- Type definitions compatible with [@notionhq/notion-mcp-server](https://github.com/notionhq/notion-mcp-server)
+- Designed for the [Model Context Protocol](https://modelcontextprotocol.io/) ecosystem
+- Optimized for GitHub Copilot reasoning
 - Developed for the [Digital Herencia](https://github.com/DigitalHerencia) team workspace
 
 ## Support
@@ -560,4 +539,6 @@ For issues, feature requests, or questions, please visit [GitHub Issues](https:/
 
 ---
 
-This project is maintained as part of the Notion automation ecosystem.
+**Architecture**: Copilot-governed control plane  
+**Execution**: VS Code MCP client  
+**Purpose**: Types, schemas, constraints for Notion automation
