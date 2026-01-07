@@ -76,6 +76,18 @@ export interface McpClientOptions {
 
 /**
  * MCP Transport interface
+ *
+ * NOTE: MCP transport is provided by the host environment (VS Code).
+ * This SDK does not implement transport logic or spawn MCP server processes.
+ * The transport layer is assumed to be externally managed and provided to the client.
+ *
+ * Implementations of this interface should be provided by:
+ * - VS Code Copilot workspace
+ * - Test mocks for unit testing
+ * - Custom integrations (if needed)
+ *
+ * This SDK focuses on domain logic, safety layers, and workflow orchestration,
+ * not on MCP server lifecycle management.
  */
 
 export interface McpTransport {

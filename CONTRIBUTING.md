@@ -248,7 +248,6 @@ No code changes.
 
 ```typescript
 // 1. Imports (grouped by external, internal, types)
-import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
 
 import { McpClient } from '../mcp/client';

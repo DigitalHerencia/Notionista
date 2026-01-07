@@ -25,13 +25,10 @@ export const NOTION_LIMITS = {
 } as const;
 
 /**
- * MCP server configuration
+ * NOTE: MCP server runtime is provided by VS Code.
+ * This SDK does not spawn or manage MCP server processes.
+ * MCP connectivity is assumed to be handled by the host environment.
  */
-export const MCP_SERVER = {
-  COMMAND: 'npx',
-  ARGS: ['-y', '@notionhq/notion-mcp-server'],
-  PACKAGE: '@notionhq/notion-mcp-server',
-} as const;
 
 export const JSON_RPC_VERSION = '2.0';
 

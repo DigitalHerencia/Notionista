@@ -83,6 +83,9 @@ export class ConfigurationError extends NotionistaError {
 
 /**
  * Error thrown when MCP transport operation fails
+ *
+ * NOTE: This error type is retained for compatibility with external transport
+ * implementations. The SDK itself does not spawn or manage MCP transports.
  */
 export class McpTransportError extends NotionistaError {
   constructor(
@@ -95,6 +98,9 @@ export class McpTransportError extends NotionistaError {
 
 /**
  * Error thrown when MCP connection fails
+ *
+ * NOTE: This error type is retained for compatibility with external transport
+ * implementations. The SDK itself does not spawn or manage MCP connections.
  */
 export class McpConnectionError extends NotionistaError {
   constructor(

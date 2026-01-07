@@ -7,8 +7,8 @@ tools: ['editFiles', 'codebase', 'terminal']
 # Remove MCP Runtime Ownership
 
 **Epic:** Alignment Epic: Notionista → Copilot-Governed Control Plane
-**Issue:** 01 of 07
-**PR Name:** `chore/remove-mcp-runtime`
+**Issue:** [#17](https://github.com/DigitalHerencia/Notionista/issues/17)
+**PR Name:** chore/remove-mcp-runtime
 
 ## Objective
 

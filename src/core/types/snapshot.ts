@@ -64,7 +64,7 @@ export interface CsvParserOptions {
  */
 export const SnapshotRecordSchema = z.object({
   id: z.string(),
-  properties: z.record(z.unknown()),
+  properties: z.record(z.string(), z.unknown()),
   source: z.enum(['csv', 'markdown']),
   filePath: z.string(),
 });
