@@ -109,7 +109,11 @@ export class SprintCycleWorkflow {
     const meetingProposals = this.createSprintMeetings(config, projectProposal.proposedState.id);
 
     // 4. Generate summary
-    const summary = this.generateSprintSummary(config, taskProposals.length, meetingProposals.length);
+    const summary = this.generateSprintSummary(
+      config,
+      taskProposals.length,
+      meetingProposals.length
+    );
 
     return {
       project: projectProposal,

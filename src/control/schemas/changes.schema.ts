@@ -260,7 +260,8 @@ export const DEFAULT_TEMPLATES: ChangeRequestTemplate[] = [
       { name: 'project', type: 'relation', required: false, description: 'Project name or ID' },
       { name: 'due', type: 'date', required: false, description: 'Due date' },
     ],
-    example: 'Create a task `Update documentation` for project `API Integration`, due `2026-01-15`.',
+    example:
+      'Create a task `Update documentation` for project `API Integration`, due `2026-01-15`.',
   },
   {
     type: 'mark-task-done',

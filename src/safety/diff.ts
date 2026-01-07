@@ -1,4 +1,4 @@
-import type { PropertyDiff } from './proposal';
+import type { PropertyDiff, DiffSummary } from './proposal';
 
 /**
  * Impact level for property changes
@@ -19,6 +19,25 @@ export interface DiffResult {
  * Used to show what will change when a proposal is applied
  */
 export class DiffEngine {
+  /**
+   * Compute full diff summary including before/after states
+   * @param current Current state (null for creates)
+   * @param proposed Proposed new state
+   * @returns Complete diff summary
+   */
+  computeDiffSummary<T extends Record<string, unknown>>(
+    current: T | null,
+    proposed: T
+  ): DiffSummary {
+    const propertyDiffs = this.computeDiff(current, proposed);
+    const summary = this.generateSummary(propertyDiffs);
+
+    return {
+      before: current,
+      after: proposed,
+      summary,
+    };
+  }
   /**
    * Compute diff between current and proposed states
    * @param current Current state (null for creates)

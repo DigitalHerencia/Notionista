@@ -57,28 +57,28 @@ export type GovernanceRule = z.infer<typeof GovernanceRuleSchema>;
  * Default governance policy from copilot-instructions.md
  */
 export const DefaultGovernancePolicySchema = z.object({
-  allowedOperations: z.array(z.string()).default([
-    'search',
-    'list-databases',
-    'query-database',
-    'retrieve-page',
-    'retrieve-block',
-    'read-comment',
-  ]),
-  requiresApproval: z.array(z.string()).default([
-    'create-page',
-    'update-page',
-    'update-properties',
-    'append-blocks',
-    'add-comment',
-  ]),
-  disallowed: z.array(z.string()).default([
-    'delete-page-bulk',
-    'delete-block-bulk',
-    'erase-content',
-    'move-database',
-    'move-to-workspace',
-  ]),
+  allowedOperations: z
+    .array(z.string())
+    .default([
+      'search',
+      'list-databases',
+      'query-database',
+      'retrieve-page',
+      'retrieve-block',
+      'read-comment',
+    ]),
+  requiresApproval: z
+    .array(z.string())
+    .default(['create-page', 'update-page', 'update-properties', 'append-blocks', 'add-comment']),
+  disallowed: z
+    .array(z.string())
+    .default([
+      'delete-page-bulk',
+      'delete-block-bulk',
+      'erase-content',
+      'move-database',
+      'move-to-workspace',
+    ]),
   bulkOperationLimit: z.number().default(50),
   requiresDryRun: z.boolean().default(true),
 });

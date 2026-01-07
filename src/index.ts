@@ -1,5 +1,10 @@
 // MCP Client and Types
-export { McpClient, MockMcpClient, type IMcpClient, type McpOperationIntent } from './mcp/client.js';
+export {
+  McpClient,
+  MockMcpClient,
+  type IMcpClient,
+  type McpOperationIntent,
+} from './mcp/client.js';
 
 // Core constants
 export { DATABASE_IDS as DATABASE_IDS_CONST } from './core/constants/databases.js';
@@ -27,14 +32,17 @@ export {
   DiffEngine,
   ProposalManager,
   Validator,
-  type ApplyResult,
   type BatchConfig,
   type BatchOperation,
   type BatchResult,
   type ChangeProposal,
   type DiffResult,
+  type DiffSummary,
   type ImpactLevel,
+  type McpTool,
   type PropertyDiff,
+  type ProposalIntent,
+  type RiskAssessment,
   type SideEffect,
   type ValidationContext,
   type ValidationResult,
