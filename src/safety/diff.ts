@@ -25,7 +25,10 @@ export class DiffEngine {
    * @param proposed Proposed new state
    * @returns Complete diff summary
    */
-  computeDiffSummary<T extends Record<string, unknown>>(current: T | null, proposed: T): DiffSummary {
+  computeDiffSummary<T extends Record<string, unknown>>(
+    current: T | null,
+    proposed: T
+  ): DiffSummary {
     const propertyDiffs = this.computeDiff(current, proposed);
     const summary = this.generateSummary(propertyDiffs);
 
