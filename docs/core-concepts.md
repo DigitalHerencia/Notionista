@@ -203,34 +203,37 @@ VS Code MCP client executes the approved changes:
      └──────────┘
 ```
 
-## Repository Pattern
+## Repository Type Definitions
 
-Each Notion database has a corresponding repository that provides type-safe CRUD operations:
+Each Notion database has corresponding type definitions for Copilot reasoning:
 
-### Available Repositories
+### Available Repository Types
 
-| Repository     | Database | Entity Type |
-| -------------- | -------- | ----------- |
-| `sdk.teams`    | Teams    | `Team`      |
-| `sdk.projects` | Projects | `Project`   |
-| `sdk.tasks`    | Tasks    | `Task`      |
-| `sdk.meetings` | Meetings | `Meeting`   |
+| Repository Type      | Database | Entity Type |
+| -------------------- | -------- | ----------- |
+| `TeamRepository`     | Teams    | `Team`      |
+| `ProjectRepository`  | Projects | `Project`   |
+| `TaskRepository`     | Tasks    | `Task`      |
+| `MeetingRepository`  | Meetings | `Meeting`   |
 
-### Repository Interface
+### Repository Type Interface
 
-All repositories extend `BaseRepository<T>` with these common methods:
+Type definitions guide Copilot's reasoning:
 
 ```typescript
+// Repository types describe structure, not execution
 interface BaseRepository<T, CreateInput, UpdateInput> {
-  // Read operations (no proposals needed)
+  // Query types (describe intent)
   findMany(filter?: QueryFilter): Promise<T[]>;
   findById(id: string): Promise<T | null>;
   findByIdOrThrow(id: string): Promise<T>;
 
-  // Mutation operations (return proposals)
+  // Proposal types (describe change intent)
   create(input: CreateInput): Promise<ChangeProposal<T>>;
   update(id: string, input: UpdateInput): Promise<ChangeProposal<T>>;
 }
+
+// Copilot uses these types, execution happens via MCP
 ```
 
 ### Entity Types
