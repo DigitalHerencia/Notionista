@@ -1,8 +1,13 @@
 import type { DatabaseId } from '../constants/databases';
+import type { McpOperationIntent } from '../../mcp/client';
 
 /**
  * Represents a change proposal in the safety workflow
  * Propose → Approve → Apply pattern
+ *
+ * This is a DECLARATIVE proposal - it describes what should happen,
+ * not executes it. The mcpIntent field contains the MCP operation
+ * that would need to be executed to apply this change.
  */
 export interface ChangeProposal<T> {
   /** Unique identifier for this proposal */
@@ -34,6 +39,9 @@ export interface ChangeProposal<T> {
 
   /** When this proposal was created */
   createdAt: Date;
+
+  /** The MCP operation intent to execute this proposal */
+  mcpIntent?: McpOperationIntent;
 }
 
 /**

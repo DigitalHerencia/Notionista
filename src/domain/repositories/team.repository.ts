@@ -56,52 +56,13 @@ export class TeamRepository extends BaseRepository<Team, CreateTeamInput, Update
   }
 
   /**
-   * Find teams by name (partial match)
+   * Note: Query methods like findByName, findWithProjects, findWithTasks,
+   * and getMetrics are removed.
+   *
+   * These methods required executing queries and filtering results,
+   * which violates the declarative control layer principle.
+   *
+   * Use findMany() to generate query intents, then execute and process
+   * results externally. Metrics should be calculated from fetched data.
    */
-  async findByName(name: string): Promise<Team[]> {
-    const allTeams = await this.findMany();
-    return allTeams.filter((team) => team.name.toLowerCase().includes(name.toLowerCase()));
-  }
-
-  /**
-   * Get team with all related projects
-   */
-  async findWithProjects(teamId: string): Promise<{ team: Team; projectIds: string[] }> {
-    const team = await this.findByIdOrThrow(teamId);
-    return {
-      team,
-      projectIds: team.projects,
-    };
-  }
-
-  /**
-   * Get team with all related tasks
-   */
-  async findWithTasks(teamId: string): Promise<{ team: Team; taskIds: string[] }> {
-    const team = await this.findByIdOrThrow(teamId);
-    return {
-      team,
-      taskIds: team.tasks,
-    };
-  }
-
-  /**
-   * Get team completion metrics
-   */
-  async getMetrics(teamId: string): Promise<{
-    team: Team;
-    projectsComplete: number;
-    tasksCompleted: number;
-    totalProjects: number;
-    totalTasks: number;
-  }> {
-    const team = await this.findByIdOrThrow(teamId);
-    return {
-      team,
-      projectsComplete: team.projectsComplete ?? 0,
-      tasksCompleted: team.tasksCompleted ?? 0,
-      totalProjects: team.projects.length,
-      totalTasks: team.tasks.length,
-    };
-  }
 }

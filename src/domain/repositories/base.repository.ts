@@ -1,4 +1,4 @@
-import type { IMcpClient } from '../../mcp/client';
+import type { IMcpClient, McpOperationIntent } from '../../mcp/client';
 import type { DatabaseId } from '../../core/constants/databases';
 import type { NotionPage, PageProperties, QueryFilter } from '../../core/types/notion';
 import type {
@@ -7,11 +7,19 @@ import type {
   SideEffect,
   ValidationResult,
 } from '../../core/types/proposals';
-import { EntityNotFoundError, ValidationError as DomainValidationError } from '../../core/errors';
+import { ValidationError as DomainValidationError } from '../../core/errors';
 
 /**
  * Abstract base repository implementing the repository pattern
- * All concrete repositories extend this class
+ *
+ * This is a DECLARATIVE repository - it generates operation intents and proposals,
+ * it does NOT execute queries or mutations.
+ *
+ * All methods return:
+ * - Query intents (not actual data)
+ * - Change proposals (not applied changes)
+ *
+ * Execution is delegated to external systems (VS Code Copilot, MCP host).
  *
  * @template TEntity - The domain entity type
  * @template TCreateInput - Input type for creating entities
@@ -24,50 +32,38 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
   ) {}
 
   /**
-   * Find all entities matching the filter
+   * Generate intent to find all entities matching the filter
+   * Returns the operation intent, not actual entities
+   *
+   * @deprecated This method describes a query intent but doesn't execute it.
+   * Use the returned McpOperationIntent for Copilot reasoning or external execution.
    */
-  async findMany(filter?: QueryFilter): Promise<TEntity[]> {
-    const result = await this.mcp.queryDatabase({
+  findMany(filter?: QueryFilter): McpOperationIntent {
+    return this.mcp.queryDatabase({
       database_id: this.databaseId,
       filter,
       page_size: 100,
     });
-
-    return result.results.map((page: NotionPage) => this.toDomainEntity(page));
   }
 
   /**
-   * Find a single entity by ID
-   * @returns The entity or null if not found
+   * Generate intent to find a single entity by ID
+   * Returns the operation intent, not the actual entity
+   *
+   * @deprecated This method describes a query intent but doesn't execute it.
+   * Use the returned McpOperationIntent for Copilot reasoning or external execution.
    */
-  async findById(id: string): Promise<TEntity | null> {
-    try {
-      const page = await this.mcp.getPage(id);
-      return this.toDomainEntity(page);
-    } catch (error) {
-      return null;
-    }
+  findById(id: string): McpOperationIntent {
+    return this.mcp.getPage(id);
   }
 
   /**
-   * Find a single entity by ID, throw if not found
-   * @throws {EntityNotFoundError} If entity is not found
+   * Create a new entity - returns a proposal with operation intent
+   * Does NOT execute the change or query existing data
    */
-  async findByIdOrThrow(id: string): Promise<TEntity> {
-    const entity = await this.findById(id);
-    if (!entity) {
-      throw new EntityNotFoundError(this.getEntityName(), id);
-    }
-    return entity;
-  }
-
-  /**
-   * Create a new entity - returns a proposal for the safety workflow
-   * Does NOT execute the change immediately
-   */
-  async create(input: TCreateInput): Promise<ChangeProposal<TEntity>> {
+  create(input: TCreateInput): ChangeProposal<TEntity> {
     // Validate input
-    const validation = await this.validateCreate(input);
+    const validation = this.validateCreate(input);
     if (!validation.valid) {
       throw new DomainValidationError('Create validation failed', validation.errors);
     }
@@ -75,11 +71,15 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
     // Create proposed entity
     const proposedState = this.createProposedEntity(input);
 
-    // Detect side effects
-    const sideEffects = await this.detectSideEffects('create', null, proposedState);
+    // Detect side effects (pure analysis, no queries)
+    const sideEffects = this.detectSideEffects('create', null, proposedState);
 
     // Generate diff
     const diff = this.generateDiff(null, proposedState);
+
+    // Generate MCP operation intent
+    const properties = this.toNotionProperties(proposedState as any);
+    const mcpIntent = this.mcp.createPage(this.databaseId, properties);
 
     return {
       id: this.generateProposalId(),
@@ -93,31 +93,38 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
       sideEffects,
       validation,
       createdAt: new Date(),
+      mcpIntent, // Include the operation intent
     };
   }
 
   /**
-   * Update an existing entity - returns a proposal for the safety workflow
-   * Does NOT execute the change immediately
+   * Update an existing entity - returns a proposal with operation intent
+   * Does NOT execute the change or query existing data
+   *
+   * Note: In a declarative system, you must provide the current state
+   * or fetch it externally before calling this method.
    */
-  async update(id: string, input: TUpdateInput): Promise<ChangeProposal<TEntity>> {
-    // Get current state
-    const currentState = await this.findByIdOrThrow(id);
-
+  update(id: string, input: TUpdateInput, currentState?: TEntity): ChangeProposal<TEntity> {
     // Validate update
-    const validation = await this.validateUpdate(id, input);
+    const validation = this.validateUpdate(id, input);
     if (!validation.valid) {
       throw new DomainValidationError('Update validation failed', validation.errors);
     }
 
     // Create proposed state
-    const proposedState = this.mergeUpdate(currentState, input);
+    const proposedState = currentState
+      ? this.mergeUpdate(currentState, input)
+      : this.createProposedEntity(input as unknown as TCreateInput);
 
-    // Detect side effects
-    const sideEffects = await this.detectSideEffects('update', currentState, proposedState);
+    // Detect side effects (pure analysis, no queries)
+    const sideEffects = this.detectSideEffects('update', currentState || null, proposedState);
 
     // Generate diff
-    const diff = this.generateDiff(currentState, proposedState);
+    const diff = this.generateDiff(currentState || null, proposedState);
+
+    // Generate MCP operation intent
+    const properties = this.toNotionProperties(proposedState as any);
+    const mcpIntent = this.mcp.updatePage(id, properties);
 
     return {
       id: this.generateProposalId(),
@@ -126,36 +133,14 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
         database: this.databaseId,
         pageId: id,
       },
-      currentState,
+      currentState: currentState || null,
       proposedState,
       diff,
       sideEffects,
       validation,
       createdAt: new Date(),
+      mcpIntent, // Include the operation intent
     };
-  }
-
-  /**
-   * Execute a create proposal
-   * @internal Used by ProposalManager
-   */
-  async executeCreate(proposal: ChangeProposal<TEntity>): Promise<TEntity> {
-    const properties = this.toNotionProperties(proposal.proposedState as any);
-    const page = await this.mcp.createPage(this.databaseId, properties);
-    return this.toDomainEntity(page);
-  }
-
-  /**
-   * Execute an update proposal
-   * @internal Used by ProposalManager
-   */
-  async executeUpdate(proposal: ChangeProposal<TEntity>): Promise<TEntity> {
-    if (!proposal.target.pageId) {
-      throw new Error('Update proposal must have a pageId');
-    }
-    const properties = this.toNotionProperties(proposal.proposedState as any);
-    const page = await this.mcp.updatePage(proposal.target.pageId, properties);
-    return this.toDomainEntity(page);
   }
 
   /**
@@ -178,10 +163,10 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
   protected abstract getEntityName(): string;
 
   /**
-   * Validate create input
+   * Validate create input (pure function, no side effects)
    * Can be overridden by concrete repositories for custom validation
    */
-  protected async validateCreate(_input: TCreateInput): Promise<ValidationResult> {
+  protected validateCreate(_input: TCreateInput): ValidationResult {
     return {
       valid: true,
       errors: [],
@@ -190,10 +175,10 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
   }
 
   /**
-   * Validate update input
+   * Validate update input (pure function, no side effects)
    * Can be overridden by concrete repositories for custom validation
    */
-  protected async validateUpdate(_id: string, _input: TUpdateInput): Promise<ValidationResult> {
+  protected validateUpdate(_id: string, _input: TUpdateInput): ValidationResult {
     return {
       valid: true,
       errors: [],
@@ -224,14 +209,14 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
   }
 
   /**
-   * Detect side effects of a change
+   * Detect side effects of a change (pure analysis, no queries)
    * Can be overridden to detect relations, rollups, etc.
    */
-  protected async detectSideEffects(
+  protected detectSideEffects(
     _operation: 'create' | 'update',
     _current: TEntity | null,
     _proposed: TEntity
-  ): Promise<SideEffect[]> {
+  ): SideEffect[] {
     return [];
   }
 

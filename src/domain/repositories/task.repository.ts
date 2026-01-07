@@ -1,6 +1,7 @@
 import type { Task } from '../../core/types/schemas';
 import type { NotionPage, PageProperties } from '../../core/types/notion';
 import type { Priority } from '../../core/constants/databases';
+import type { McpOperationIntent } from '../../mcp/client';
 import { BaseRepository } from './base.repository';
 import { DATABASE_IDS } from '../../core/constants/databases';
 
@@ -96,114 +97,86 @@ export class TaskRepository extends BaseRepository<Task, CreateTaskInput, Update
   }
 
   /**
-   * Find tasks by completion status
+   * Generate intent to find tasks by completion status
+   *
+   * @deprecated This method generates a query intent but doesn't execute it.
+   * The query would need to be executed externally and results filtered.
    */
-  async findByDone(done: boolean): Promise<Task[]> {
-    const allTasks = await this.findMany();
-    return allTasks.filter((task) => task.done === done);
+  findByDone(done: boolean): McpOperationIntent {
+    return this.findMany({
+      property: 'Done',
+      checkbox: { equals: done },
+    });
   }
 
   /**
-   * Find incomplete tasks
+   * Generate intent to find incomplete tasks
+   *
+   * @deprecated This method generates a query intent but doesn't execute it.
    */
-  async findIncomplete(): Promise<Task[]> {
+  findIncomplete(): McpOperationIntent {
     return this.findByDone(false);
   }
 
   /**
-   * Find completed tasks
+   * Generate intent to find completed tasks
+   *
+   * @deprecated This method generates a query intent but doesn't execute it.
    */
-  async findCompleted(): Promise<Task[]> {
+  findCompleted(): McpOperationIntent {
     return this.findByDone(true);
   }
 
   /**
-   * Find tasks by project
+   * Generate intent to find tasks by project
+   *
+   * @deprecated This method generates a query intent but doesn't execute it.
    */
-  async findByProject(projectId: string): Promise<Task[]> {
-    const allTasks = await this.findMany();
-    return allTasks.filter((task) => task.projectId === projectId);
+  findByProject(projectId: string): McpOperationIntent {
+    return this.findMany({
+      property: 'Project',
+      relation: { contains: projectId },
+    });
   }
 
   /**
-   * Find tasks by team
+   * Generate intent to find tasks by team
+   *
+   * @deprecated This method generates a query intent but doesn't execute it.
    */
-  async findByTeam(teamId: string): Promise<Task[]> {
-    const allTasks = await this.findMany();
-    return allTasks.filter((task) => task.teamId === teamId);
+  findByTeam(teamId: string): McpOperationIntent {
+    return this.findMany({
+      property: 'Team',
+      relation: { contains: teamId },
+    });
   }
 
   /**
-   * Find tasks by priority
+   * Generate intent to find tasks by priority
+   *
+   * @deprecated This method generates a query intent but doesn't execute it.
    */
-  async findByPriority(priority: Priority): Promise<Task[]> {
-    const allTasks = await this.findMany();
-    return allTasks.filter((task) => task.priority === priority);
+  findByPriority(priority: Priority): McpOperationIntent {
+    return this.findMany({
+      property: 'Priority',
+      select: { equals: priority },
+    });
   }
 
   /**
-   * Find high priority tasks
+   * Generate intent to find high priority tasks
+   *
+   * @deprecated This method generates a query intent but doesn't execute it.
    */
-  async findHighPriority(): Promise<Task[]> {
+  findHighPriority(): McpOperationIntent {
     return this.findByPriority('High');
   }
 
   /**
-   * Find overdue tasks (incomplete with due date in the past)
+   * Note: Complex query methods like findOverdue, findDueToday, findDueSoon
+   * are removed as they require post-query filtering that should be done
+   * externally after query execution.
+   *
+   * Use findMany() with appropriate filters and process results externally.
    */
-  async findOverdue(): Promise<Task[]> {
-    const allTasks = await this.findMany();
-    const now = new Date().toISOString();
-
-    return allTasks.filter((task) => !task.done && task.due && task.due < now);
-  }
-
-  /**
-   * Find tasks due today
-   */
-  async findDueToday(): Promise<Task[]> {
-    const allTasks = await this.findMany();
-    const today = new Date().toISOString().split('T')[0];
-
-    return allTasks.filter((task) => task.due && task.due.startsWith(today as string));
-  }
-
-  /**
-   * Find tasks due within the next N days
-   */
-  async findDueSoon(days: number = 7): Promise<Task[]> {
-    const allTasks = await this.findMany();
-    const now = new Date();
-    const futureDate = new Date(now);
-    futureDate.setDate(futureDate.getDate() + days);
-
-    const nowStr = now.toISOString();
-    const futureStr = futureDate.toISOString();
-
-    return allTasks.filter(
-      (task) => !task.done && task.due && task.due >= nowStr && task.due <= futureStr
-    );
-  }
-
-  /**
-   * Get task completion rate for a project
-   */
-  async getProjectCompletionRate(projectId: string): Promise<number> {
-    const tasks = await this.findByProject(projectId);
-    if (tasks.length === 0) return 0;
-
-    const completed = tasks.filter((t) => t.done).length;
-    return (completed / tasks.length) * 100;
-  }
-
-  /**
-   * Get task completion rate for a team
-   */
-  async getTeamCompletionRate(teamId: string): Promise<number> {
-    const tasks = await this.findByTeam(teamId);
-    if (tasks.length === 0) return 0;
-
-    const completed = tasks.filter((t) => t.done).length;
-    return (completed / tasks.length) * 100;
-  }
 }
