@@ -29,7 +29,41 @@ export interface ValidationResult {
 }
 
 /**
- * A proposed change that must be approved before execution
+ * MCP tool that should be used to execute this proposal
+ */
+export type McpTool = 'post-page' | 'patch-page' | 'delete-a-block' | 'patch-block-children';
+
+/**
+ * Intent description for a proposal
+ * Describes what Copilot should do to execute this proposal
+ */
+export interface ProposalIntent {
+  description: string;
+  mcpTool: McpTool;
+  parameters: Record<string, unknown>;
+}
+
+/**
+ * Diff summary showing before/after states
+ */
+export interface DiffSummary {
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown>;
+  summary: string;
+}
+
+/**
+ * Risk assessment for a proposed change
+ */
+export interface RiskAssessment {
+  level: 'low' | 'medium' | 'high';
+  factors: string[];
+  mitigations: string[];
+}
+
+/**
+ * A declarative proposed change that describes intent only
+ * NO execution methods - Copilot handles all execution
  * Implements the Propose → Approve → Apply safety workflow
  */
 export interface ChangeProposal<T = unknown> {
@@ -39,38 +73,41 @@ export interface ChangeProposal<T = unknown> {
     database: DatabaseId;
     pageId?: string;
   };
+
+  // Declarative intent - what should be done
+  intent: ProposalIntent;
+
+  // Diff summary - before/after comparison
+  diff: DiffSummary;
+
+  // Validation and risks
+  validation: ValidationResult;
+  risks: RiskAssessment;
+
+  // Legacy fields for backward compatibility
   currentState: T | null;
   proposedState: T;
-  diff: PropertyDiff[];
+  propertyDiffs: PropertyDiff[];
   sideEffects: SideEffect[];
-  validation: ValidationResult;
+
+  // Status tracking
   status: 'pending' | 'approved' | 'applied' | 'rejected' | 'failed';
   createdAt: Date;
   appliedAt?: Date;
 }
 
 /**
- * Result of applying a proposal
- */
-export interface ApplyResult {
-  proposalId: string;
-  success: boolean;
-  entityId?: string;
-  error?: Error;
-  timestamp: Date;
-}
-
-/**
- * Manages the proposal lifecycle: propose → approve → (external apply)
+ * Manages the proposal lifecycle: propose → approve → (external execution)
  *
- * This is a DECLARATIVE proposal manager - it tracks proposal state
- * but does NOT execute operations. Execution is delegated externally.
+ * This is a DECLARATIVE proposal manager - it only tracks proposal state
+ * and provides descriptions of intent. It does NOT execute operations.
+ * All execution is delegated to Copilot using the MCP tools specified in the intent.
  */
 export class ProposalManager {
   private pendingProposals = new Map<string, ChangeProposal>();
 
   /**
-   * Create a new change proposal (does NOT execute)
+   * Create a new declarative change proposal (does NOT execute)
    * @param change The proposed change details
    * @returns The created proposal with unique ID
    */
@@ -161,7 +198,7 @@ export class ProposalManager {
   }
 
   /**
-   * Format proposal for human review
+   * Format proposal for human review with intent and risk information
    * @param proposal The proposal to format
    * @returns Markdown-formatted review text
    */
@@ -176,10 +213,39 @@ export class ProposalManager {
       ``,
     ];
 
-    if (proposal.diff.length > 0) {
+    // Intent section
+    lines.push(`### Intent`);
+    lines.push(``);
+    lines.push(`**Description**: ${proposal.intent.description}`);
+    lines.push(`**MCP Tool**: \`${proposal.intent.mcpTool}\``);
+    lines.push(`**Parameters**:`);
+    lines.push(`\`\`\`json`);
+    lines.push(JSON.stringify(proposal.intent.parameters, null, 2));
+    lines.push(`\`\`\``);
+    lines.push(``);
+
+    // Diff summary
+    lines.push(`### Diff Summary`);
+    lines.push(``);
+    lines.push(proposal.diff.summary);
+    lines.push(``);
+    if (proposal.diff.before) {
+      lines.push(`**Before**:`);
+      lines.push(`\`\`\`json`);
+      lines.push(JSON.stringify(proposal.diff.before, null, 2));
+      lines.push(`\`\`\``);
+    }
+    lines.push(`**After**:`);
+    lines.push(`\`\`\`json`);
+    lines.push(JSON.stringify(proposal.diff.after, null, 2));
+    lines.push(`\`\`\``);
+    lines.push(``);
+
+    // Property changes (legacy format for backward compatibility)
+    if (proposal.propertyDiffs && proposal.propertyDiffs.length > 0) {
       lines.push(`### Property Changes`);
       lines.push(``);
-      for (const diff of proposal.diff) {
+      for (const diff of proposal.propertyDiffs) {
         lines.push(`- **${diff.property}** (${diff.impact} impact)`);
         lines.push(`  - Old: \`${JSON.stringify(diff.oldValue)}\``);
         lines.push(`  - New: \`${JSON.stringify(diff.newValue)}\``);
@@ -187,18 +253,7 @@ export class ProposalManager {
       lines.push(``);
     }
 
-    if (proposal.sideEffects.length > 0) {
-      lines.push(`### Side Effects`);
-      lines.push(``);
-      for (const effect of proposal.sideEffects) {
-        lines.push(`- **${effect.type}**: ${effect.description}`);
-        if (effect.affectedItems.length > 0) {
-          lines.push(`  - Affects: ${effect.affectedItems.join(', ')}`);
-        }
-      }
-      lines.push(``);
-    }
-
+    // Validation
     if (!proposal.validation.valid) {
       lines.push(`### ❌ Validation Errors`);
       lines.push(``);
@@ -213,6 +268,39 @@ export class ProposalManager {
       lines.push(``);
       for (const warning of proposal.validation.warnings) {
         lines.push(`- ${warning}`);
+      }
+      lines.push(``);
+    }
+
+    // Risk assessment
+    lines.push(`### 🎯 Risk Assessment`);
+    lines.push(``);
+    lines.push(`**Risk Level**: ${proposal.risks.level.toUpperCase()}`);
+    lines.push(``);
+    if (proposal.risks.factors.length > 0) {
+      lines.push(`**Risk Factors**:`);
+      for (const factor of proposal.risks.factors) {
+        lines.push(`- ${factor}`);
+      }
+      lines.push(``);
+    }
+    if (proposal.risks.mitigations.length > 0) {
+      lines.push(`**Mitigations**:`);
+      for (const mitigation of proposal.risks.mitigations) {
+        lines.push(`- ${mitigation}`);
+      }
+      lines.push(``);
+    }
+
+    // Side effects
+    if (proposal.sideEffects && proposal.sideEffects.length > 0) {
+      lines.push(`### Side Effects`);
+      lines.push(``);
+      for (const effect of proposal.sideEffects) {
+        lines.push(`- **${effect.type}**: ${effect.description}`);
+        if (effect.affectedItems.length > 0) {
+          lines.push(`  - Affects: ${effect.affectedItems.join(', ')}`);
+        }
       }
       lines.push(``);
     }

@@ -198,3 +198,47 @@ describe('DiffEngine', () => {
     });
   });
 });
+
+describe('DiffEngine - computeDiffSummary', () => {
+  const engine = new DiffEngine();
+
+  it('should generate complete diff summary for creation', () => {
+    const proposed = { name: 'Test Task', priority: 'High', done: false };
+    const summary = engine.computeDiffSummary(null, proposed);
+
+    expect(summary.before).toBeNull();
+    expect(summary.after).toEqual(proposed);
+    expect(summary.summary).toContain('3 added');
+  });
+
+  it('should generate diff summary for updates', () => {
+    const current = { name: 'Old Task', priority: 'Low', done: false };
+    const proposed = { name: 'New Task', priority: 'High', done: false };
+    const summary = engine.computeDiffSummary(current, proposed);
+
+    expect(summary.before).toEqual(current);
+    expect(summary.after).toEqual(proposed);
+    expect(summary.summary).toContain('2 modified');
+  });
+
+  it('should generate diff summary with mixed changes', () => {
+    const current = { name: 'Task', priority: 'Low', oldField: 'value' };
+    const proposed = { name: 'Task', priority: 'High', newField: 'value' };
+    const summary = engine.computeDiffSummary(current, proposed);
+
+    expect(summary.before).toEqual(current);
+    expect(summary.after).toEqual(proposed);
+    expect(summary.summary).toContain('1 added');
+    expect(summary.summary).toContain('1 modified');
+    expect(summary.summary).toContain('1 removed');
+  });
+
+  it('should generate summary with no changes', () => {
+    const state = { name: 'Task', priority: 'Low' };
+    const summary = engine.computeDiffSummary(state, state);
+
+    expect(summary.before).toEqual(state);
+    expect(summary.after).toEqual(state);
+    expect(summary.summary).toBe('No changes');
+  });
+});
