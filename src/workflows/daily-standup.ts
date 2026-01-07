@@ -80,7 +80,11 @@ export class DailyStandupWorkflow {
    */
   async generateStandupReport(_config: StandupConfig = {}): Promise<StandupReport> {
     throw new Error(
-      'DailyStandupWorkflow methods require execution. Use generateStandupReportFromData() with fetched data instead.'
+      [
+        'DailyStandupWorkflow.generateStandupReport() is deprecated and no longer executes queries.',
+        'Use generateStandupReportFromData() with externally-fetched data instead.',
+        'See migration guide and examples: https://github.com/digital-herencia/notionista/docs/migration/daily-standup',
+      ].join(' ')
     );
   }
 }
