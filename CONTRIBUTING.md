@@ -166,7 +166,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for clear co
 
 #### Format
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -632,6 +632,5 @@ If you have questions:
 
 - 💬 [GitHub Discussions](https://github.com/DigitalHerencia/Notionista/discussions)
 - 🐛 [GitHub Issues](https://github.com/DigitalHerencia/Notionista/issues)
-- 📧 Email: support@digitalherencia.com
 
 Thank you for contributing to Notionista SDK! 🎉
