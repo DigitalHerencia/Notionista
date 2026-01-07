@@ -50,7 +50,7 @@
  * ```
  *
  * @module control
- * @see {@link AGENTS.md} for agent behavioral contracts
+ * @see {@link Agents.md} for agent behavioral contracts
  * @see {@link .github/copilot-instructions.md} for governance rules
  */
 
