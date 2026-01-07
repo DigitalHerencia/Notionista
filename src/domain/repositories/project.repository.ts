@@ -116,70 +116,13 @@ export class ProjectRepository extends BaseRepository<
   }
 
   /**
-   * Find projects by status
+   * Note: Query methods like findByStatus, findByTeam, findByMilestone,
+   * findByDomain, findWithTasks, and findByDateRange are removed.
+   *
+   * These methods required executing queries and filtering results,
+   * which violates the declarative control layer principle.
+   *
+   * Use findMany() with appropriate filters to generate query intents,
+   * then execute and process results externally.
    */
-  async findByStatus(status: ProjectStatus): Promise<Project[]> {
-    const allProjects = await this.findMany();
-    return allProjects.filter((project) => project.status === status);
-  }
-
-  /**
-   * Find projects by team
-   */
-  async findByTeam(teamId: string): Promise<Project[]> {
-    const allProjects = await this.findMany();
-    return allProjects.filter((project) => project.teamId === teamId);
-  }
-
-  /**
-   * Find projects by milestone
-   */
-  async findByMilestone(milestone: Milestone): Promise<Project[]> {
-    const allProjects = await this.findMany();
-    return allProjects.filter((project) => project.milestone === milestone);
-  }
-
-  /**
-   * Find projects by domain
-   */
-  async findByDomain(domain: Domain): Promise<Project[]> {
-    const allProjects = await this.findMany();
-    return allProjects.filter((project) => project.domain === domain);
-  }
-
-  /**
-   * Find active projects (status = Active)
-   */
-  async findActive(): Promise<Project[]> {
-    return this.findByStatus('Active');
-  }
-
-  /**
-   * Find completed projects
-   */
-  async findCompleted(): Promise<Project[]> {
-    return this.findByStatus('Completed');
-  }
-
-  /**
-   * Get project with all related tasks
-   */
-  async findWithTasks(projectId: string): Promise<{ project: Project; taskIds: string[] }> {
-    const project = await this.findByIdOrThrow(projectId);
-    return {
-      project,
-      taskIds: project.taskIds,
-    };
-  }
-
-  /**
-   * Find projects within a date range
-   */
-  async findByDateRange(startDate: string, endDate: string): Promise<Project[]> {
-    const allProjects = await this.findMany();
-    return allProjects.filter((project) => {
-      if (!project.startDate) return false;
-      return project.startDate >= startDate && project.startDate <= endDate;
-    });
-  }
 }

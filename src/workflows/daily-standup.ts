@@ -55,239 +55,126 @@ export interface StandupReport {
 }
 
 /**
- * Workflow for generating daily standup reports
- * Provides task summaries by team for daily coordination
+ * Daily Standup Workflow - Pure Calculation Functions
+ *
+ * @deprecated This workflow contains execution-oriented methods that query data.
+ *
+ * In a declarative control layer, standup reports should be generated from
+ * externally-fetched data, not by executing queries internally.
+ *
+ * The correct pattern is:
+ * 1. Generate query intents using repositories
+ * 2. Execute queries externally (via VS Code MCP host)
+ * 3. Pass fetched data to pure calculation functions
  */
 export class DailyStandupWorkflow {
+  // Repositories are kept for interface compatibility but not used
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(
-    private readonly tasks: ITaskRepository,
-    private readonly teams: ITeamRepository
+    private readonly _tasks: ITaskRepository,
+    private readonly _teams: ITeamRepository
   ) {}
 
   /**
-   * Generate a daily standup report with task summaries by team
-   *
-   * @param config Standup configuration
-   * @returns Complete standup report
+   * @deprecated Use generateStandupReportFromData() with externally-fetched data
    */
-  async generateStandupReport(config: StandupConfig = {}): Promise<StandupReport> {
-    const date = config.date || new Date();
-    const includeDone = config.includeDone || false;
-
-    // Get teams to report on
-    const allTeams = await this.teams.findMany();
-    const targetTeams = config.teamIds
-      ? allTeams.filter((team) => config.teamIds!.includes(team.id))
-      : allTeams;
-
-    // Generate team summaries
-    const teamSummaries = await Promise.all(
-      targetTeams.map((team) => this.generateTeamSummary(team, date, includeDone))
+  async generateStandupReport(_config: StandupConfig = {}): Promise<StandupReport> {
+    throw new Error(
+      [
+        'DailyStandupWorkflow.generateStandupReport() is deprecated and no longer executes queries.',
+        'Use generateStandupReportFromData() with externally-fetched data instead.',
+        'See migration guide and examples: https://github.com/digital-herencia/notionista/docs/migration/daily-standup',
+      ].join(' ')
     );
-
-    // Calculate overall summary
-    const overallSummary = this.calculateOverallSummary(teamSummaries);
-
-    return {
-      date,
-      teams: teamSummaries,
-      overallSummary,
-    };
   }
+}
 
-  /**
-   * Generate task summary for a specific team
-   *
-   * @param team Team to summarize
-   * @param date Reference date for the standup
-   * @param includeDone Include completed tasks
-   * @returns Team task summary
-   */
-  private async generateTeamSummary(
-    team: Team,
-    date: Date,
-    includeDone: boolean
-  ): Promise<TeamTaskSummary> {
-    // Get all tasks for this team
-    const allTasks = await this.tasks.findByTeam(team.id);
+/**
+ * Generate standup report from fetched data (pure function)
+ */
+export function generateStandupReportFromData(
+  teams: Team[],
+  tasks: Task[],
+  config: StandupConfig = {}
+): StandupReport {
+  const date = config.date || new Date();
+  const includeDone = config.includeDone || false;
 
-    // Filter tasks based on configuration
-    const tasks = includeDone ? allTasks : allTasks.filter((task) => !task.done);
+  // Filter teams if specific IDs provided
+  const targetTeams = config.teamIds
+    ? teams.filter((team) => config.teamIds!.includes(team.id))
+    : teams;
 
-    // Convert to detailed format with overdue calculation
-    const taskDetails = tasks.map((task) => this.createTaskDetail(task, date));
+  // Generate team summaries
+  const teamSummaries = targetTeams.map((team) =>
+    generateTeamTaskSummary(team, tasks, includeDone)
+  );
 
-    // Calculate metrics
-    const completedTasks = allTasks.filter((t) => t.done).length;
-    const activeTasks = allTasks.filter((t) => !t.done).length;
-    const overdueTasks = taskDetails.filter((t) => t.isOverdue).length;
-    const highPriorityTasks = taskDetails.filter((t) => t.priority === 'High').length;
-    const completionRate = allTasks.length > 0 ? (completedTasks / allTasks.length) * 100 : 0;
-
-    return {
-      teamId: team.id,
-      teamName: team.name,
-      totalTasks: allTasks.length,
-      completedTasks,
-      activeTasks,
-      overdueTasks,
-      highPriorityTasks,
-      completionRate: Math.round(completionRate * 10) / 10, // Round to 1 decimal
-      tasks: taskDetails,
-    };
-  }
-
-  /**
-   * Create detailed task information with overdue status
-   *
-   * @param task Task to detail
-   * @param referenceDate Date to check if task is overdue
-   * @returns Task detail
-   */
-  private createTaskDetail(task: Task, referenceDate: Date): TaskDetail {
-    let isOverdue = false;
-    if (!task.done && task.due) {
-      const dueDate = new Date(task.due);
-      isOverdue = dueDate < referenceDate;
-    }
-
-    return {
-      id: task.id,
-      name: task.name,
-      done: task.done,
-      priority: task.priority,
-      due: task.due,
-      isOverdue,
-      projectId: task.projectId,
-    };
-  }
-
-  /**
-   * Calculate overall summary across all teams
-   *
-   * @param teamSummaries Array of team summaries
-   * @returns Overall summary
-   */
-  private calculateOverallSummary(teamSummaries: TeamTaskSummary[]) {
-    const totalTasks = teamSummaries.reduce((sum, team) => sum + team.totalTasks, 0);
-    const completedTasks = teamSummaries.reduce((sum, team) => sum + team.completedTasks, 0);
-    const activeTasks = teamSummaries.reduce((sum, team) => sum + team.activeTasks, 0);
-    const overdueTasks = teamSummaries.reduce((sum, team) => sum + team.overdueTasks, 0);
-
-    const averageCompletionRate =
+  // Calculate overall summary
+  const overallSummary = {
+    totalTeams: teamSummaries.length,
+    totalTasks: teamSummaries.reduce((sum, ts) => sum + ts.totalTasks, 0),
+    completedTasks: teamSummaries.reduce((sum, ts) => sum + ts.completedTasks, 0),
+    activeTasks: teamSummaries.reduce((sum, ts) => sum + ts.activeTasks, 0),
+    overdueTasks: teamSummaries.reduce((sum, ts) => sum + ts.overdueTasks, 0),
+    averageCompletionRate:
       teamSummaries.length > 0
-        ? teamSummaries.reduce((sum, team) => sum + team.completionRate, 0) / teamSummaries.length
-        : 0;
+        ? Math.round(
+            (teamSummaries.reduce((sum, ts) => sum + ts.completionRate, 0) / teamSummaries.length) *
+              10
+          ) / 10
+        : 0,
+  };
 
-    return {
-      totalTeams: teamSummaries.length,
-      totalTasks,
-      completedTasks,
-      activeTasks,
-      overdueTasks,
-      averageCompletionRate: Math.round(averageCompletionRate * 10) / 10,
-    };
-  }
+  return {
+    date,
+    teams: teamSummaries,
+    overallSummary,
+  };
+}
 
-  /**
-   * Format standup report as markdown
-   *
-   * @param report Standup report to format
-   * @returns Markdown-formatted report
-   */
-  formatReport(report: StandupReport): string {
-    const lines: string[] = [
-      `# Daily Standup Report`,
-      ``,
-      `**Date**: ${report.date.toLocaleDateString()}`,
-      ``,
-      `## Overall Summary`,
-      ``,
-      `- **Teams**: ${report.overallSummary.totalTeams}`,
-      `- **Total Tasks**: ${report.overallSummary.totalTasks}`,
-      `- **Completed**: ${report.overallSummary.completedTasks}`,
-      `- **Active**: ${report.overallSummary.activeTasks}`,
-      `- **Overdue**: ${report.overallSummary.overdueTasks} ⚠️`,
-      `- **Average Completion Rate**: ${report.overallSummary.averageCompletionRate}%`,
-      ``,
-    ];
+/**
+ * Generate task summary for a single team (pure function)
+ *
+ * @param team - The team to generate summary for
+ * @param allTasks - All tasks (will be filtered to team tasks)
+ * @param includeDone - Whether to include completed tasks in details
+ * @param currentTime - Current time for overdue calculation (defaults to Date.now())
+ */
+function generateTeamTaskSummary(
+  team: Team,
+  allTasks: Task[],
+  includeDone: boolean,
+  currentTime: string = new Date().toISOString()
+): TeamTaskSummary {
+  const teamTasks = allTasks.filter((task) => task.teamId === team.id);
 
-    // Add team summaries
-    for (const team of report.teams) {
-      lines.push(`## ${team.teamName}`);
-      lines.push(``);
-      lines.push(`**Metrics**:`);
-      lines.push(`- Total: ${team.totalTasks}`);
-      lines.push(`- Completed: ${team.completedTasks}`);
-      lines.push(`- Active: ${team.activeTasks}`);
-      lines.push(`- Overdue: ${team.overdueTasks}${team.overdueTasks > 0 ? ' ⚠️' : ''}`);
-      lines.push(`- High Priority: ${team.highPriorityTasks}`);
-      lines.push(`- Completion Rate: ${team.completionRate}%`);
-      lines.push(``);
+  const filteredTasks = includeDone ? teamTasks : teamTasks.filter((task) => !task.done);
 
-      if (team.tasks.length > 0) {
-        lines.push(`**Tasks**:`);
-        lines.push(``);
+  const taskDetails: TaskDetail[] = filteredTasks.map((task) => ({
+    id: task.id,
+    name: task.name,
+    done: task.done,
+    priority: task.priority,
+    due: task.due,
+    isOverdue: !task.done && task.due ? task.due < currentTime : false,
+    projectId: task.projectId,
+  }));
 
-        // Group tasks by status
-        const activeTasks = team.tasks.filter((t) => !t.done);
-        const completedTasks = team.tasks.filter((t) => t.done);
+  const completedTasks = teamTasks.filter((t) => t.done).length;
+  const activeTasks = teamTasks.filter((t) => !t.done).length;
+  const overdueTasks = teamTasks.filter((t) => !t.done && t.due && t.due < currentTime).length;
+  const highPriorityTasks = teamTasks.filter((t) => !t.done && t.priority === 'High').length;
 
-        if (activeTasks.length > 0) {
-          lines.push(`*Active Tasks:*`);
-          for (const task of activeTasks) {
-            const priorityBadge = task.priority ? ` [${task.priority}]` : '';
-            const overdueBadge = task.isOverdue ? ' ⚠️ OVERDUE' : '';
-            const dueDateStr = task.due ? ` - Due: ${new Date(task.due).toLocaleDateString()}` : '';
-            lines.push(`- [ ] ${task.name}${priorityBadge}${dueDateStr}${overdueBadge}`);
-          }
-          lines.push(``);
-        }
-
-        if (completedTasks.length > 0) {
-          lines.push(`*Completed Tasks:*`);
-          for (const task of completedTasks) {
-            lines.push(`- [x] ${task.name}`);
-          }
-          lines.push(``);
-        }
-      }
-
-      lines.push(`---`);
-      lines.push(``);
-    }
-
-    return lines.join('\n');
-  }
-
-  /**
-   * Generate a quick summary for a specific team
-   *
-   * @param teamId Team ID to summarize
-   * @param date Reference date (default: today)
-   * @returns Formatted team summary
-   */
-  async generateTeamQuickSummary(teamId: string, date: Date = new Date()): Promise<string> {
-    const allTeams = await this.teams.findMany();
-    const team = allTeams.find((t) => t.id === teamId);
-
-    if (!team) {
-      throw new Error(`Team ${teamId} not found`);
-    }
-
-    const summary = await this.generateTeamSummary(team, date, false);
-
-    const lines: string[] = [
-      `**${summary.teamName}** - Quick Summary`,
-      ``,
-      `📊 ${summary.activeTasks} active • ✅ ${summary.completedTasks} done • ⚠️ ${summary.overdueTasks} overdue`,
-      `📈 Completion: ${summary.completionRate}%`,
-    ];
-
-    if (summary.highPriorityTasks > 0) {
-      lines.push(`🔥 ${summary.highPriorityTasks} high priority tasks`);
-    }
-
-    return lines.join('\n');
-  }
+  return {
+    teamId: team.id,
+    teamName: team.name,
+    totalTasks: teamTasks.length,
+    completedTasks,
+    activeTasks,
+    overdueTasks,
+    highPriorityTasks,
+    completionRate: teamTasks.length > 0 ? (completedTasks / teamTasks.length) * 100 : 0,
+    tasks: taskDetails,
+  };
 }

@@ -119,108 +119,14 @@ export class MeetingRepository extends BaseRepository<
   }
 
   /**
-   * Find meetings by type
+   * Note: Query methods like findByType, findByTeam, findByProject,
+   * findByCadence, findByDateRange, findUpcoming, findPast, and
+   * findWithActionItems are removed.
+   *
+   * These methods required executing queries and filtering results,
+   * which violates the declarative control layer principle.
+   *
+   * Use findMany() with appropriate filters to generate query intents,
+   * then execute and process results externally.
    */
-  async findByType(type: MeetingType): Promise<Meeting[]> {
-    const allMeetings = await this.findMany();
-    return allMeetings.filter((meeting) => meeting.type === type);
-  }
-
-  /**
-   * Find standups
-   */
-  async findStandups(): Promise<Meeting[]> {
-    return this.findByType('Standup');
-  }
-
-  /**
-   * Find sprint planning meetings
-   */
-  async findSprintPlannings(): Promise<Meeting[]> {
-    return this.findByType('Sprint Planning');
-  }
-
-  /**
-   * Find post-mortem meetings
-   */
-  async findPostMortems(): Promise<Meeting[]> {
-    return this.findByType('Post-mortem');
-  }
-
-  /**
-   * Find meetings by team
-   */
-  async findByTeam(teamId: string): Promise<Meeting[]> {
-    const allMeetings = await this.findMany();
-    return allMeetings.filter(
-      (meeting) => meeting.teamIds.includes(teamId) || meeting.attendeeTeamIds.includes(teamId)
-    );
-  }
-
-  /**
-   * Find meetings by project
-   */
-  async findByProject(projectId: string): Promise<Meeting[]> {
-    const allMeetings = await this.findMany();
-    return allMeetings.filter((meeting) => meeting.projectIds.includes(projectId));
-  }
-
-  /**
-   * Find meetings by cadence
-   */
-  async findByCadence(cadence: Cadence): Promise<Meeting[]> {
-    const allMeetings = await this.findMany();
-    return allMeetings.filter((meeting) => meeting.cadence === cadence);
-  }
-
-  /**
-   * Find daily meetings
-   */
-  async findDaily(): Promise<Meeting[]> {
-    return this.findByCadence('Daily');
-  }
-
-  /**
-   * Find meetings within a date range
-   */
-  async findByDateRange(startDate: string, endDate: string): Promise<Meeting[]> {
-    const allMeetings = await this.findMany();
-    return allMeetings.filter((meeting) => {
-      if (!meeting.date) return false;
-      return meeting.date >= startDate && meeting.date <= endDate;
-    });
-  }
-
-  /**
-   * Find upcoming meetings (date in the future)
-   */
-  async findUpcoming(): Promise<Meeting[]> {
-    const allMeetings = await this.findMany();
-    const now = new Date().toISOString();
-
-    return allMeetings.filter((meeting) => meeting.date && meeting.date >= now);
-  }
-
-  /**
-   * Find past meetings (date in the past)
-   */
-  async findPast(): Promise<Meeting[]> {
-    const allMeetings = await this.findMany();
-    const now = new Date().toISOString();
-
-    return allMeetings.filter((meeting) => meeting.date && meeting.date < now);
-  }
-
-  /**
-   * Get meeting with action items
-   */
-  async findWithActionItems(
-    meetingId: string
-  ): Promise<{ meeting: Meeting; actionItemIds: string[] }> {
-    const meeting = await this.findByIdOrThrow(meetingId);
-    return {
-      meeting,
-      actionItemIds: meeting.actionItemTaskIds,
-    };
-  }
 }

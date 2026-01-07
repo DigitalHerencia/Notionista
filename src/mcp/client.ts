@@ -1,207 +1,410 @@
 import type { DatabaseId } from '../core/constants/databases';
 import type { McpClientOptions } from '../core/types/mcp';
-import type { NotionPage, PageProperties, QueryParams, QueryResult } from '../core/types/notion';
+import type { NotionPage, PageProperties, QueryParams } from '../core/types/notion';
 
 /**
- * Interface for MCP client operations
- * Abstracts the MCP tool calls for Notion operations
+ * Declarative MCP Operation Intent
+ * Represents the intent to perform an MCP operation without execution
+ *
+ * This is a declarative control layer - operations are described as intents
+ * for Copilot reasoning, not for runtime execution.
+ */
+export interface McpOperationIntent {
+  /** The MCP tool name to invoke */
+  tool:
+    | 'query-data-source'
+    | 'retrieve-a-page'
+    | 'post-page'
+    | 'patch-page'
+    | 'delete-a-block'
+    | 'post-search';
+
+  /** The parameters for the MCP tool call */
+  params: Record<string, unknown>;
+
+  /** Human-readable description of the intent */
+  description: string;
+
+  /** Validation result for this operation (simple structure for consistency) */
+  validation?: {
+    valid: boolean;
+    errors: string[];
+    warnings: string[];
+  };
+}
+
+/**
+ * Declarative MCP Client Interface
+ *
+ * This interface describes MCP operations as declarative intents,
+ * not as executable functions. No network calls or side effects occur.
+ *
+ * Used for:
+ * - Type checking and IntelliSense
+ * - Copilot reasoning about Notion operations
+ * - Schema definition and validation
+ * - Documentation generation
+ *
+ * NOT used for:
+ * - Executing actual MCP operations (delegated to VS Code)
+ * - Managing network connections
+ * - Handling responses or errors
  */
 export interface IMcpClient {
   /**
-   * Query a database with filters and sorting
+   * Describes intent to query a database
+   * Returns the operation intent, not actual results
    */
-  queryDatabase(params: QueryParams): Promise<QueryResult>;
+  queryDatabase(params: QueryParams): McpOperationIntent;
 
   /**
-   * Retrieve a single page by ID
+   * Describes intent to retrieve a page by ID
+   * Returns the operation intent, not the actual page
    */
-  getPage(pageId: string): Promise<NotionPage>;
+  getPage(pageId: string): McpOperationIntent;
 
   /**
-   * Create a new page in a database
+   * Describes intent to create a page
+   * Returns the operation intent, not the created page
    */
-  createPage(databaseId: DatabaseId, properties: PageProperties): Promise<NotionPage>;
+  createPage(databaseId: DatabaseId, properties: PageProperties): McpOperationIntent;
 
   /**
-   * Update properties of an existing page
+   * Describes intent to update a page
+   * Returns the operation intent, not the updated page
    */
-  updatePage(pageId: string, properties: PageProperties): Promise<NotionPage>;
+  updatePage(pageId: string, properties: PageProperties): McpOperationIntent;
 
   /**
-   * Delete a page (archive it in Notion)
+   * Describes intent to delete a page
+   * Returns the operation intent, not execution result
    */
-  deletePage(pageId: string): Promise<void>;
+  deletePage(pageId: string): McpOperationIntent;
 
   /**
-   * Search for pages by title
+   * Describes intent to search pages
+   * Returns the operation intent, not search results
    */
-  search(query: string): Promise<NotionPage[]>;
+  search(query: string): McpOperationIntent;
 }
 
 /**
- * MCP Client for Notion integration
- * Provides methods to interact with the Notion API through MCP
+ * Declarative MCP Client
+ *
+ * Generates declarative operation intents for MCP tool calls.
+ * Does NOT execute operations or perform network calls.
+ *
+ * This class exists purely for:
+ * - Schema definition and type safety
+ * - Generating operation intents for Copilot reasoning
+ * - Documentation of available MCP operations
+ *
+ * Execution of these intents is delegated to VS Code's MCP infrastructure.
+ *
+ * @param _options - Client options (not currently used as this is declarative only)
  */
 export class McpClient implements IMcpClient {
-  private connected: boolean = false;
-
   constructor(_options: McpClientOptions) {
-    // TODO: Store configuration when implementation is complete
-  }
-
-  isConnected(): boolean {
-    return this.connected;
+    // Options are intentionally unused in declarative mode
+    // This class generates intents, not executes operations
+    // Execution configuration is handled by external MCP host
   }
 
   /**
-   * Call an MCP tool with the given name and arguments
+   * Generate intent to query a database
    */
-  async callTool<T = unknown>(toolName: string, _args: Record<string, unknown>): Promise<T> {
-    // TODO: Implement actual MCP tool invocation via transport layer
-    throw new Error(`MCP tool invocation not implemented: ${toolName}`);
+  queryDatabase(params: QueryParams): McpOperationIntent {
+    return {
+      tool: 'query-data-source',
+      params: {
+        data_source_id: params.database_id,
+        filter: params.filter,
+        sorts: params.sorts,
+        page_size: params.page_size,
+        start_cursor: params.start_cursor,
+      },
+      description: `Query database ${params.database_id}${params.filter ? ' with filters' : ''}`,
+      validation: this.validateQueryParams(params),
+    };
   }
 
-  async queryDatabase(_params: QueryParams): Promise<QueryResult> {
-    throw new Error('Not implemented');
+  /**
+   * Generate intent to retrieve a page
+   */
+  getPage(pageId: string): McpOperationIntent {
+    return {
+      tool: 'retrieve-a-page',
+      params: { page_id: pageId },
+      description: `Retrieve page ${pageId}`,
+      validation: this.validatePageId(pageId),
+    };
   }
 
-  async getPage(_pageId: string): Promise<NotionPage> {
-    throw new Error('Not implemented');
+  /**
+   * Generate intent to create a page
+   */
+  createPage(databaseId: DatabaseId, properties: PageProperties): McpOperationIntent {
+    return {
+      tool: 'post-page',
+      params: {
+        parent: { database_id: databaseId },
+        properties,
+      },
+      description: `Create page in database ${databaseId}`,
+      validation: this.validateCreateParams(databaseId, properties),
+    };
   }
 
-  async createPage(_databaseId: DatabaseId, _properties: PageProperties): Promise<NotionPage> {
-    throw new Error('Not implemented');
+  /**
+   * Generate intent to update a page
+   */
+  updatePage(pageId: string, properties: PageProperties): McpOperationIntent {
+    return {
+      tool: 'patch-page',
+      params: {
+        page_id: pageId,
+        properties,
+      },
+      description: `Update page ${pageId}`,
+      validation: this.validateUpdateParams(pageId, properties),
+    };
   }
 
-  async updatePage(_pageId: string, _properties: PageProperties): Promise<NotionPage> {
-    throw new Error('Not implemented');
+  /**
+   * Generate intent to delete a page
+   */
+  deletePage(pageId: string): McpOperationIntent {
+    return {
+      tool: 'delete-a-block',
+      params: { block_id: pageId },
+      description: `Delete page ${pageId}`,
+      validation: this.validatePageId(pageId),
+    };
   }
 
-  async deletePage(_pageId: string): Promise<void> {
-    throw new Error('Not implemented');
+  /**
+   * Generate intent to search pages
+   */
+  search(query: string): McpOperationIntent {
+    return {
+      tool: 'post-search',
+      params: { query },
+      description: `Search for "${query}"`,
+      validation: this.validateSearchQuery(query),
+    };
   }
 
-  async search(_query: string): Promise<NotionPage[]> {
-    throw new Error('Not implemented');
+  // Validation helpers (pure functions, no side effects)
+
+  private validateQueryParams(params: QueryParams) {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (!params.database_id) {
+      errors.push('database_id is required');
+    }
+
+    if (params.page_size && (params.page_size < 1 || params.page_size > 100)) {
+      errors.push('page_size must be between 1 and 100');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  }
+
+  private validatePageId(pageId: string) {
+    const errors: string[] = [];
+
+    if (!pageId || pageId.trim().length === 0) {
+      errors.push('pageId is required');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings: [],
+    };
+  }
+
+  private validateCreateParams(databaseId: DatabaseId, properties: PageProperties) {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (!databaseId) {
+      errors.push('databaseId is required');
+    }
+
+    if (!properties || Object.keys(properties).length === 0) {
+      warnings.push('Creating page with no properties');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  }
+
+  private validateUpdateParams(pageId: string, properties: PageProperties) {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (!pageId || pageId.trim().length === 0) {
+      errors.push('pageId is required');
+    }
+
+    if (!properties || Object.keys(properties).length === 0) {
+      warnings.push('Updating page with no properties');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  }
+
+  private validateSearchQuery(query: string) {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (!query || query.trim().length === 0) {
+      errors.push('Search query is required');
+    }
+
+    if (query.length > 1000) {
+      warnings.push('Search query is very long (>1000 characters)');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
   }
 }
 
 /**
- * Mock MCP client for testing
+ * Mock MCP Client for Testing
+ *
+ * Provides in-memory simulation of MCP operation intents.
+ * Used for testing repository and workflow logic without actual MCP calls.
+ *
+ * Like the main McpClient, this returns operation intents, not execution results.
+ * However, it also maintains internal state for testing convenience.
  */
 export class MockMcpClient implements IMcpClient {
   private pages: Map<string, NotionPage> = new Map();
 
-  async queryDatabase(params: QueryParams): Promise<QueryResult> {
-    const pages = Array.from(this.pages.values()).filter(
+  queryDatabase(params: QueryParams): McpOperationIntent {
+    // For testing: simulate querying internal state
+    const matchingPages = Array.from(this.pages.values()).filter(
       (page) => page.parent.database_id === params.database_id
     );
+
     return {
-      results: pages,
-      has_more: false,
-      next_cursor: null,
-    };
-  }
-
-  async getPage(pageId: string): Promise<NotionPage> {
-    const page = this.pages.get(pageId);
-    if (!page) {
-      throw new Error(`Page not found: ${pageId}`);
-    }
-    return page;
-  }
-
-  async createPage(databaseId: DatabaseId, properties: PageProperties): Promise<NotionPage> {
-    const page: NotionPage = {
-      id: `mock-${Date.now()}`,
-      created_time: new Date().toISOString(),
-      last_edited_time: new Date().toISOString(),
-      parent: {
-        type: 'database_id',
-        database_id: databaseId,
+      tool: 'query-data-source',
+      params: {
+        data_source_id: params.database_id,
+        filter: params.filter,
       },
-      properties: this.convertToNotionProperties(properties),
-      url: `https://notion.so/mock-${Date.now()}`,
+      description: `Query database ${params.database_id} (mock: found ${matchingPages.length} pages)`,
+      validation: { valid: true, errors: [], warnings: [] },
     };
-    this.pages.set(page.id, page);
-    return page;
   }
 
-  async updatePage(pageId: string, properties: PageProperties): Promise<NotionPage> {
-    const page = await this.getPage(pageId);
-    page.properties = {
-      ...page.properties,
-      ...this.convertToNotionProperties(properties),
+  getPage(pageId: string): McpOperationIntent {
+    const exists = this.pages.has(pageId);
+
+    return {
+      tool: 'retrieve-a-page',
+      params: { page_id: pageId },
+      description: `Retrieve page ${pageId} (mock: ${exists ? 'exists' : 'not found'})`,
+      validation: { valid: true, errors: [], warnings: exists ? [] : ['Page not found in mock'] },
     };
-    page.last_edited_time = new Date().toISOString();
-    return page;
   }
 
-  async deletePage(pageId: string): Promise<void> {
-    this.pages.delete(pageId);
+  createPage(databaseId: DatabaseId, properties: PageProperties): McpOperationIntent {
+    // For testing: simulate creating a page
+    const mockPageId = `mock-${Date.now()}`;
+
+    return {
+      tool: 'post-page',
+      params: {
+        parent: { database_id: databaseId },
+        properties,
+      },
+      description: `Create page in database ${databaseId} (mock: would create ${mockPageId})`,
+      validation: { valid: true, errors: [], warnings: [] },
+    };
   }
 
-  async search(query: string): Promise<NotionPage[]> {
-    return Array.from(this.pages.values()).filter((page) => {
+  updatePage(pageId: string, properties: PageProperties): McpOperationIntent {
+    const exists = this.pages.has(pageId);
+
+    return {
+      tool: 'patch-page',
+      params: {
+        page_id: pageId,
+        properties,
+      },
+      description: `Update page ${pageId} (mock: ${exists ? 'exists' : 'not found'})`,
+      validation: { valid: true, errors: [], warnings: exists ? [] : ['Page not found in mock'] },
+    };
+  }
+
+  deletePage(pageId: string): McpOperationIntent {
+    const exists = this.pages.has(pageId);
+
+    return {
+      tool: 'delete-a-block',
+      params: { block_id: pageId },
+      description: `Delete page ${pageId} (mock: ${exists ? 'exists' : 'not found'})`,
+      validation: { valid: true, errors: [], warnings: exists ? [] : ['Page not found in mock'] },
+    };
+  }
+
+  search(query: string): McpOperationIntent {
+    // For testing: simulate search
+    const matchingPages = Array.from(this.pages.values()).filter((page) => {
       const titleProp = Object.values(page.properties).find((p: any) => p.type === 'title');
-      if (titleProp && titleProp.type === 'title') {
-        return titleProp.title.some((t: any) => t.plain_text.includes(query));
+      if (titleProp && 'title' in titleProp) {
+        return titleProp.title.some((t: any) => t.plain_text?.includes(query));
       }
       return false;
     });
+
+    return {
+      tool: 'post-search',
+      params: { query },
+      description: `Search for "${query}" (mock: found ${matchingPages.length} pages)`,
+      validation: { valid: true, errors: [], warnings: [] },
+    };
   }
 
-  private convertToNotionProperties(properties: PageProperties): Record<string, any> {
-    const result: Record<string, any> = {};
+  // Test helper methods (not part of IMcpClient interface)
 
-    for (const [key, value] of Object.entries(properties)) {
-      if ('title' in value && value.title) {
-        result[key] = {
-          type: 'title',
-          title: value.title.map((t: any) => ({
-            plain_text: t.text?.content || '',
-          })),
-        };
-      } else if ('rich_text' in value && value.rich_text) {
-        result[key] = {
-          type: 'rich_text',
-          rich_text: value.rich_text.map((t: any) => ({
-            plain_text: t.text?.content || '',
-          })),
-        };
-      } else if ('number' in value) {
-        result[key] = {
-          type: 'number',
-          number: value.number,
-        };
-      } else if ('select' in value) {
-        result[key] = {
-          type: 'select',
-          select: value.select,
-        };
-      } else if ('multi_select' in value) {
-        result[key] = {
-          type: 'multi_select',
-          multi_select: value.multi_select,
-        };
-      } else if ('date' in value) {
-        result[key] = {
-          type: 'date',
-          date: value.date,
-        };
-      } else if ('checkbox' in value) {
-        result[key] = {
-          type: 'checkbox',
-          checkbox: value.checkbox,
-        };
-      } else if ('relation' in value) {
-        result[key] = {
-          type: 'relation',
-          relation: value.relation,
-        };
-      }
-    }
+  /**
+   * Add a mock page for testing
+   */
+  addMockPage(page: NotionPage): void {
+    this.pages.set(page.id, page);
+  }
 
-    return result;
+  /**
+   * Clear all mock pages
+   */
+  clearMockPages(): void {
+    this.pages.clear();
+  }
+
+  /**
+   * Get mock page by ID (for test assertions)
+   */
+  getMockPage(pageId: string): NotionPage | undefined {
+    return this.pages.get(pageId);
   }
 }

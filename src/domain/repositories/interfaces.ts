@@ -1,5 +1,6 @@
 import type { ChangeProposal } from '../../safety';
-import type { Team, Project, Task, Meeting } from '../../schemas';
+import type { McpOperationIntent } from '../../mcp/client';
+import type { Project, Task, Meeting } from '../../schemas';
 import type {
   ProjectStatus,
   Milestone,
@@ -51,39 +52,43 @@ export interface MeetingCreateInput {
 
 /**
  * Repository interface for Team operations
+ *
+ * Note: All methods return declarative intents, not execution results.
  */
 export interface ITeamRepository {
-  findById(id: string): Promise<Team | null>;
-  findMany(): Promise<Team[]>;
+  findById(id: string): McpOperationIntent;
+  findMany(): McpOperationIntent;
 }
 
 /**
  * Repository interface for Project operations
+ *
+ * Note: All methods return declarative intents/proposals, not execution results.
  */
 export interface IProjectRepository {
-  findById(id: string): Promise<Project | null>;
-  findByTeam(teamId: string): Promise<Project[]>;
-  findMany(): Promise<Project[]>;
-  create(input: ProjectCreateInput): Promise<ChangeProposal<Project>>;
+  findById(id: string): McpOperationIntent;
+  findMany(): McpOperationIntent;
+  create(input: ProjectCreateInput): ChangeProposal<Project>;
 }
 
 /**
  * Repository interface for Task operations
+ *
+ * Note: All methods return declarative intents/proposals, not execution results.
  */
 export interface ITaskRepository {
-  findById(id: string): Promise<Task | null>;
-  findByTeam(teamId: string): Promise<Task[]>;
-  findByProject(projectId: string): Promise<Task[]>;
-  findMany(): Promise<Task[]>;
-  create(input: TaskCreateInput): Promise<ChangeProposal<Task>>;
+  findById(id: string): McpOperationIntent;
+  findMany(): McpOperationIntent;
+  create(input: TaskCreateInput): ChangeProposal<Task>;
 }
 
 /**
  * Repository interface for Meeting operations
+ *
+ * Note: All methods return declarative intents/proposals, not execution results.
  */
 export interface IMeetingRepository {
-  findById(id: string): Promise<Meeting | null>;
-  findByTeam(teamId: string): Promise<Meeting[]>;
-  findMany(): Promise<Meeting[]>;
-  create(input: MeetingCreateInput): Promise<ChangeProposal<Meeting>>;
+  findById(id: string): McpOperationIntent;
+  findMany(): McpOperationIntent;
+  create(input: MeetingCreateInput): ChangeProposal<Meeting>;
 }

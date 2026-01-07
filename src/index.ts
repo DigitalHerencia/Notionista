@@ -1,5 +1,5 @@
-// MCP Client
-export { McpClient, MockMcpClient } from './mcp/client.js';
+// MCP Client and Types
+export { McpClient, MockMcpClient, type IMcpClient, type McpOperationIntent } from './mcp/client.js';
 
 // Core constants
 export { DATABASE_IDS as DATABASE_IDS_CONST } from './core/constants/databases.js';
