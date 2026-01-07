@@ -106,7 +106,7 @@ interface ChangeProposal {
   
   // Validation ✓
   validation: {
-    isValid: boolean; // mapped from 'valid' field
+    valid: boolean;
     errors: string[];
     warnings: string[];
   };
