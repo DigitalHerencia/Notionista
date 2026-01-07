@@ -2,7 +2,7 @@
  * Control Layer Schemas
  *
  * Agent-aligned control schemas that mirror behavioral expectations from:
- * - AGENTS.md (now Agents.md)
+ * - Agents.md (formerly referenced as AGENTS.md)
  * - .github/copilot-instructions.md
  *
  * These schemas define the control/governance layer without execution logic.
