@@ -1,6 +1,6 @@
-# Contributing to Notionista SDK
+# Contributing to Notionista
 
-Thank you for your interest in contributing to Notionista SDK! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Notionista! This document provides guidelines and instructions for contributing to the control plane.
 
 ## Table of Contents
 
@@ -40,7 +40,8 @@ pnpm lint && pnpm format && pnpm typecheck && pnpm test:coverage && pnpm build
 - Node.js 20 or higher
 - pnpm 8.x (recommended) or npm
 - Git
-- A Notion account with MCP integration configured
+- VS Code with GitHub Copilot (for testing Copilot integration)
+- Notion account with MCP integration configured (for testing)
 
 ### Initial Setup
 
@@ -67,14 +68,14 @@ pnpm lint && pnpm format && pnpm typecheck && pnpm test:coverage && pnpm build
    pnpm install
    ```
 
-5. **Set up environment variables**
+5. **Set up environment variables** (for testing with MCP)
 
    ```bash
    cp .env.example .env
-   # Edit .env and add your NOTION_TOKEN
+   # Edit .env and add your NOTION_TOKEN for VS Code MCP testing
    ```
 
-6. **Build the project**
+6. **Build type definitions**
 
    ```bash
    pnpm build
@@ -87,6 +88,23 @@ pnpm lint && pnpm format && pnpm typecheck && pnpm test:coverage && pnpm build
    ```
 
 ## Development Workflow
+
+### Understanding the Control Plane Model
+
+Notionista is a **control plane** that provides:
+- Type definitions for Copilot reasoning
+- Validation rules and constraints
+- Declarative proposal schemas
+
+**What Notionista does NOT do:**
+- Execute MCP requests (handled by VS Code)
+- Manage connections or retry logic
+- Run servers or background processes
+
+When contributing, focus on:
+- Type safety and schema definitions
+- Validation logic and constraint metadata
+- Documentation for Copilot consumption
 
 ### Creating a Feature Branch
 

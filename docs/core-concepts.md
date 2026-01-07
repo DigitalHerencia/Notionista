@@ -1,63 +1,87 @@
 ---
-post_title: Core Concepts - Notionista SDK
+post_title: Core Concepts - Notionista
 author1: Digital Herencia
 post_slug: core-concepts
 microsoft_alias: digitalherencia
 featured_image: /assets/core-concepts.png
-categories: SDK, Documentation, Architecture
-tags: notion, mcp, automation, typescript, architecture, safety
+categories: Control Plane, Documentation, Architecture
+tags: notion, mcp, automation, typescript, architecture, copilot, governance
 ai_note: Documentation generated with AI assistance
-summary: Understand the core concepts, architecture, and safety workflow of Notionista SDK
-post_date: 2026-01-05
+summary: Understand the core concepts, architecture, and governance model of Notionista control plane
+post_date: 2026-01-07
 ---
 
 # Core Concepts
 
-This guide covers the fundamental concepts and architecture of the Notionista SDK.
+This guide covers the fundamental concepts and architecture of Notionista as a Copilot-governed control plane.
 
 ## Architecture Overview
 
-Notionista is built on a layered architecture that separates concerns and provides clean abstractions:
+Notionista operates as a **declarative control plane** that Copilot reasons about:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                   Application Layer                      │
-│  (Workflows, CLI, Scripts, Copilot Agents)              │
+│                 GitHub Copilot Chat                      │
+│            (Natural Language Operator)                   │
+└─────────────────┬───────────────────────────────────────┘
+                  │ Reasons about
+                  │ types & constraints
+┌─────────────────▼───────────────────────────────────────┐
+│                Notionista Control Plane                  │
+│  (Types, Schemas, Constraints, Validation Rules)        │
+│  • ProposalManager • Validator • DiffEngine             │
+│  • Repository Types • Query Schemas                      │
+│  • Constraint Metadata • Batch Guidance                  │
+└─────────────────┬───────────────────────────────────────┘
+                  │ Declares intent
+                  │ (no execution)
+┌─────────────────▼───────────────────────────────────────┐
+│             VS Code MCP Client                           │
+│       (Owned by VS Code, not this repo)                 │
+│  • Executes MCP tool calls                               │
+│  • Handles retry logic & rate limiting                   │
+│  • Manages Notion API transport                          │
 └─────────────────┬───────────────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────────────┐
-│                   Domain Layer                           │
-│  (Repositories: Teams, Projects, Tasks, Meetings)       │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────┐
-│                   Safety Layer                           │
-│  (Proposal Manager, Validator, Diff Engine)             │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────┐
-│                   MCP Client Layer                       │
-│  (Tool Wrappers, Middleware, Rate Limiting)             │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────┐
-│             @notionhq/notion-mcp-server                  │
-│                  (stdio transport)                       │
+│         @notionhq/notion-mcp-server                      │
+│              (stdio transport)                           │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### Layer Responsibilities
 
-| Layer           | Purpose                              | Components                             |
-| --------------- | ------------------------------------ | -------------------------------------- |
-| **Application** | Business logic and user interactions | Workflows, scripts, CLI tools          |
-| **Domain**      | Entity management and business rules | Repositories, entities, schemas        |
-| **Safety**      | Mutation protection and validation   | ProposalManager, Validator, DiffEngine |
-| **MCP Client**  | Protocol abstraction                 | McpClient, middleware, transport       |
+| Layer                       | Purpose                                  | Owner           |
+| --------------------------- | ---------------------------------------- | --------------- |
+| **GitHub Copilot Chat**     | Natural language operator and coordinator| GitHub/Microsoft|
+| **Notionista Control Plane**| Types, schemas, constraints, governance  | This Repository |
+| **VS Code MCP Client**      | Execution, retry logic, rate limiting    | VS Code         |
+| **Notion MCP Server**       | Notion API protocol bridge               | Notion          |
+
+## Control Plane Model
+
+Notionista provides the **governance layer** for Copilot-driven automation:
+
+### What Notionista Provides
+
+- **Types & Schemas**: TypeScript definitions Copilot uses for reasoning
+- **Constraints**: Metadata about batch limits, rate limits, retry policies  
+- **Validation Rules**: Declarative rules for data integrity
+- **Proposals**: Immutable change descriptions (not executed by this repo)
+- **Diff Engine**: Compute property-level differences for review
+- **Validator**: Validate proposed changes against rules
+
+### What Notionista Does NOT Do
+
+- ❌ Execute MCP requests (handled by VS Code)
+- ❌ Manage retry logic (handled by VS Code)
+- ❌ Enforce rate limits (handled by VS Code)
+- ❌ Connect to Notion API (handled by MCP server)
+- ❌ Run background processes or servers
 
 ## Safety Workflow: Propose → Approve → Apply
 
-The cornerstone of Notionista is its three-phase safety workflow that prevents accidental data loss:
+The cornerstone of Notionista is its declarative three-phase safety workflow:
 
 ```
 ┌──────────┐     ┌──────────┐     ┌──────────┐
@@ -66,12 +90,12 @@ The cornerstone of Notionista is its three-phase safety workflow that prevents a
      │                │                │
      ▼                ▼                ▼
   Generate        Review &         Execute
-  Proposal       Validate         Changes
+  Proposal       Validate         (via MCP)
 ```
 
 ### Phase 1: Propose
 
-When you call a mutation method (create, update, delete), Notionista:
+When Copilot creates a proposal, Notionista:
 
 1. **Validates** the input against the schema
 2. **Computes** the diff between current and proposed state
@@ -79,25 +103,37 @@ When you call a mutation method (create, update, delete), Notionista:
 4. **Creates** a proposal object (no changes executed yet)
 
 ```typescript
-// Create a proposal (nothing is written to Notion yet)
-const proposal = await sdk.projects.create({
-  name: 'Q1 Planning',
-  status: 'Active',
-  milestone: 'M1',
-  startDate: new Date('2026-01-06').toISOString(),
-  endDate: new Date('2026-01-20').toISOString(),
-});
+// Copilot creates a declarative proposal (nothing executed)
+const proposal: ChangeProposal<Project> = {
+  id: 'proposal-abc123',
+  type: 'create',
+  target: { database: 'projects' },
+  currentState: null,
+  proposedState: {
+    id: 'new-project',
+    name: 'Q1 Planning',
+    status: 'Active',
+    milestone: 'M1',
+    startDate: '2026-01-06',
+    endDate: '2026-01-20'
+  },
+  diff: [
+    { property: 'name', oldValue: null, newValue: 'Q1 Planning', impact: 'low' },
+    { property: 'status', oldValue: null, newValue: 'Active', impact: 'high' }
+  ],
+  validation: { valid: true, errors: [], warnings: [] },
+  status: 'pending'
+};
 
-console.log(proposal.status); // 'pending'
-console.log(proposal.type); // 'create'
+// Status: 'pending' - awaiting review
 ```
 
 ### Phase 2: Approve
 
-Review the proposal and explicitly approve it:
+Copilot presents the proposal for review and you explicitly approve:
 
 ```typescript
-// Review the proposed changes
+// Copilot formats for human review
 console.log(proposal.formatForReview());
 
 // Output:
@@ -117,26 +153,27 @@ console.log(proposal.formatForReview());
 //   - New: `"Active"`
 // ...
 
-// If satisfied, approve the proposal
-await proposal.approve();
-console.log(proposal.status); // 'approved'
+// User approves in natural language
+// "Approved" or "Yes, proceed"
+
+// Proposal status changes to 'approved'
 ```
 
 ### Phase 3: Apply
 
-Execute the approved changes:
+VS Code MCP client executes the approved changes:
 
 ```typescript
-// Apply the approved proposal
-const result = await proposal.apply();
+// VS Code MCP client executes (not Notionista)
+// Proposal status: 'approved' → 'applied'
 
-if (result.success) {
-  console.log(`Created project: ${result.entityId}`);
-  console.log(proposal.status); // 'applied'
-} else {
-  console.error('Failed:', result.error);
-  console.log(proposal.status); // 'failed'
-}
+// If successful:
+//   proposal.status === 'applied'
+//   entityId returned
+
+// If failed:
+//   proposal.status === 'failed'
+//   error details available
 ```
 
 ### Proposal Lifecycle
@@ -166,34 +203,37 @@ if (result.success) {
      └──────────┘
 ```
 
-## Repository Pattern
+## Repository Type Definitions
 
-Each Notion database has a corresponding repository that provides type-safe CRUD operations:
+Each Notion database has corresponding type definitions for Copilot reasoning:
 
-### Available Repositories
+### Available Repository Types
 
-| Repository     | Database | Entity Type |
-| -------------- | -------- | ----------- |
-| `sdk.teams`    | Teams    | `Team`      |
-| `sdk.projects` | Projects | `Project`   |
-| `sdk.tasks`    | Tasks    | `Task`      |
-| `sdk.meetings` | Meetings | `Meeting`   |
+| Repository Type      | Database | Entity Type |
+| -------------------- | -------- | ----------- |
+| `TeamRepository`     | Teams    | `Team`      |
+| `ProjectRepository`  | Projects | `Project`   |
+| `TaskRepository`     | Tasks    | `Task`      |
+| `MeetingRepository`  | Meetings | `Meeting`   |
 
-### Repository Interface
+### Repository Type Interface
 
-All repositories extend `BaseRepository<T>` with these common methods:
+Type definitions guide Copilot's reasoning:
 
 ```typescript
+// Repository types describe structure, not execution
 interface BaseRepository<T, CreateInput, UpdateInput> {
-  // Read operations (no proposals needed)
+  // Query types (describe intent)
   findMany(filter?: QueryFilter): Promise<T[]>;
   findById(id: string): Promise<T | null>;
   findByIdOrThrow(id: string): Promise<T>;
 
-  // Mutation operations (return proposals)
+  // Proposal types (describe change intent)
   create(input: CreateInput): Promise<ChangeProposal<T>>;
   update(id: string, input: UpdateInput): Promise<ChangeProposal<T>>;
 }
+
+// Copilot uses these types, execution happens via MCP
 ```
 
 ### Entity Types

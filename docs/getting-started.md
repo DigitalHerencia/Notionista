@@ -1,34 +1,35 @@
 ---
-post_title: Getting Started with Notionista SDK
+post_title: Getting Started with Notionista
 author1: Digital Herencia
 post_slug: getting-started
 microsoft_alias: digitalherencia
 featured_image: /assets/getting-started.png
-categories: SDK, Documentation, Tutorial
-tags: notion, mcp, automation, typescript, quickstart
+categories: Control Plane, Documentation, Tutorial
+tags: notion, mcp, automation, typescript, copilot, quickstart
 ai_note: Documentation generated with AI assistance
-summary: Get up and running with Notionista SDK in under 5 minutes
-post_date: 2026-01-05
+summary: Get up and running with Notionista control plane and Copilot-driven automation
+post_date: 2026-01-07
 ---
 
 # Getting Started
 
-Get up and running with Notionista SDK in under 5 minutes.
+Get up and running with Notionista and Copilot-driven Notion automation.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before you begin, ensure you have the following:
 
-| Requirement        | Version | Notes                                            |
-| ------------------ | ------- | ------------------------------------------------ |
-| **Node.js**        | 20+     | Required for ES modules support                  |
-| **pnpm**           | Latest  | Recommended package manager (npm/yarn also work) |
-| **Notion Account** | -       | With MCP integration configured                  |
-| **TypeScript**     | 5.9+    | For full type safety                             |
+| Requirement            | Version | Notes                                                    |
+| ---------------------- | ------- | -------------------------------------------------------- |
+| **VS Code**            | Latest  | Required for GitHub Copilot and MCP integration          |
+| **GitHub Copilot**     | Latest  | Copilot extension for VS Code                            |
+| **Notion MCP**         | -       | Configured in VS Code (managed by VS Code, not this repo)|
+| **Node.js**            | 20+     | Required for type definitions and local development      |
+| **TypeScript**         | 5.9+    | For full type safety and IntelliSense                    |
 
 ## Installation
 
-Install the Notionista SDK using your preferred package manager:
+Install Notionista for type definitions and schemas:
 
 ```bash
 # Using pnpm (recommended)
@@ -41,138 +42,132 @@ npm install notionista
 yarn add notionista
 ```
 
-## Environment Setup
+## MCP Setup (In VS Code)
 
-Create a `.env` file in your project root with your Notion integration token:
+Configure Notion MCP in VS Code (this is managed by VS Code, not Notionista):
 
-```bash
-# Required - Your Notion integration token
-NOTION_TOKEN=ntn_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+1. Open VS Code Settings (JSON)
+2. Configure MCP server:
 
-# Optional configuration
-MCP_SERVER_PATH=/path/to/notion-mcp-server
-LOG_LEVEL=info
-CACHE_TTL=300
-RATE_LIMIT=3
-```
-
-### Obtaining a Notion Token
-
-1. Visit [Notion Integrations](https://www.notion.so/my-integrations)
-2. Click **"New integration"**
-3. Configure the integration:
-   - **Name**: `Notionista SDK`
-   - **Associated workspace**: Select your target workspace
-   - **Capabilities**: Enable Read, Update, and Insert content
-4. Copy the **Internal Integration Token**
-5. Share your databases with the integration in Notion
-
-## Basic Usage
-
-Here's a complete example to get you started:
-
-```typescript
-import { NotionistaSdk } from 'notionista';
-
-// Initialize the SDK
-const sdk = new NotionistaSdk({
-  notionToken: process.env.NOTION_TOKEN!,
-  logLevel: 'info',
-});
-
-async function main() {
-  // Connect to MCP server
-  await sdk.connect();
-
-  try {
-    // Query incomplete tasks
-    const tasks = await sdk.tasks.findMany({
-      where: { done: false },
-      orderBy: { due: 'asc' },
-    });
-
-    console.log(`Found ${tasks.length} incomplete tasks`);
-
-    // Display task list
-    for (const task of tasks) {
-      console.log(`- [${task.priority || 'No Priority'}] ${task.name}`);
-      if (task.due) {
-        console.log(`  Due: ${new Date(task.due).toLocaleDateString()}`);
+```json
+{
+  "github.copilot.chat.mcpServers": {
+    "notion": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "NOTION_API_KEY": "your-notion-token"
       }
     }
-
-    // Create a new task (returns a proposal)
-    const proposal = await sdk.tasks.create({
-      name: 'Review documentation',
-      priority: 'High',
-      due: new Date('2026-01-15').toISOString(),
-    });
-
-    // Review the proposal before applying
-    console.log('\n--- Change Proposal ---');
-    console.log(proposal.formatForReview());
-
-    // Approve and apply the change
-    await proposal.approve();
-    const result = await proposal.apply();
-    console.log(`Created task: ${result.entityId}`);
-  } finally {
-    // Always disconnect when done
-    await sdk.disconnect();
   }
 }
-
-main().catch(console.error);
 ```
 
-## Understanding the Output
+3. Restart VS Code
+4. MCP connection is now managed by VS Code
 
-When you run the example above, you'll see output similar to:
+**Note:** The MCP server runs inside VS Code and handles all execution. Notionista provides types and governance.
 
-```bash
-Found 15 incomplete tasks
-- [High] Complete API documentation
-  Due: 1/10/2026
-- [Medium] Update README examples
-  Due: 1/12/2026
-- [Low] Add unit tests for QueryBuilder
+## Usage with Copilot
 
---- Change Proposal ---
-## Change Proposal: proposal-1704499200-abc123
+Notionista provides the governance layer - you interact through natural language in Copilot Chat.
 
+### Example Conversation
+
+**Natural language request:**
+```
+@workspace Show me all incomplete high-priority tasks due this week
+```
+
+**Copilot's response:**
+```
+I'll query the tasks using Notionista's type definitions:
+
+Found 3 incomplete high-priority tasks:
+1. Update API documentation (due 2026-01-10)
+2. Fix authentication flow (due 2026-01-12)
+3. Add unit tests (due 2026-01-15)
+```
+
+**Natural language request:**
+```
+@workspace Create a new task to review these items, high priority, due tomorrow
+```
+
+**Copilot's response:**
+```
+I'll create a task proposal using Notionista's ChangeProposal type:
+
+## Change Proposal
 **Type**: create
-**Target Database**: See config/databases.json for current database ID
-**Status**: pending
-**Created**: 2026-01-05T12:00:00.000Z
+**Target Database**: Tasks
 
-### Property Changes
+### Proposed Changes
+- name: "Review high-priority tasks"
+- priority: "High"
+- due: "2026-01-08"
+- done: false
 
-- **name** (low impact)
-  - Old: `null`
-  - New: `"Review documentation"`
-- **priority** (medium impact)
-  - Old: `null`
-  - New: `"High"`
-- **due** (medium impact)
-  - Old: `null`
-  - New: `"2026-01-15T00:00:00.000Z"`
-
-Created task: abc123-def456-ghi789
+Approve to proceed?
 ```
 
-## Project Structure
+**Your response:**
+```
+Approved
+```
 
-A typical Notionista project structure looks like:
+**Copilot executes via MCP:**
+```
+✅ Task created successfully (task-abc123)
+```
 
-```bash
-my-project/
-├── src/
-│   ├── index.ts          # Main entry point
-│   ├── workflows/        # Custom workflows
-│   └── scripts/          # Automation scripts
-├── .env                  # Environment variables
-├── package.json
-└── tsconfig.json
+### How It Works
+
+1. **You speak naturally** to Copilot in VS Code
+2. **Copilot reasons** using Notionista's types and constraints
+3. **Copilot proposes** changes using declarative schemas
+4. **You approve** the proposal
+5. **VS Code MCP client executes** the approved changes
+6. **Notionista never executes** - it only provides the governance layer
+
+## Programmatic Usage (Optional)
+
+If you need direct programmatic access, import types and create declarative proposals:
+
+```typescript
+import type { Task, ChangeProposal, QueryFilter } from 'notionista';
+
+// Define query intent (not executed)
+const filter: QueryFilter = {
+  and: [
+    { property: 'Done', checkbox: { equals: false } },
+    { property: 'Priority', select: { equals: 'High' } }
+  ]
+};
+
+// Create a declarative proposal (no execution)
+const proposal: ChangeProposal<Task> = {
+  id: 'proposal-123',
+  type: 'create',
+  target: { database: 'tasks' },
+  currentState: null,
+  proposedState: {
+    id: 'task-new',
+    name: 'Review tasks',
+    done: false,
+    priority: 'High',
+    due: '2026-01-08'
+  },
+  diff: [
+    { property: 'name', oldValue: null, newValue: 'Review tasks', impact: 'low' },
+    { property: 'priority', oldValue: null, newValue: 'High', impact: 'medium' }
+  ],
+  validation: { valid: true, errors: [], warnings: [] },
+  status: 'pending'
+};
+
+// Copilot reviews and executes via VS Code MCP client
+// This code describes intent - execution is delegated
 ```
 
 ## TypeScript Configuration
@@ -188,8 +183,7 @@ Ensure your `tsconfig.json` includes these settings for optimal type safety:
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": true,
-    "outDir": "./dist"
+    "declaration": true
   },
   "include": ["src/**/*"]
 }
@@ -197,31 +191,29 @@ Ensure your `tsconfig.json` includes these settings for optimal type safety:
 
 ## Next Steps
 
-Now that you have Notionista set up, explore these topics:
+Now that you understand the Copilot-first model, explore these topics:
 
-| Topic                               | Description                                      |
-| ----------------------------------- | ------------------------------------------------ |
-| [Core Concepts](./core-concepts.md) | Learn about the safety workflow and architecture |
-| [Query Builder](./query-builder.md) | Build complex queries with a fluent API          |
-| [Workflows](./workflows.md)         | Orchestrate sprints and team operations          |
-| [Examples](./examples.md)           | Complete working examples                        |
+| Topic                               | Description                                         |
+| ----------------------------------- | --------------------------------------------------- |
+| [Core Concepts](./core-concepts.md) | Learn about the control plane and governance model  |
+| [Query Builder](./query-builder.md) | Declarative query schemas for expressing intent     |
+| [Workflows](./workflows.md)         | Workflow type definitions and patterns              |
+| [Examples](./examples.md)           | Complete usage examples for Copilot                 |
 
-## Common Issues
+## Common Questions
 
-### Connection Errors
+### Who executes the MCP requests?
 
-If you encounter connection errors:
+**VS Code's MCP client** handles all execution. Notionista provides types and governance, Copilot reasons and proposes, VS Code executes.
 
-1. Verify your `NOTION_TOKEN` is correct
-2. Ensure your integration has access to the target databases
-3. Check that databases are shared with your integration in Notion
+### Can I use this without Copilot?
 
-### Type Errors
+Yes, but programmatically. Import types and create proposals directly. However, the primary design is for Copilot consumption.
 
-If TypeScript shows type errors:
+### Where is retry logic handled?
 
-1. Ensure you're using TypeScript 5.9+
-2. Run `pnpm install` to ensure all dependencies are installed
-3. Check that `esModuleInterop` is enabled in your tsconfig
+**VS Code MCP client** handles retries. Notionista provides constraint metadata documenting retry behavior (3 retries, exponential backoff).
 
-For more troubleshooting help, see the [Troubleshooting Guide](./troubleshooting.md).
+### Where is rate limiting enforced?
+
+**VS Code MCP client** enforces rate limits (3 requests/second). Notionista provides constraint metadata for Copilot planning.

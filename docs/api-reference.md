@@ -1,188 +1,30 @@
 ---
-post_title: API Reference - Notionista SDK
+post_title: API Reference - Notionista
 author1: Digital Herencia
 post_slug: api-reference
 microsoft_alias: digitalherencia
 featured_image: /assets/api-reference.png
-categories: SDK, Documentation, API
-tags: notion, mcp, automation, typescript, api, reference
+categories: Control Plane, Documentation, API
+tags: notion, mcp, automation, typescript, api, reference, copilot
 ai_note: Documentation generated with AI assistance
-summary: Complete API reference for Notionista SDK with detailed method signatures and examples
-post_date: 2026-01-05
+summary: Complete type definitions and API reference for Notionista control plane
+post_date: 2026-01-07
 ---
 
 # API Reference
 
-Complete API documentation for Notionista SDK.
+Complete type definitions and API reference for Notionista.
 
-## NotionistaSdk
+## Overview
 
-The main SDK class providing access to all repositories and workflows.
+Notionista provides **type definitions and schemas** that Copilot uses for reasoning. This is not a runtime execution API - all operations describe intent, and execution is delegated to VS Code's MCP client.
 
-### Constructor
+## Core Type Exports
 
-```typescript
-class NotionistaSdk {
-  constructor(options: SdkOptions);
-}
-```
-
-### SdkOptions
-
-| Property        | Type                                     | Required | Default  | Description              |
-| --------------- | ---------------------------------------- | -------- | -------- | ------------------------ |
-| `notionToken`   | `string`                                 | ✅       | -        | Notion integration token |
-| `logLevel`      | `'error' \| 'warn' \| 'info' \| 'debug'` | ❌       | `'info'` | Logging verbosity        |
-| `cacheTtl`      | `number`                                 | ❌       | `300`    | Cache TTL in seconds     |
-| `rateLimit`     | `number`                                 | ❌       | `3`      | Requests per second      |
-| `mcpServerPath` | `string`                                 | ❌       | -        | Custom MCP server path   |
-
-### Methods
-
-#### `connect()`
-
-Establishes connection to the MCP server.
+### Entity Types
 
 ```typescript
-await sdk.connect(): Promise<void>
-```
-
-**Example:**
-
-```typescript
-const sdk = new NotionistaSdk({ notionToken: process.env.NOTION_TOKEN! });
-await sdk.connect();
-```
-
-#### `disconnect()`
-
-Closes the connection to the MCP server.
-
-```typescript
-await sdk.disconnect(): Promise<void>
-```
-
-### Properties
-
-| Property   | Type                | Description          |
-| ---------- | ------------------- | -------------------- |
-| `teams`    | `TeamRepository`    | Team operations      |
-| `projects` | `ProjectRepository` | Project operations   |
-| `tasks`    | `TaskRepository`    | Task operations      |
-| `meetings` | `MeetingRepository` | Meeting operations   |
-| `mcp`      | `McpClient`         | Low-level MCP client |
-
----
-
-## BaseRepository
-
-Abstract base class for all repositories.
-
-### Type Parameters
-
-```typescript
-abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput>
-```
-
-| Parameter      | Description                      |
-| -------------- | -------------------------------- |
-| `TEntity`      | The domain entity type           |
-| `TCreateInput` | Input type for creating entities |
-| `TUpdateInput` | Input type for updating entities |
-
-### Methods
-
-#### `findMany(filter?)`
-
-Find all entities matching the optional filter.
-
-```typescript
-async findMany(filter?: QueryFilter): Promise<TEntity[]>
-```
-
-**Parameters:**
-
-| Name     | Type          | Description                   |
-| -------- | ------------- | ----------------------------- |
-| `filter` | `QueryFilter` | Optional Notion filter object |
-
-**Returns:** `Promise<TEntity[]>` - Array of matching entities
-
-**Example:**
-
-```typescript
-// Find all tasks
-const allTasks = await sdk.tasks.findMany();
-
-// Find with filter
-const incompleteTasks = await sdk.tasks.findMany({
-  property: 'Done',
-  checkbox: { equals: false },
-});
-```
-
-#### `findById(id)`
-
-Find a single entity by ID.
-
-```typescript
-async findById(id: string): Promise<TEntity | null>
-```
-
-**Returns:** `TEntity | null` - The entity or null if not found
-
-#### `findByIdOrThrow(id)`
-
-Find a single entity by ID, throwing if not found.
-
-```typescript
-async findByIdOrThrow(id: string): Promise<TEntity>
-```
-
-**Throws:** `EntityNotFoundError` if entity is not found
-
-#### `create(input)`
-
-Create a new entity proposal.
-
-```typescript
-async create(input: TCreateInput): Promise<ChangeProposal<TEntity>>
-```
-
-**Returns:** `ChangeProposal<TEntity>` - A proposal for review and approval
-
-**Example:**
-
-```typescript
-const proposal = await sdk.tasks.create({
-  name: 'New Task',
-  priority: 'High',
-  due: '2026-01-15T00:00:00.000Z',
-});
-
-// Review and apply
-console.log(proposal.formatForReview());
-await proposal.approve();
-await proposal.apply();
-```
-
-#### `update(id, input)`
-
-Update an existing entity.
-
-```typescript
-async update(id: string, input: TUpdateInput): Promise<ChangeProposal<TEntity>>
-```
-
----
-
-## TaskRepository
-
-Repository for Task entities. Extends `BaseRepository`.
-
-### Task Entity
-
-```typescript
+// Task entity type
 interface Task {
   id: string;
   name: string;
@@ -193,166 +35,8 @@ interface Task {
   projectId?: string;
   teamId?: string;
 }
-```
 
-### CreateTaskInput
-
-```typescript
-interface CreateTaskInput {
-  name: string;
-  done?: boolean;
-  due?: string | null;
-  priority?: 'High' | 'Medium' | 'Low' | null;
-  projectId?: string;
-  teamId?: string;
-}
-```
-
-### UpdateTaskInput
-
-```typescript
-interface UpdateTaskInput {
-  name?: string;
-  done?: boolean;
-  due?: string | null;
-  priority?: 'High' | 'Medium' | 'Low' | null;
-  projectId?: string;
-  teamId?: string;
-}
-```
-
-### Specialized Methods
-
-#### `findByDone(done)`
-
-Find tasks by completion status.
-
-```typescript
-async findByDone(done: boolean): Promise<Task[]>
-```
-
-#### `findIncomplete()`
-
-Find all incomplete tasks.
-
-```typescript
-async findIncomplete(): Promise<Task[]>
-```
-
-**Example:**
-
-```typescript
-const incompleteTasks = await sdk.tasks.findIncomplete();
-console.log(`You have ${incompleteTasks.length} tasks to complete`);
-```
-
-#### `findCompleted()`
-
-Find all completed tasks.
-
-```typescript
-async findCompleted(): Promise<Task[]>
-```
-
-#### `findByProject(projectId)`
-
-Find tasks belonging to a specific project.
-
-```typescript
-async findByProject(projectId: string): Promise<Task[]>
-```
-
-#### `findByTeam(teamId)`
-
-Find tasks belonging to a specific team.
-
-```typescript
-async findByTeam(teamId: string): Promise<Task[]>
-```
-
-#### `findByPriority(priority)`
-
-Find tasks by priority level.
-
-```typescript
-async findByPriority(priority: 'High' | 'Medium' | 'Low'): Promise<Task[]>
-```
-
-#### `findHighPriority()`
-
-Find all high-priority tasks.
-
-```typescript
-async findHighPriority(): Promise<Task[]>
-```
-
-#### `findOverdue()`
-
-Find incomplete tasks with due dates in the past.
-
-```typescript
-async findOverdue(): Promise<Task[]>
-```
-
-**Example:**
-
-```typescript
-const overdueTasks = await sdk.tasks.findOverdue();
-if (overdueTasks.length > 0) {
-  console.warn(`⚠️ You have ${overdueTasks.length} overdue tasks!`);
-}
-```
-
-#### `findDueToday()`
-
-Find tasks due today.
-
-```typescript
-async findDueToday(): Promise<Task[]>
-```
-
-#### `findDueSoon(days?)`
-
-Find incomplete tasks due within the next N days.
-
-```typescript
-async findDueSoon(days: number = 7): Promise<Task[]>
-```
-
-**Example:**
-
-```typescript
-const nextWeekTasks = await sdk.tasks.findDueSoon(7);
-const next3DaysTasks = await sdk.tasks.findDueSoon(3);
-```
-
-#### `getProjectCompletionRate(projectId)`
-
-Get task completion rate for a project.
-
-```typescript
-async getProjectCompletionRate(projectId: string): Promise<number>
-```
-
-**Returns:** Percentage (0-100) of completed tasks
-
-#### `getTeamCompletionRate(teamId)`
-
-Get task completion rate for a team.
-
-```typescript
-async getTeamCompletionRate(teamId: string): Promise<number>
-```
-
----
-
-## ProjectRepository
-
-Repository for Project entities.
-
-### Project Entity
-
-```typescript
+// Project entity type
 interface Project {
   id: string;
   name: string;
@@ -365,43 +49,26 @@ interface Project {
   teamId?: string;
   taskIds: string[];
 }
+
+// Team entity type
+interface Team {
+  id: string;
+  name: string;
+  tasksCompleted: number;
+  projectsComplete: number;
+}
+
+// Meeting entity type
+interface Meeting {
+  id: string;
+  name: string;
+  type: 'Standup' | 'Planning' | 'Review' | 'Sync' | 'Other';
+  cadence: 'Daily' | 'Weekly' | 'Biweekly' | 'Monthly' | 'Ad Hoc';
+  date: string;
+  attendees: string[];
+  actionItems: string[];
+}
 ```
-
-### Specialized Methods
-
-#### `findByStatus(status)`
-
-Find projects by status.
-
-```typescript
-async findByStatus(status: ProjectStatus): Promise<Project[]>
-```
-
-#### `findActive()`
-
-Find all active projects.
-
-```typescript
-async findActive(): Promise<Project[]>
-```
-
-#### `findByTeam(teamId)`
-
-Find projects belonging to a team.
-
-```typescript
-async findByTeam(teamId: string): Promise<Project[]>
-```
-
-#### `findByMilestone(milestone)`
-
-Find projects by milestone.
-
-```typescript
-async findByMilestone(milestone: 'M1' | 'M2' | 'M3'): Promise<Project[]>
-```
-
----
 
 ## ChangeProposal
 
