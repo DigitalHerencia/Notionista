@@ -175,7 +175,7 @@ export const NamingConventionsSchema = z.object({
   projects: z.string().regex(/^[A-Z].*$/, 'Must be descriptive, no prefix required'),
   tasks: z
     .string()
-    .regex(/^[A-Z][a-z]+ .*$/, 'Must be verb-object format (e.g., "Update documentation")'),
+    .regex(/^[A-Z][A-Za-z-]* .+$/, 'Must be verb-object format (e.g., "Update documentation")'),
   meetings: z
     .string()
     .regex(
