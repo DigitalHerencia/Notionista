@@ -272,10 +272,21 @@ export class DiffEngine {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
     if (typeof value === 'string') return value;
-    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'number' || typeof value === 'boolean') return value.toString();
+    if (typeof value === 'bigint') return `${value}n`;
+    if (typeof value === 'symbol') return value.toString();
+    if (typeof value === 'function') {
+      return value.name ? `[Function ${value.name}]` : '[Function]';
+    }
     if (value instanceof Date) return value.toISOString();
     if (Array.isArray(value)) return `[${value.length} items]`;
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return '[object Object]';
+      }
+    }
+    return 'unknown';
   }
 }

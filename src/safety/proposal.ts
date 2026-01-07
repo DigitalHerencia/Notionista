@@ -71,7 +71,7 @@ export class ProposalManager {
    * @param change The proposed change details
    * @returns The created proposal with unique ID
    */
-  async propose<T>(
+  propose<T>(
     change: Omit<ChangeProposal<T>, 'id' | 'createdAt' | 'status'>
   ): Promise<ChangeProposal<T>> {
     const proposal: ChangeProposal<T> = {
@@ -82,7 +82,7 @@ export class ProposalManager {
     };
 
     this.pendingProposals.set(proposal.id, proposal);
-    return proposal;
+    return Promise.resolve(proposal);
   }
 
   /**

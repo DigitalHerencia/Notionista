@@ -22,6 +22,17 @@ We are committed to providing a welcoming and inclusive environment. Please:
 - Focus on what is best for the community
 - Show empathy towards other community members
 
+## Quick CI Check Before Submitting
+
+Before pushing your branch, ensure your code passes all checks:
+
+```bash
+# This command runs all checks locally (same as CI)
+pnpm lint && pnpm format && pnpm typecheck && pnpm test:coverage && pnpm build
+```
+
+✅ **All checks must pass** or your PR will fail CI and require fixes.
+
 ## Getting Started
 
 ### Prerequisites
@@ -82,13 +93,16 @@ We are committed to providing a welcoming and inclusive environment. Please:
 Always create a new branch for your work:
 
 ```bash
-# Update your main branch
-git checkout main
-git pull upstream main
+# Update your develop branch (main development branch)
+git checkout develop
+git pull upstream develop
 
 # Create and switch to a new feature branch
 git checkout -b feature/your-feature-name
 ```
+
+**Note**: When creating a PR, target the `develop` branch for features,
+or `main` for hotfixes. Only maintainers merge `develop` → `main`.
 
 ### Branch Naming Convention
 
@@ -119,20 +133,30 @@ Use descriptive branch names with prefixes:
    - API documentation
    - Examples (if applicable)
 
-4. **Run linting and formatting**
+4. **Run quality checks** (in this order)
 
    ```bash
-   pnpm lint
+   # Auto-fix linting issues
+   pnpm lint -- --fix
+
+   # Auto-format code
    pnpm format
+
+   # Type checking
+   pnpm typecheck
+
+   # Run tests with coverage
+   pnpm test:coverage
+
+   # Or run all at once
+   pnpm lint && pnpm format && pnpm typecheck && pnpm test:coverage
    ```
 
-5. **Run tests**
+   ⚠️ **Important**: Your code must pass all checks to be accepted in CI.
+   If any checks fail, the PR will be blocked. Use `--fix` flags liberally
+   during development to catch issues early.
 
-   ```bash
-   pnpm test
-   ```
-
-6. **Commit your changes**
+5. **Commit your changes**
 
    Follow the [Commit Convention](#commit-convention) below.
 
@@ -263,14 +287,14 @@ export class BaseRepository<T> implements Repository<T> {
 
 All exported classes, functions, and types must have JSDoc:
 
-```typescript
+````typescript
 /**
  * Repository for managing Team entities in Notion.
- * 
+ *
  * Provides type-safe CRUD operations with built-in proposal workflow
  * for all mutations. All write operations return ChangeProposal instances
  * that must be approved before execution.
- * 
+ *
  * @example
  * ```typescript
  * const teams = await teamRepo.findMany();
@@ -282,11 +306,11 @@ All exported classes, functions, and types must have JSDoc:
 export class TeamRepository extends BaseRepository<Team> {
   /**
    * Find all teams matching the given filter.
-   * 
+   *
    * @param filter - Optional filter criteria for querying teams
    * @returns Promise resolving to array of Team entities
    * @throws {NotionApiError} If the Notion API request fails
-   * 
+   *
    * @example
    * ```typescript
    * // Find teams with completed projects
@@ -299,7 +323,7 @@ export class TeamRepository extends BaseRepository<Team> {
     // Implementation
   }
 }
-```
+````
 
 #### Inline Comments
 
@@ -307,10 +331,7 @@ Use inline comments sparingly and only for complex logic:
 
 ```typescript
 // Calculate exponential backoff with jitter to avoid thundering herd
-const delay = Math.min(
-  baseDelay * Math.pow(2, attempt) + Math.random() * 1000,
-  maxDelay
-);
+const delay = Math.min(baseDelay * Math.pow(2, attempt) + Math.random() * 1000, maxDelay);
 ```
 
 ### Error Handling
@@ -326,10 +347,10 @@ try {
   return this.transformResults(result);
 } catch (error) {
   if (error instanceof McpError) {
-    throw new RepositoryError(
-      `Failed to query ${this.databaseId}: ${error.message}`,
-      { cause: error, databaseId: this.databaseId }
-    );
+    throw new RepositoryError(`Failed to query ${this.databaseId}: ${error.message}`, {
+      cause: error,
+      databaseId: this.databaseId,
+    });
   }
   throw error;
 }
@@ -355,9 +376,9 @@ async function loadAllData() {
 
 // Avoid
 function loadAllData() {
-  return teamRepo.findMany().then(teams => {
-    return projectRepo.findMany().then(projects => {
-      return taskRepo.findMany().then(tasks => {
+  return teamRepo.findMany().then((teams) => {
+    return projectRepo.findMany().then((projects) => {
+      return taskRepo.findMany().then((tasks) => {
         return { teams, projects, tasks };
       });
     });
@@ -395,9 +416,9 @@ describe('TaskRepository', () => {
   describe('findMany', () => {
     it('should return all tasks when no filter provided', async () => {
       mockClient.queryDataSource.mockResolvedValue(mockTaskPages);
-      
+
       const tasks = await taskRepo.findMany();
-      
+
       expect(tasks).toHaveLength(5);
       expect(mockClient.queryDataSource).toHaveBeenCalledWith({
         database_id: DATABASE_IDS.TASKS,
@@ -406,16 +427,16 @@ describe('TaskRepository', () => {
 
     it('should filter incomplete tasks', async () => {
       mockClient.queryDataSource.mockResolvedValue(mockIncompleteTaskPages);
-      
+
       const tasks = await taskRepo.findMany({ where: { done: false } });
-      
+
       expect(tasks).toHaveLength(3);
-      expect(tasks.every(t => !t.done)).toBe(true);
+      expect(tasks.every((t) => !t.done)).toBe(true);
     });
 
     it('should throw RepositoryError on MCP client failure', async () => {
       mockClient.queryDataSource.mockRejectedValue(new McpError('API error'));
-      
+
       await expect(taskRepo.findMany()).rejects.toThrow(RepositoryError);
     });
   });
@@ -426,7 +447,7 @@ describe('TaskRepository', () => {
         name: 'New task',
         priority: 'High',
       });
-      
+
       expect(proposal.status).toBe('pending');
       expect(proposal.proposedState.name).toBe('New task');
       expect(mockClient.createPage).not.toHaveBeenCalled();
@@ -533,7 +554,6 @@ Add example scripts to `examples/` directory:
    Go to the repository and click "New Pull Request"
 
 3. **Fill in the PR template**
-
    - Clear title following commit convention
    - Description of changes
    - Related issues

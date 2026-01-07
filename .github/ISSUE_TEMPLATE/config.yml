@@ -1,0 +1,6 @@
+name: Issue Template Config
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/DigitalHerencia/Notionista/discussions
+    about: For questions and general discussions about Notionista
