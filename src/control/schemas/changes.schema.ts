@@ -53,7 +53,9 @@ export type CreateProjectRequest = z.infer<typeof CreateProjectRequestSchema>;
  */
 export const CreateTaskRequestSchema = z.object({
   type: z.literal('create-task'),
-  name: z.string().regex(/^[A-Z][a-z]+ .*$/, 'Must be verb-object format'),
+  name: z
+    .string()
+    .regex(/^[A-Z][\w-]+ .+$/, 'Must start with a capitalized verb and include an object'),
   project: z.string().optional(),
   team: z.string().optional(),
   due: z.date().optional(),
