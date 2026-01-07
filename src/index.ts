@@ -41,6 +41,9 @@ export {
   type ValidationRule,
 } from './safety/index.js';
 
+// Control Layer (Agent-Aligned Governance)
+export * from './control/index.js';
+
 // Error types
 export {
   BatchLimitExceededError,
