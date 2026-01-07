@@ -144,7 +144,7 @@ export function calculateTeamMetrics(
     completionRate: teamTasks.length > 0 ? (completedTasks / teamTasks.length) * 100 : 0,
     overdueTasks: countOverdueTasks(teamTasks),
     tasksByPriority: groupByPriority(teamTasks),
-    velocity: 0, // Requires historical completion data (dates when tasks were completed) to calculate tasks/day
+    velocity: Number.NaN, // Unavailable: requires historical completion data (task completion dates) to compute tasks/day
   };
 }
 
