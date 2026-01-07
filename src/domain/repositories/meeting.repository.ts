@@ -130,4 +130,3 @@ export class MeetingRepository extends BaseRepository<
    * then execute and process results externally.
    */
 }
-}

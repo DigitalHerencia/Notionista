@@ -119,51 +119,20 @@ export class BatchLimiter {
   }
 
   /**
-   * Execute batch operation with progress tracking
-   * @param items Items to process
-   * @param executor Function to execute on each item
-   * @returns Batch execution result
+   * @deprecated Batch execution is an external concern in a declarative system.
+   *
+   * This method executes operations, which violates the declarative control layer.
+   *
+   * Instead:
+   * 1. Use splitBatch() to split items into chunks
+   * 2. Generate operation intents for each item
+   * 3. Execute externally (via VS Code MCP host)
+   * 4. Track results externally
    */
-  async executeBatch<T, R>(items: T[], executor: (item: T) => Promise<R>): Promise<BatchResult> {
-    const startTime = Date.now();
-    let successful = 0;
-    let failed = 0;
-    const errors: Array<{ index: number; error: Error }> = [];
-
-    // Validate or split batch
-    const chunks = this.splitBatch(items);
-
-    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
-      const chunk = chunks[chunkIndex]!;
-
-      for (let i = 0; i < chunk.length; i++) {
-        const globalIndex = chunkIndex * this.config.maxBatchSize + i;
-        const item = chunk[i]!;
-
-        try {
-          await executor(item);
-          successful++;
-        } catch (error) {
-          failed++;
-          errors.push({
-            index: globalIndex,
-            error: error instanceof Error ? error : new Error(String(error)),
-          });
-        }
-
-        // Report progress
-        if (this.config.onProgress) {
-          this.config.onProgress(successful + failed, items.length);
-        }
-      }
-    }
-
-    return {
-      successful,
-      failed,
-      errors,
-      duration: Date.now() - startTime,
-    };
+  async executeBatch<T, R>(_items: T[], _executor: (item: T) => Promise<R>): Promise<BatchResult> {
+    throw new Error(
+      'BatchLimiter.executeBatch() is deprecated. Use splitBatch() to prepare items, generate intents, and execute externally.'
+    );
   }
 
   /**

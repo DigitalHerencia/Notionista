@@ -61,7 +61,10 @@ export interface ApplyResult {
 }
 
 /**
- * Manages the proposal lifecycle: propose → approve → apply
+ * Manages the proposal lifecycle: propose → approve → (external apply)
+ *
+ * This is a DECLARATIVE proposal manager - it tracks proposal state
+ * but does NOT execute operations. Execution is delegated externally.
  */
 export class ProposalManager {
   private pendingProposals = new Map<string, ChangeProposal>();
@@ -71,9 +74,7 @@ export class ProposalManager {
    * @param change The proposed change details
    * @returns The created proposal with unique ID
    */
-  propose<T>(
-    change: Omit<ChangeProposal<T>, 'id' | 'createdAt' | 'status'>
-  ): Promise<ChangeProposal<T>> {
+  propose<T>(change: Omit<ChangeProposal<T>, 'id' | 'createdAt' | 'status'>): ChangeProposal<T> {
     const proposal: ChangeProposal<T> = {
       ...change,
       id: Math.random().toString(36).substring(2) + Date.now().toString(36),
@@ -82,11 +83,11 @@ export class ProposalManager {
     };
 
     this.pendingProposals.set(proposal.id, proposal);
-    return Promise.resolve(proposal);
+    return proposal;
   }
 
   /**
-   * Approve a proposal for execution
+   * Approve a proposal (marks it as ready for external execution)
    * @param proposalId The proposal ID to approve
    */
   approve(proposalId: string): void {
@@ -101,45 +102,38 @@ export class ProposalManager {
   }
 
   /**
-   * Execute an approved proposal
-   * @param proposalId The proposal ID to apply
-   * @param executor Function that performs the actual change
-   * @returns Result of the application
+   * Mark a proposal as applied (called after external execution)
+   *
+   * This does NOT execute the proposal. It only updates the status
+   * after external systems have executed the MCP operation.
+   *
+   * @param proposalId The proposal ID to mark as applied
    */
-  async apply(
-    proposalId: string,
-    executor: (proposal: ChangeProposal) => Promise<string>
-  ): Promise<ApplyResult> {
+  markApplied(proposalId: string): void {
     const proposal = this.pendingProposals.get(proposalId);
     if (!proposal) {
       throw new Error(`Proposal ${proposalId} not found`);
     }
     if (proposal.status !== 'approved') {
       throw new Error(
-        `Proposal ${proposalId} must be approved before applying (status: ${proposal.status})`
+        `Proposal ${proposalId} must be approved before marking as applied (status: ${proposal.status})`
       );
     }
+    proposal.status = 'applied';
+    proposal.appliedAt = new Date();
+  }
 
-    try {
-      const entityId = await executor(proposal);
-      proposal.status = 'applied';
-      proposal.appliedAt = new Date();
-
-      return {
-        proposalId,
-        success: true,
-        entityId,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      proposal.status = 'failed';
-      return {
-        proposalId,
-        success: false,
-        error: error as Error,
-        timestamp: new Date(),
-      };
+  /**
+   * Mark a proposal as failed (called after external execution failure)
+   *
+   * @param proposalId The proposal ID to mark as failed
+   */
+  markFailed(proposalId: string): void {
+    const proposal = this.pendingProposals.get(proposalId);
+    if (!proposal) {
+      throw new Error(`Proposal ${proposalId} not found`);
     }
+    proposal.status = 'failed';
   }
 
   /**

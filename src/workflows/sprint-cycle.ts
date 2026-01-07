@@ -60,6 +60,9 @@ export interface SprintResult {
 /**
  * Workflow orchestration for sprint cycle management
  * Implements the 2-week sprint planning process for Digital Herencia
+ *
+ * This is a DECLARATIVE workflow - it generates proposals and intents,
+ * it does NOT execute operations.
  */
 export class SprintCycleWorkflow {
   constructor(
@@ -72,15 +75,17 @@ export class SprintCycleWorkflow {
    * Plan a new sprint with all required artifacts
    * Returns proposals for review before execution (Propose step)
    *
+   * Pure function - generates proposals without side effects
+   *
    * @param config Sprint configuration
    * @returns Aggregate proposal containing project, tasks, and meetings
    */
-  async planSprint(config: SprintConfig): Promise<SprintProposal> {
+  planSprint(config: SprintConfig): SprintProposal {
     // Validate configuration
     this.validateSprintConfig(config);
 
     // 1. Create project proposal
-    const projectProposal = await this.projects.create({
+    const projectProposal = this.projects.create({
       name: config.name,
       status: 'Active',
       milestone: config.milestone,
@@ -92,28 +97,19 @@ export class SprintCycleWorkflow {
     });
 
     // 2. Create task proposals linked to project
-    const taskProposals = await Promise.all(
-      config.tasks.map((taskInput) =>
-        this.tasks.create({
-          ...taskInput,
-          projectId: projectProposal.proposedState.id,
-          teamId: config.teamId,
-        })
-      )
+    const taskProposals = config.tasks.map((taskInput) =>
+      this.tasks.create({
+        ...taskInput,
+        projectId: projectProposal.proposedState.id,
+        teamId: config.teamId,
+      })
     );
 
     // 3. Create meeting proposals for sprint cycle
-    const meetingProposals = await this.createSprintMeetings(
-      config,
-      projectProposal.proposedState.id
-    );
+    const meetingProposals = this.createSprintMeetings(config, projectProposal.proposedState.id);
 
     // 4. Generate summary
-    const summary = this.generateSprintSummary(
-      config,
-      taskProposals.length,
-      meetingProposals.length
-    );
+    const summary = this.generateSprintSummary(config, taskProposals.length, meetingProposals.length);
 
     return {
       project: projectProposal,
@@ -129,18 +125,17 @@ export class SprintCycleWorkflow {
    * - Daily Standup template
    * - Post-mortem/Retrospective (end)
    *
+   * Pure function - generates proposals without side effects
+   *
    * @param config Sprint configuration
    * @param projectId Project ID to link meetings to
    * @returns Array of meeting proposals
    */
-  private async createSprintMeetings(
-    config: SprintConfig,
-    projectId: string
-  ): Promise<ChangeProposal<Meeting>[]> {
+  private createSprintMeetings(config: SprintConfig, projectId: string): ChangeProposal<Meeting>[] {
     const meetings: ChangeProposal<Meeting>[] = [];
 
     // Sprint Planning meeting
-    const planningMeeting = await this.meetings.create({
+    const planningMeeting = this.meetings.create({
       name: `Sprint Planning - ${config.name}`,
       type: 'Sprint Planning',
       cadence: 'Biweekly',
@@ -151,7 +146,7 @@ export class SprintCycleWorkflow {
     meetings.push(planningMeeting);
 
     // Daily Standup (recurring template)
-    const standupMeeting = await this.meetings.create({
+    const standupMeeting = this.meetings.create({
       name: `Daily Standup - ${config.name}`,
       type: 'Standup',
       cadence: 'Daily',
@@ -162,7 +157,7 @@ export class SprintCycleWorkflow {
     meetings.push(standupMeeting);
 
     // Post-mortem / Retrospective meeting
-    const postMortemMeeting = await this.meetings.create({
+    const postMortemMeeting = this.meetings.create({
       name: `Post-mortem - ${config.name}`,
       type: 'Post-mortem',
       cadence: 'Biweekly',

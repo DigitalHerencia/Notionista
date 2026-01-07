@@ -55,8 +55,17 @@ export interface StandupReport {
 }
 
 /**
- * Workflow for generating daily standup reports
- * Provides task summaries by team for daily coordination
+ * Daily Standup Workflow - Pure Calculation Functions
+ *
+ * @deprecated This workflow contains execution-oriented methods that query data.
+ *
+ * In a declarative control layer, standup reports should be generated from
+ * externally-fetched data, not by executing queries internally.
+ *
+ * The correct pattern is:
+ * 1. Generate query intents using repositories
+ * 2. Execute queries externally (via VS Code MCP host)
+ * 3. Pass fetched data to pure calculation functions
  */
 export class DailyStandupWorkflow {
   constructor(
@@ -65,19 +74,96 @@ export class DailyStandupWorkflow {
   ) {}
 
   /**
-   * Generate a daily standup report with task summaries by team
-   *
-   * @param config Standup configuration
-   * @returns Complete standup report
+   * @deprecated Use generateStandupReportFromData() with externally-fetched data
    */
-  async generateStandupReport(config: StandupConfig = {}): Promise<StandupReport> {
-    const date = config.date || new Date();
-    const includeDone = config.includeDone || false;
+  async generateStandupReport(_config: StandupConfig = {}): Promise<StandupReport> {
+    throw new Error(
+      'DailyStandupWorkflow methods require execution. Use generateStandupReportFromData() with fetched data instead.'
+    );
+  }
+}
 
-    // Get teams to report on
-    const allTeams = await this.teams.findMany();
-    const targetTeams = config.teamIds
-      ? allTeams.filter((team) => config.teamIds!.includes(team.id))
+/**
+ * Generate standup report from fetched data (pure function)
+ */
+export function generateStandupReportFromData(
+  teams: Team[],
+  tasks: Task[],
+  config: StandupConfig = {}
+): StandupReport {
+  const date = config.date || new Date();
+  const includeDone = config.includeDone || false;
+
+  // Filter teams if specific IDs provided
+  const targetTeams = config.teamIds
+    ? teams.filter((team) => config.teamIds!.includes(team.id))
+    : teams;
+
+  // Generate team summaries
+  const teamSummaries = targetTeams.map((team) =>
+    generateTeamTaskSummary(team, tasks, includeDone)
+  );
+
+  // Calculate overall summary
+  const overallSummary = {
+    totalTeams: teamSummaries.length,
+    totalTasks: teamSummaries.reduce((sum, ts) => sum + ts.totalTasks, 0),
+    completedTasks: teamSummaries.reduce((sum, ts) => sum + ts.completedTasks, 0),
+    activeTasks: teamSummaries.reduce((sum, ts) => sum + ts.activeTasks, 0),
+    overdueTasks: teamSummaries.reduce((sum, ts) => sum + ts.overdueTasks, 0),
+    averageCompletionRate:
+      teamSummaries.length > 0
+        ? teamSummaries.reduce((sum, ts) => sum + ts.completionRate, 0) / teamSummaries.length
+        : 0,
+  };
+
+  return {
+    date,
+    teams: teamSummaries,
+    overallSummary,
+  };
+}
+
+/**
+ * Generate task summary for a single team (pure function)
+ */
+function generateTeamTaskSummary(
+  team: Team,
+  allTasks: Task[],
+  includeDone: boolean
+): TeamTaskSummary {
+  const teamTasks = allTasks.filter((task) => task.teamId === team.id);
+  const now = new Date().toISOString();
+
+  const filteredTasks = includeDone ? teamTasks : teamTasks.filter((task) => !task.done);
+
+  const taskDetails: TaskDetail[] = filteredTasks.map((task) => ({
+    id: task.id,
+    name: task.name,
+    done: task.done,
+    priority: task.priority,
+    due: task.due,
+    isOverdue: !task.done && task.due ? task.due < now : false,
+    projectId: task.projectId,
+  }));
+
+  const completedTasks = teamTasks.filter((t) => t.done).length;
+  const activeTasks = teamTasks.filter((t) => !t.done).length;
+  const overdueTasks = teamTasks.filter((t) => !t.done && t.due && t.due < now).length;
+  const highPriorityTasks = teamTasks.filter((t) => !t.done && t.priority === 'High').length;
+
+  return {
+    teamId: team.id,
+    teamName: team.name,
+    totalTasks: teamTasks.length,
+    completedTasks,
+    activeTasks,
+    overdueTasks,
+    highPriorityTasks,
+    completionRate: teamTasks.length > 0 ? (completedTasks / teamTasks.length) * 100 : 0,
+    tasks: taskDetails,
+  };
+}
       : allTeams;
 
     // Generate team summaries
