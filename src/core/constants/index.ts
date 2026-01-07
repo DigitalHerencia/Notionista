@@ -1,13 +1,20 @@
 /**
  * MCP configuration constants
+ *
+ * NOTE: Runtime concerns like retries, rate limiting, and timeouts are handled
+ * by the VS Code MCP client, not by this SDK. These constants are retained for
+ * documentation purposes and to inform constraint metadata.
+ *
+ * For constraint metadata used in Copilot reasoning, see:
+ * @see {DEFAULT_MCP_CONSTRAINTS} in src/core/types/constraints.ts
  */
 
 export const MCP_DEFAULTS = {
+  /**
+   * Request timeout in milliseconds
+   * @handledBy 'vscode-mcp-client'
+   */
   TIMEOUT: 30000, // 30 seconds
-  MAX_RETRIES: 3,
-  RATE_LIMIT_PER_SECOND: 3,
-  RETRY_BACKOFF_BASE: 1000, // 1 second
-  RETRY_BACKOFF_MAX: 10000, // 10 seconds
 } as const;
 
 /**
@@ -17,10 +24,23 @@ export { DATABASE_IDS } from './databases.js';
 
 /**
  * Notion API constants
+ *
+ * These are informational constraints about the Notion API.
+ * Actual enforcement is handled by the Notion API and VS Code MCP client.
  */
 
 export const NOTION_LIMITS = {
+  /**
+   * Maximum page size for paginated queries
+   * @handledBy 'notion-api'
+   */
   MAX_PAGE_SIZE: 100,
+
+  /**
+   * Recommended maximum batch size for bulk operations
+   * This is guidance for Copilot, not enforced by the SDK
+   * @handledBy 'copilot-agent'
+   */
   MAX_BATCH_SIZE: 50,
 } as const;
 
