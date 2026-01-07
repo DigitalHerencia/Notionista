@@ -76,10 +76,12 @@ export interface OverallAnalytics {
  * data as parameters rather than fetching it internally.
  */
 export class AnalyticsService {
+  // Repositories are kept for interface compatibility but not used
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(
-    private readonly teams: ITeamRepository,
-    private readonly projects: IProjectRepository,
-    private readonly tasks: ITaskRepository
+    private readonly _teams: ITeamRepository,
+    private readonly _projects: IProjectRepository,
+    private readonly _tasks: ITaskRepository
   ) {}
 
   /**

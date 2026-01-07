@@ -68,9 +68,11 @@ export interface StandupReport {
  * 3. Pass fetched data to pure calculation functions
  */
 export class DailyStandupWorkflow {
+  // Repositories are kept for interface compatibility but not used
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(
-    private readonly tasks: ITaskRepository,
-    private readonly teams: ITeamRepository
+    private readonly _tasks: ITaskRepository,
+    private readonly _teams: ITeamRepository
   ) {}
 
   /**
