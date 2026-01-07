@@ -205,7 +205,7 @@ export class McpClient implements IMcpClient {
     }
 
     if (params.page_size && (params.page_size < 1 || params.page_size > 100)) {
-      warnings.push('page_size should be between 1 and 100');
+      errors.push('page_size must be between 1 and 100');
     }
 
     return {
