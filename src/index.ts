@@ -28,13 +28,14 @@ export { CsvSnapshotParser } from './sync/parser/csv.js';
 
 // Safety Layer
 export {
-  BatchLimiter,
   DiffEngine,
   ProposalManager,
   Validator,
-  type BatchConfig,
+  formatBatchSummary,
+  generateBatchSummary,
+  isWithinBatchLimit,
+  splitBatch,
   type BatchOperation,
-  type BatchResult,
   type ChangeProposal,
   type DiffResult,
   type DiffSummary,
@@ -49,12 +50,23 @@ export {
   type ValidationRule,
 } from './safety/index.js';
 
+// Constraint metadata for Copilot reasoning
+export {
+  DEFAULT_MCP_CONSTRAINTS,
+  splitIntoBatches,
+  validateBatchSize,
+  type BatchGuidance,
+  type BatchSizeValidation,
+  type McpCallConstraints,
+  type RateLimitConstraints,
+  type RetryConstraints,
+} from './core/types/constraints.js';
+
 // Control Layer (Agent-Aligned Governance)
 export * from './control/index.js';
 
 // Error types
 export {
-  BatchLimitExceededError,
   EntityNotFoundError,
   McpError,
   NotionistaError,

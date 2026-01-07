@@ -9,9 +9,10 @@
  *
  * These middleware types and interfaces are retained for type definitions only.
  * The implementations should not be used in production code.
+ *
+ * For constraint metadata used in Copilot reasoning, see:
+ * @see {DEFAULT_MCP_CONSTRAINTS} in src/core/types/constraints.ts
  */
 
-export * from './rate-limiter.js';
-export * from './retry.js';
 export * from './logger.js';
 export * from './cache.js';

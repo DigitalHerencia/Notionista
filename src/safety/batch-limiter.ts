@@ -1,26 +1,15 @@
-import { BatchLimitExceededError } from '../core/errors';
-
 /**
- * Configuration for batch operations
+ * Batch Operation Utilities
+ *
+ * Provides utilities for reasoning about batch operations without execution.
+ * This module offers pure functions for batch size validation and splitting.
+ *
+ * Actual batch execution is delegated to the VS Code MCP host.
+ *
+ * @deprecated This module is being phased out. Use constraint types instead:
+ * @see {validateBatchSize} in src/core/types/constraints.ts
+ * @see {splitIntoBatches} in src/core/types/constraints.ts
  */
-export interface BatchConfig {
-  /**
-   * Maximum number of items in a single batch
-   * @default 50
-   */
-  maxBatchSize: number;
-
-  /**
-   * Whether to allow splitting batches automatically
-   * @default false
-   */
-  allowSplit: boolean;
-
-  /**
-   * Progress callback for batch operations
-   */
-  onProgress?: (completed: number, total: number) => void;
-}
 
 /**
  * Batch operation metadata
@@ -33,200 +22,116 @@ export interface BatchOperation {
 }
 
 /**
- * Batch execution result
+ * @deprecated Use validateBatchSize from src/core/types/constraints.ts instead
+ *
+ * This function is retained for backward compatibility only.
+ * It validates batch size against recommended limits but does not enforce them.
+ *
+ * @param itemCount - Number of items in batch
+ * @param maxBatchSize - Maximum recommended batch size (default: 50)
+ * @returns True if within recommended limit
  */
-export interface BatchResult {
-  successful: number;
-  failed: number;
-  errors: Array<{ index: number; error: Error }>;
-  duration: number; // milliseconds
+export function isWithinBatchLimit(itemCount: number, maxBatchSize = 50): boolean {
+  return itemCount <= maxBatchSize;
 }
 
 /**
- * Enforces batch size limits for bulk operations
- * Protects against accidental mass updates
+ * @deprecated Use splitIntoBatches from src/core/types/constraints.ts instead
+ *
+ * Split items into chunks based on recommended batch size.
+ * This is a pure function that returns chunks without executing operations.
+ *
+ * @param items - Array of items to split
+ * @param maxBatchSize - Maximum items per chunk (default: 50)
+ * @returns Array of item chunks
  */
-export class BatchLimiter {
-  private readonly config: BatchConfig;
+export function splitBatch<T>(items: T[], maxBatchSize = 50): T[][] {
+  const chunks: T[][] = [];
 
-  /**
-   * Default batch size limit (matches copilot-instructions.md)
-   */
-  static readonly DEFAULT_BATCH_SIZE = 50;
-
-  constructor(config: Partial<BatchConfig> = {}) {
-    this.config = {
-      maxBatchSize: config.maxBatchSize ?? BatchLimiter.DEFAULT_BATCH_SIZE,
-      allowSplit: config.allowSplit ?? false,
-      onProgress: config.onProgress,
-    };
+  for (let i = 0; i < items.length; i += maxBatchSize) {
+    chunks.push(items.slice(i, i + maxBatchSize));
   }
 
-  /**
-   * Validate batch size against limit
-   * @param itemCount Number of items in batch
-   * @throws BatchLimitExceededError if limit exceeded
-   */
-  validateBatchSize(itemCount: number): void {
-    if (itemCount > this.config.maxBatchSize) {
-      throw new BatchLimitExceededError(itemCount, this.config.maxBatchSize);
-    }
+  return chunks;
+}
+
+/**
+ * @deprecated Batch operation summaries should be generated externally
+ *
+ * Generate dry-run summary for batch operation.
+ * This is metadata only - no execution occurs.
+ *
+ * @param itemCount - Number of items
+ * @param maxBatchSize - Maximum batch size (default: 50)
+ * @returns Summary object
+ */
+export function generateBatchSummary(itemCount: number, maxBatchSize = 50): BatchOperation {
+  const chunks = Math.ceil(itemCount / maxBatchSize);
+  const estimatedDuration = estimateBatchDuration(itemCount);
+
+  return {
+    id: `batch_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    itemCount,
+    estimatedDuration,
+    chunks,
+  };
+}
+
+/**
+ * Format batch summary for display
+ *
+ * @param summary - Batch operation summary
+ * @param maxBatchSize - Maximum batch size (default: 50)
+ * @returns Markdown formatted summary
+ */
+export function formatBatchSummary(summary: BatchOperation, maxBatchSize = 50): string {
+  const lines = [
+    `### Batch Operation Summary`,
+    ``,
+    `- **Total Items**: ${summary.itemCount}`,
+    `- **Chunks**: ${summary.chunks}`,
+    `- **Items per Chunk**: ${maxBatchSize}`,
+    `- **Estimated Duration**: ${formatDuration(summary.estimatedDuration)}`,
+  ];
+
+  if (summary.chunks > 1) {
+    lines.push(``);
+    lines.push(`⚠️ This batch will be processed in ${summary.chunks} chunks`);
   }
 
-  /**
-   * Check if batch size is within limit
-   * @param itemCount Number of items in batch
-   * @returns True if within limit
-   */
-  isWithinLimit(itemCount: number): boolean {
-    return itemCount <= this.config.maxBatchSize;
-  }
-
-  /**
-   * Split batch into chunks if allowed
-   * @param items Array of items to batch
-   * @returns Array of chunks
-   */
-  splitBatch<T>(items: T[]): T[][] {
-    if (!this.config.allowSplit) {
-      this.validateBatchSize(items.length);
-      return [items];
-    }
-
-    const chunks: T[][] = [];
-    for (let i = 0; i < items.length; i += this.config.maxBatchSize) {
-      chunks.push(items.slice(i, i + this.config.maxBatchSize));
-    }
-
-    return chunks;
-  }
-
-  /**
-   * Generate dry-run summary for batch operation
-   * @param itemCount Number of items
-   * @returns Summary object
-   */
-  generateDryRunSummary(itemCount: number): BatchOperation {
-    const chunks = Math.ceil(itemCount / this.config.maxBatchSize);
-    const estimatedDuration = this.estimateDuration(itemCount);
-
-    return {
-      id: this.generateBatchId(),
-      itemCount,
-      estimatedDuration,
-      chunks,
-    };
-  }
-
-  /**
-   * @deprecated Batch execution is an external concern in a declarative system.
-   *
-   * This method executes operations, which violates the declarative control layer.
-   *
-   * Instead:
-   * 1. Use splitBatch() to split items into chunks
-   * 2. Generate operation intents for each item
-   * 3. Execute externally (via VS Code MCP host)
-   * 4. Track results externally
-   */
-  async executeBatch<T, R>(_items: T[], _executor: (item: T) => Promise<R>): Promise<BatchResult> {
-    throw new Error(
-      'BatchLimiter.executeBatch() is deprecated. Use splitBatch() to prepare items, generate intents, and execute externally.'
+  if (summary.itemCount > maxBatchSize) {
+    lines.push(``);
+    lines.push(
+      `⚠️ Batch size exceeds recommended limit of ${maxBatchSize}. Consider splitting or requesting user approval.`
     );
   }
 
-  /**
-   * Format batch summary for display
-   * @param summary Batch operation summary
-   * @returns Markdown formatted summary
-   */
-  formatSummary(summary: BatchOperation): string {
-    const lines = [
-      `### Batch Operation Summary`,
-      ``,
-      `- **Total Items**: ${summary.itemCount}`,
-      `- **Chunks**: ${summary.chunks}`,
-      `- **Items per Chunk**: ${this.config.maxBatchSize}`,
-      `- **Estimated Duration**: ${this.formatDuration(summary.estimatedDuration)}`,
-    ];
+  return lines.join('\n');
+}
 
-    if (summary.chunks > 1) {
-      lines.push(``);
-      lines.push(`⚠️ This batch will be processed in ${summary.chunks} chunks`);
-    }
+/**
+ * Estimate duration based on item count
+ * Assumes ~333ms per item with rate limiting (3 req/sec)
+ */
+function estimateBatchDuration(itemCount: number): number {
+  // 3 req/sec rate limit = ~333ms per request
+  return itemCount * 333;
+}
 
-    if (summary.itemCount > this.config.maxBatchSize && !this.config.allowSplit) {
-      lines.push(``);
-      lines.push(
-        `❌ Batch size exceeds limit of ${this.config.maxBatchSize}. Enable allowSplit to proceed.`
-      );
-    }
-
-    return lines.join('\n');
+/**
+ * Format duration for display
+ */
+function formatDuration(ms: number): string {
+  if (ms < 1000) {
+    return `${ms}ms`;
   }
 
-  /**
-   * Format batch result for display
-   * @param result Batch execution result
-   * @returns Markdown formatted result
-   */
-  formatResult(result: BatchResult): string {
-    const lines = [
-      `### Batch Execution Result`,
-      ``,
-      `- **Successful**: ${result.successful}`,
-      `- **Failed**: ${result.failed}`,
-      `- **Duration**: ${this.formatDuration(result.duration)}`,
-    ];
-
-    if (result.errors.length > 0) {
-      lines.push(``);
-      lines.push(`#### Errors`);
-      lines.push(``);
-
-      for (const { index, error } of result.errors.slice(0, 10)) {
-        lines.push(`- Item ${index}: ${error.message}`);
-      }
-
-      if (result.errors.length > 10) {
-        lines.push(`- ... and ${result.errors.length - 10} more errors`);
-      }
-    }
-
-    return lines.join('\n');
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) {
+    return `${seconds}s`;
   }
 
-  /**
-   * Estimate duration based on item count
-   * Assumes ~100ms per item with rate limiting
-   */
-  private estimateDuration(itemCount: number): number {
-    // 3 req/sec rate limit = ~333ms per request
-    return itemCount * 333;
-  }
-
-  /**
-   * Format duration for display
-   */
-  private formatDuration(ms: number): string {
-    if (ms < 1000) {
-      return `${ms}ms`;
-    }
-
-    const seconds = Math.floor(ms / 1000);
-    if (seconds < 60) {
-      return `${seconds}s`;
-    }
-
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}m ${remainingSeconds}s`;
-  }
-
-  /**
-   * Generate unique batch ID
-   */
-  private generateBatchId(): string {
-    return `batch_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  }
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds}s`;
 }
