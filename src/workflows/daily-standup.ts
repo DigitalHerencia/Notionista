@@ -115,7 +115,10 @@ export function generateStandupReportFromData(
     overdueTasks: teamSummaries.reduce((sum, ts) => sum + ts.overdueTasks, 0),
     averageCompletionRate:
       teamSummaries.length > 0
-        ? teamSummaries.reduce((sum, ts) => sum + ts.completionRate, 0) / teamSummaries.length
+        ? Math.round(
+            (teamSummaries.reduce((sum, ts) => sum + ts.completionRate, 0) / teamSummaries.length) *
+              10
+          ) / 10
         : 0,
   };
 
@@ -128,14 +131,19 @@ export function generateStandupReportFromData(
 
 /**
  * Generate task summary for a single team (pure function)
+ *
+ * @param team - The team to generate summary for
+ * @param allTasks - All tasks (will be filtered to team tasks)
+ * @param includeDone - Whether to include completed tasks in details
+ * @param currentTime - Current time for overdue calculation (defaults to Date.now())
  */
 function generateTeamTaskSummary(
   team: Team,
   allTasks: Task[],
-  includeDone: boolean
+  includeDone: boolean,
+  currentTime: string = new Date().toISOString()
 ): TeamTaskSummary {
   const teamTasks = allTasks.filter((task) => task.teamId === team.id);
-  const now = new Date().toISOString();
 
   const filteredTasks = includeDone ? teamTasks : teamTasks.filter((task) => !task.done);
 
@@ -145,13 +153,13 @@ function generateTeamTaskSummary(
     done: task.done,
     priority: task.priority,
     due: task.due,
-    isOverdue: !task.done && task.due ? task.due < now : false,
+    isOverdue: !task.done && task.due ? task.due < currentTime : false,
     projectId: task.projectId,
   }));
 
   const completedTasks = teamTasks.filter((t) => t.done).length;
   const activeTasks = teamTasks.filter((t) => !t.done).length;
-  const overdueTasks = teamTasks.filter((t) => !t.done && t.due && t.due < now).length;
+  const overdueTasks = teamTasks.filter((t) => !t.done && t.due && t.due < currentTime).length;
   const highPriorityTasks = teamTasks.filter((t) => !t.done && t.priority === 'High').length;
 
   return {

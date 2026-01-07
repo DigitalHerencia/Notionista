@@ -101,8 +101,14 @@ export abstract class BaseRepository<TEntity, TCreateInput, TUpdateInput> {
    * Update an existing entity - returns a proposal with operation intent
    * Does NOT execute the change or query existing data
    *
-   * Note: In a declarative system, you must provide the current state
-   * or fetch it externally before calling this method.
+   * @param id - Entity ID to update
+   * @param input - Update input data
+   * @param currentState - Optional current state (if available from prior fetch).
+   *                       If not provided, proposal will have null currentState
+   *                       and diff will show all changes as new values.
+   *
+   * Note: In a declarative system, current state should be fetched externally
+   * before calling this method if you want accurate diffs and side-effect analysis.
    */
   update(id: string, input: TUpdateInput, currentState?: TEntity): ChangeProposal<TEntity> {
     // Validate update

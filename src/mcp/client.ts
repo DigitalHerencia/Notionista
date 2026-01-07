@@ -25,7 +25,7 @@ export interface McpOperationIntent {
   /** Human-readable description of the intent */
   description: string;
 
-  /** Validation result for this operation */
+  /** Validation result for this operation (simple structure for consistency) */
   validation?: {
     valid: boolean;
     errors: string[];
@@ -100,10 +100,14 @@ export interface IMcpClient {
  * - Documentation of available MCP operations
  *
  * Execution of these intents is delegated to VS Code's MCP infrastructure.
+ *
+ * @param _options - Client options (not currently used as this is declarative only)
  */
 export class McpClient implements IMcpClient {
   constructor(_options: McpClientOptions) {
-    // Options intentionally unused - this class only generates intents
+    // Options are intentionally unused in declarative mode
+    // This class generates intents, not executes operations
+    // Execution configuration is handled by external MCP host
   }
 
   /**
