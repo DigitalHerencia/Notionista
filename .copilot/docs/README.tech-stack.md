@@ -294,4 +294,4 @@ When evaluating new technologies:
 
 ---
 
-**End of Tech Stack Reference**
+End of Tech Stack Reference

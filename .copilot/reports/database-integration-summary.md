@@ -168,7 +168,7 @@ Successfully integrated three newly added Notion databases into the Digital Here
 
 ## Documentation Hierarchy
 
-```
+```plaintext
 Configuration Layer:
   config/databases.json
     ↓
@@ -323,7 +323,7 @@ config/databases.json#/publicDatabases/blog
 
 Agents reference:
 
-```
+```plaintext
 notion-mcp-reference.md#/SOPs Database
 notion-mcp-reference.md#/Tech Stack Database
 notion-mcp-reference.md#/Blog Database
@@ -333,7 +333,7 @@ notion-mcp-reference.md#/Blog Database
 
 Agents access:
 
-```
+```plaintext
 README.sops.md (SOP operations)
 README.tech-stack.md (Tech inventory management)
 README.blog.md (Blog content management)

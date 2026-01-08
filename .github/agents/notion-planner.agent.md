@@ -127,7 +127,7 @@ If Step X fails:
 1. Rollback action
 2. Verification
 
-````
+````plaintext
 
 ### Phase 4: Present Plan
 

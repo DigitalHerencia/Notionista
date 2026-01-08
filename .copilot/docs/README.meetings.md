@@ -77,7 +77,7 @@
 
 **Block Structure**:
 
-```
+```yaml
 heading_1: "What did we do yesterday?"
   └─ bulleted_list_item: [Yesterday's accomplishments by team]
 
@@ -116,7 +116,7 @@ heading_1: "Action items"
 
 **Block Structure**:
 
-```
+```yaml
 heading_1: "Progress Updates"
   └─ paragraph: [Description placeholder]
   └─ bulleted_list_item: [Progress items]
@@ -157,7 +157,7 @@ heading_1: "Follow-up Actions"
 
 **Block Structure**:
 
-```
+```yaml
 heading_1: "Goals / agenda"
   └─ bulleted_list_item: [Today's goals]
 
@@ -184,7 +184,7 @@ heading_1: "Action items"
 
 **Block Structure**:
 
-```
+```yaml
 heading_1: "Stretch"
   └─ paragraph: "Nice-to-haves if we get ahead."
 
@@ -232,7 +232,7 @@ heading_1: "Notes"
 
 **Block Structure**:
 
-```
+```yaml
 heading_1: "What happened last week?"
   └─ bulleted_list_item: [Week summary by team]
 
@@ -263,7 +263,7 @@ heading_1: "Action Items"
 
 **Block Structure**:
 
-```
+```yaml
 heading_1: "Sprint Goal"
   └─ paragraph: "What will we accomplish over the course of the sprint?"
   └─ bulleted_list_item: [Sprint goal statement]
@@ -308,7 +308,7 @@ Example:
 
 **Block Structure**:
 
-```
+```yaml
 heading_1: "User Facing Impact"
   └─ paragraph: [Impact description]
   └─ bulleted_list_item: [Specific impacts]
@@ -352,7 +352,7 @@ heading_1: "Action Items"
 
 ### Daily Context Flow
 
-```
+```text
 ┌─────────────────────┐
 │  Previous Day       │
 │  Meeting Pages      │
@@ -383,7 +383,7 @@ heading_1: "Action Items"
 
 ### Biweekly Sprint Cycle
 
-```
+```text
 Day 1-2: Sprint Planning
   └─ Set sprint goal
   └─ Commit backlog items
@@ -461,7 +461,7 @@ Day 13-14: Sprint Close
 
 ### Querying Today's Meetings
 
-```
+```bash
 Tool: query-data-source
 Data Source ID: 2caa4e63-bf23-815a-8981-000bbdbb7f0b
 Filter: { "property": "Created", "date": { "equals": "{today}" } }
@@ -469,14 +469,14 @@ Filter: { "property": "Created", "date": { "equals": "{today}" } }
 
 ### Getting Meeting Content
 
-```
+```bash
 Tool: get-block-children
 Block ID: {meeting page ID}
 ```
 
 ### Updating Meeting Content
 
-```
+```bash
 Tool: patch-block-children
 Block ID: {meeting page ID}
 Children: [

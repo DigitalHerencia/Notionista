@@ -1002,7 +1002,7 @@ mcp_notionapi_API -
 
 ---
 
-### Common Errors
+## Additional References
 
 - **Database Configuration**: [../../config/databases.json](../../config/databases.json)
 - **Project & Task Inventory**: [../../.copilot/reports/project-task-reference.md](../../.copilot/reports/project-task-reference.md)
@@ -1012,4 +1012,4 @@ mcp_notionapi_API -
 
 ---
 
-**End of Reference Document**
+End of Reference Document
