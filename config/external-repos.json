@@ -1,0 +1,12 @@
+{
+  "externalRepos": {
+    "competitiveAdvantage": {
+      "owner": "DigitalHerencia",
+      "repo": "CompetitiveAdvantage",
+      "url": "https://github.com/DigitalHerencia/CompetitiveAdvantage",
+      "defaultBranch": "main",
+      "purpose": "Competitive Advantage product/code repository (separate from Notionista Notion automation)",
+      "notes": "Repo fetch returned HTTP 404 from unauthenticated context; likely private or access-restricted. Use a PAT/GitHub App token with access if automation needs to read it."
+    }
+  }
+}

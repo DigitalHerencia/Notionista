@@ -2,6 +2,14 @@
 
 This document operationalizes safe, controlled edits to your Notion using Model Context Protocol (MCP) in VS Code Copilot Chat. It documents the Digital Herencia team-based workspace structure and leverages relations, rollups, and formulas across your existing Notion databases.
 
+> **Current Dev Cycle:** Competitive Advantage (SaaS Product) — M1 / P1.1
+> **Reference:** See [.copilot/reports/project-task-reference.md](../.copilot/reports/project-task-reference.md) for complete project/task inventory.
+
+## Related repositories
+
+- Competitive Advantage product/code repo: [DigitalHerencia/CompetitiveAdvantage](https://github.com/DigitalHerencia/CompetitiveAdvantage)
+- Local reference (how this workspace relates to it): [`.copilot/docs/competitive-advantage-repo.md`](../.copilot/docs/competitive-advantage-repo.md)
+
 ## Scope & Guardrails
 
 - Primary goal: Automate and maintain Digital Herencia team workflows in Notion using Copilot + MCP.
@@ -12,15 +20,7 @@ This document operationalizes safe, controlled edits to your Notion using Model 
   - Bulk destructive actions (delete pages/blocks, erase content).
   - Moving pages/databases to new parents or workspaces.
   - Large-scale updates (>50 items) without a dry-run summary.
-
-## Server & Auth
-
-- Recommended: Notion MCP Remote
-  - Configured in this workspace's `settings.json` under `github.copilot.chat.mcpServers` → `Notion` → `https://mcp.notion.com/mcp`.
-  - Sign-in prompts will appear in Copilot Chat when tools require authorization.
-- Alternative: Local open-source Notion MCP server
-  - Env: `NOTION_TOKEN=ntn_***` (Internal Integration Token). Share target pages/databases with your integration in Notion UI.
-  - If using HTTP transport, secure with a bearer `AUTH_TOKEN` and configure client headers accordingly.
+- **Critical:** Never create meetings—they are recurring templates that auto-generate. Only add relations to existing meetings.
 
 ## Safety Workflow (Propose → Approve → Apply)
 
@@ -31,64 +31,83 @@ This document operationalizes safe, controlled edits to your Notion using Model 
 
 ## Digital Herencia Workspace Structure
 
-> **Note**: Database IDs and URLs are maintained in `config/databases.json` at the root of the workspace. Always reference that file as the authoritative source for current database identifiers.
+> **Note**: Database IDs and URLs are maintained in [config/databases.json](../config/databases.json). Always reference that file as the authoritative source for current database identifiers.
 
 ### Core Databases
 
-| Database       | Data Source ID            | URL                       | Notes                         |
-| -------------- | ------------------------- | ------------------------- | ----------------------------- |
-| **Teams**      | See config/databases.json | See config/databases.json | Primary teams database        |
-| **Projects**   | See config/databases.json | See config/databases.json | Company-wide projects         |
-| **Tasks**      | See config/databases.json | See config/databases.json | All tasks across teams        |
-| **Meetings**   | See config/databases.json | See config/databases.json | All meetings and standups     |
-| **Prompts**    | See config/databases.json | See config/databases.json | Prompt templates              |
-| **Tech Stack** | See config/databases.json | See config/databases.json | Technology inventory          |
-| **Templates**  | See config/databases.json | See config/databases.json | Reusable templates            |
-| **SOPs**       | See config/databases.json | See config/databases.json | Standard operating procedures |
-| **Calendar**   | See config/databases.json | See config/databases.json | Team calendar                 |
+| Database       | Notes                                                  |
+| -------------- | ------------------------------------------------------ |
+| **Teams**      | Primary teams database (6 active teams)                |
+| **Projects**   | Company-wide projects (89 total across all teams)      |
+| **Tasks**      | All tasks across teams (433 total)                     |
+| **Meetings**   | Recurring meeting templates (never manually created)   |
+| **Portfolio**  | Work artifacts from completed tasks (manually created) |
+| **Tech Stack** | Technology inventory                                   |
+| **Calendar**   | Team calendar                                          |
 
 ### Teams (6 Active)
 
-Teams serve as de facto Areas and contain auxiliary mutable Project and Task databases where template items can be assigned via button properties.
+Teams serve as de facto Areas and contain auxiliary mutable Project and Task databases where template items can be assigned via button properties ("Add Project" / "Add Task").
 
-| Team             | Role                                     |
-| ---------------- | ---------------------------------------- |
-| Engineering Team | Technical development and implementation |
-| Design Team      | UI/UX and visual design                  |
-| Marketing Team   | Marketing and communications             |
-| Operations Team  | Operations and process management        |
-| Product Team     | Product strategy and roadmap             |
-| Research Team    | Research and analysis                    |
+| Team             | Role                                      | Meeting Type          |
+| ---------------- | ----------------------------------------- | --------------------- |
+| Engineering Team | Technical development and implementation  | Engineering Meeting   |
+| Design Team      | UI/UX and visual design                   | Design Meeting        |
+| Marketing Team   | Marketing and communications              | Daily Standup (shared)|
+| Operations Team  | Operations and process management         | Operations Meeting    |
+| Product Team     | Product strategy and roadmap              | Daily Standup (shared)|
+| Research Team    | Research and analysis (topics/modules)    | Daily Standup (shared)|
 
-### Team-Specific Databases (Auxiliary)
+### Meeting-Team Mapping
 
-| Database           | Data Source ID                         |
-| ------------------ | -------------------------------------- |
-| Marketing Tasks    | `2d5a4e63-bf23-816c-8877-000b6ff1beb5` |
-| Marketing Projects | `2d2a4e63-bf23-81b1-a7ef-000bab5ba8f8` |
-| Ops Tasks          | `2d5a4e63-bf23-8113-a0ef-000be10caf3e` |
-| Ops Projects       | `2d2a4e63-bf23-8078-828e-000b16ccc334` |
-| Design Tasks       | `2d5a4e63-bf23-8168-9326-000b7670541f` |
-| Research           | `2d5a4e63-bf23-8167-b32a-000b356bda57` |
+**Shared Daily Standup:** Product, Marketing, Research teams share one standup.
+**Individual Daily Meetings:** Operations, Design, Engineering each have dedicated meetings.
 
 ## Workflow: Sprint Cycle (2 Weeks)
 
-1. **Sprint Planning Meeting** (biweekly): Assign projects to teams, set milestones.
-2. **Daily Standups**: Assign tasks, track progress, remove blockers.
+### Phase & Milestone Structure
+
+| Milestone | Description                          |
+| --------- | ------------------------------------ |
+| **M1**    | Foundation & Core Infrastructure     |
+| **M2**    | Feature Development & Integration    |
+| **M3**    | Polish, Launch & Optimization        |
+
+| Phase     | Description                          |
+| --------- | ------------------------------------ |
+| **P1.1**  | Requirements Gathering & Planning    |
+| **P1.2**  | Architecture & Technical Design      |
+| **P1.3**  | Core Infrastructure Setup            |
+| **P2.1**  | Feature Development Sprint 1         |
+| **P2.2**  | Feature Development Sprint 2         |
+| **P2.3**  | Integration & Testing                |
+| **P3.1**  | Performance Optimization             |
+| **P3.2**  | User Acceptance Testing              |
+| **P3.3**  | Launch & Post-Launch Support         |
+
+### Sprint Workflow
+
+1. **Sprint Planning Meeting** (biweekly): Projects are assigned to teams via relation properties.
+2. **Daily Meetings**: Tasks are assigned via "Add Task" buttons, then linked to meeting Action Items.
 3. **Post-mortem Meeting**: Review completed sprint, capture lessons learned.
 4. **Team Sync**: Regular coordination within each team.
 
 ### Project Lifecycle
 
+- Projects are predefined in team pages with "Add Project" buttons.
+- Adding a project populates the main Projects database with team relation.
 - Projects are 2-week sprints with defined start and end dates.
 - All project tasks must be completed for project to be marked done.
 - Projects roll up to team-level completion metrics.
 
 ### Task Lifecycle
 
-- Tasks are assigned during daily meetings.
-- Tasks are relational to Projects (completion of all tasks = project done).
-- Tasks use a checkbox `Done` property for completion tracking.
+- Tasks are predefined in team pages with "Add Task" buttons.
+- Adding a task populates the main Tasks database with project/team relations.
+- Tasks follow sequential codes: T01 → T02 → T03 → T04 → T05 per project.
+- Tasks are assigned daily and **completed the same day**.
+- Task coloring: **green = due today**, **red = overdue**.
+- Archive via `Archived` checkbox property (views filter `Archived != true`).
 
 ## Database Schemas
 
@@ -129,13 +148,6 @@ Teams serve as de facto Areas and contain auxiliary mutable Project and Task dat
 - **Action Items** (relation): → Tasks
 - **Relations**: → Projects, → Teams
 
-### Prompts
-
-- **Name** (title): Prompt name
-- **Control Layer** (select): System, User, Assistant
-- **Use Case** (multi-select): Code generation, Documentation, etc.
-- **Relations**: → Team
-
 ### Tech Stack
 
 - **Name** (title): Technology name
@@ -143,13 +155,9 @@ Teams serve as de facto Areas and contain auxiliary mutable Project and Task dat
 - **Programming Languages** (multi-select): Python, TypeScript, etc.
 - **Tags** (multi-select): Frontend, Backend, DevOps, etc.
 
-### SOPs (Deprecated - Pending Update)
-
-- Documentation pages with procedures (content to be updated in subsequent requests)
-
 ## Core Relations
 
-```
+```text
 Teams ─┬─→ Projects ─→ Tasks
        │       ↓         ↓
        │    Meetings ←───┘
@@ -167,23 +175,39 @@ Teams ─┬─→ Projects ─→ Tasks
 - **Team.Projects Complete**: Count/percent of completed projects for the team.
 - **Project Progress**: Derived from percent-checked Tasks.
 
+## Research Team Structure
+
+> **Note:** Research Team uses **Topics** (equivalent to Projects) and **Learning Modules** (equivalent to Tasks). The same workflows apply—Topics are assigned in sprint planning, Modules are assigned daily.
+
 ## MCP Tooling (Common Operations)
 
+MCP tools are accessed via Copilot Chat using the `mcp_notionapi_API-*` prefix.
+
 - Data sources (databases):
-  - List/query: `retrieve-a-data-source`, `query-data-source`
-  - Create/update: `create-a-data-source`, `update-a-data-source`
-  - Templates: `list-data-source-templates`
-  - **Note**: Use database IDs from `config/databases.json` at the workspace root for all operations
+  - Retrieve: `mcp_notionapi_API-retrieve-a-data-source`
+  - Query: `mcp_notionapi_API-query-data-source`
+  - Update: `mcp_notionapi_API-update-a-data-source`
+  - Templates: `mcp_notionapi_API-list-data-source-templates`
+  - **Note**: Use database IDs from [../config/databases.json](../config/databases.json) for all operations
 - Pages/Blocks:
-  - Create/update/move: `post-page`, `patch-page`, `move-page`
-  - Read/children: `retrieve-a-page`, `get-block-children`, `retrieve-a-block`
-  - Append/edit/delete blocks: `patch-block-children`, `update-a-block`, `delete-a-block`
+  - Create page: `mcp_notionapi_API-post-page`
+  - Update page: `mcp_notionapi_API-patch-page`
+  - Move page: `mcp_notionapi_API-move-page`
+  - Retrieve page: `mcp_notionapi_API-retrieve-a-page`
+  - Retrieve block: `mcp_notionapi_API-retrieve-a-block`
+  - Get children: `mcp_notionapi_API-get-block-children`
+  - Append children: `mcp_notionapi_API-patch-block-children`
+  - Update block: `mcp_notionapi_API-update-a-block`
+  - Delete block: `mcp_notionapi_API-delete-a-block`
 - Comments:
-  - Create/read: `create-a-comment`, `retrieve-a-comment`
+  - Create: `mcp_notionapi_API-create-a-comment` (via activate_data_source_management_tools)
+  - Retrieve: `mcp_notionapi_API-retrieve-a-comment`
 - Search:
-  - Title search: `post-search` (pages and data sources)
+  - Title search: `mcp_notionapi_API-post-search` (pages and data sources)
 - Users:
-  - Self/users: `get-self`, `get-user`, `get-users`
+  - Self: `mcp_notionapi_API-get-self`
+  - Get user: `mcp_notionapi_API-get-user`
+  - List users: `mcp_notionapi_API-get-users`
 
 Copilot should prefer read-only calls first, then present a proposal before running write operations.
 
@@ -196,11 +220,31 @@ Copilot should prefer read-only calls first, then present a proposal before runn
 
 ## Change Request Templates
 
-- "Create a project titled `<X>`, domain `<Y>`, milestone `<Z>`, linked to `<Team>`."
-- "Create a task `<T>` for project `<P>`, due `<Date>`."
-- "Mark task `<T>` as done."
-- "Schedule a `<Type>` meeting for `<Date>` with `<Team>` attendees."
 - "Query all incomplete tasks for `<Team>`."
+- "Mark task `<T>` as done."
+- "Add task `<T>` to today's `<Meeting>` Action Items."
+- "Create a Portfolio page for completed task `<T>`."
+- "Get next task for `<Project>`." (filter: `Done=false`, sort by `Task Code`, take first)
+- "Show dev cycle status for `<Team>`."
+
+> **Note:** Do not use "Schedule a meeting" or "Create a meeting"—meetings auto-generate from recurring templates.
+
+## Workflow Patterns
+
+### Daily Workflow
+
+1. **Query today's meeting** for the relevant team
+2. **Get next task** from project (filter: `Done=false`, sort by `Task Code`, take first)
+3. **Add task relation** to meeting's Action Items
+4. **Complete previous task** (mark `Done=true`) if applicable
+5. **Update task due date** to today
+
+### Task Completion Workflow
+
+1. **Mark task Done** (`Done=true`)
+2. **Create Portfolio page** (if deliverable exists)
+3. **Link Portfolio** to originating Task, Project, Team
+4. **Archive task** if needed (`Archived=true`)
 
 ## Pre-Change Checklist (Copilot Must Confirm)
 
@@ -229,5 +273,3 @@ Copilot should prefer read-only calls first, then present a proposal before runn
 - Use data source IDs (not page IDs) when querying databases.
 
 ---
-
-Use this file as the authoritative guide for Copilot's behavior in this workspace. All changes to Notion must follow the Propose → Approve → Apply workflow.

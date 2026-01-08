@@ -1,56 +1,37 @@
 {
-  "name": "notionista",
+  "name": "@digital-herencia/notionista",
   "version": "0.1.0",
-  "description": "TypeScript SDK for advanced Notion automation via MCP",
+  "description": "Notion MCP integration for Digital Herencia workspace",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist"
-  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "format": "prettier --write .",
     "test": "vitest",
-    "test:coverage": "vitest --coverage",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
-    "typecheck": "tsc --noEmit"
+    "test:coverage": "vitest --coverage"
   },
   "keywords": [
     "notion",
     "mcp",
-    "automation",
-    "typescript",
-    "sdk"
+    "copilot",
+    "automation"
   ],
   "author": "Digital Herencia",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "9.39.0",
-    "@types/node": "25.0.3",
-    "@typescript-eslint/eslint-plugin": "8.52.0",
-    "@typescript-eslint/parser": "8.52.0",
-    "@vitest/coverage-v8": "4.0.16",
-    "eslint": "9.39.2",
-    "prettier": "3.7.4",
-    "tsup": "8.5.1",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.52.0",
-    "vitest": "4.0.16"
+    "@types/node": "^22.10.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   },
   "dependencies": {
-    "csv-parse": "6.1.0",
-    "zod": "4.3.5"
+    "zod": "^3.24.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
