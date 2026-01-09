@@ -341,14 +341,14 @@ export function getTeamName(teamId: string): TeamName | null {
  * Get team from domain code
  */
 export function getTeamFromDomain(domain: Domain): TeamName {
-  return DomainToTeam[domain] as TeamName;
+  return DomainToTeam[domain];
 }
 
 /**
  * Get domain from team name
  */
 export function getDomainFromTeam(teamName: TeamName): Domain {
-  return TeamToDomain[teamName] as Domain;
+  return TeamToDomain[teamName];
 }
 
 /**
@@ -441,10 +441,34 @@ export function getRelatedMeetingIds(page: TeamPage): string[] {
 // QUERY BUILDERS
 // =============================================================================
 
+type TeamRelationFilter = {
+  property: 'Team';
+  relation: {
+    contains: string;
+  };
+};
+
+type DoneFalseFilter = {
+  property: 'Done';
+  checkbox: {
+    equals: false;
+  };
+};
+
+type TeamProjectsFilter = TeamRelationFilter;
+
+type TeamTasksFilter =
+  | TeamRelationFilter
+  | {
+      and: [TeamRelationFilter, DoneFalseFilter];
+    };
+
+type TeamMeetingsFilter = TeamRelationFilter;
+
 /**
  * Build a filter for querying projects by team
  */
-export function buildTeamProjectsFilter(teamId: string) {
+export function buildTeamProjectsFilter(teamId: string): TeamProjectsFilter {
   return {
     property: 'Team',
     relation: {
@@ -456,7 +480,7 @@ export function buildTeamProjectsFilter(teamId: string) {
 /**
  * Build a filter for querying tasks by team
  */
-export function buildTeamTasksFilter(teamId: string, includeCompleted = false) {
+export function buildTeamTasksFilter(teamId: string, includeCompleted = false): TeamTasksFilter {
   if (includeCompleted) {
     return {
       property: 'Team',
@@ -487,7 +511,7 @@ export function buildTeamTasksFilter(teamId: string, includeCompleted = false) {
 /**
  * Build a filter for querying meetings by team
  */
-export function buildTeamMeetingsFilter(teamId: string) {
+export function buildTeamMeetingsFilter(teamId: string): TeamMeetingsFilter {
   return {
     property: 'Team',
     relation: {
@@ -510,10 +534,20 @@ export const CreateTeamInput = z.object({
 });
 export type CreateTeamInput = z.infer<typeof CreateTeamInput>;
 
+type CreateTeamProperties = {
+  'Team name': {
+    title: Array<{
+      text: {
+        content: TeamName;
+      };
+    }>;
+  };
+};
+
 /**
  * Build properties object for creating a team page
  */
-export function buildCreateTeamProperties(input: CreateTeamInput) {
+export function buildCreateTeamProperties(input: CreateTeamInput): CreateTeamProperties {
   return {
     'Team name': {
       title: [
