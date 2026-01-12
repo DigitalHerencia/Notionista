@@ -1,0 +1,99 @@
+{
+  "name": "notionista-vscode-extension",
+  "displayName": "Notionista VSCode Extension",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "1.80.0"
+  },
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:notionista.startChat"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "notionista.startChat",
+        "title": "Notionista: Start Chat"
+      },
+      {
+        "command": "notionista.validateNotion",
+        "title": "Notionista: Validate Notion Registry"
+      },
+      {
+        "command": "notionista.bootstrapNotion",
+        "title": "Notionista: Bootstrap Notion Canonical Schema"
+      },
+      {
+        "command": "notionista.init",
+        "title": "Notionista: Initialize Notion Workspace (Onboarding)"
+      }
+    ]
+  },
+  "configuration": {
+    "type": "object",
+    "title": "Notionista",
+    "properties": {
+      "notionista.mcpCommand": {
+        "type": "string",
+        "default": "mcp.run",
+        "description": "VS Code command used to invoke MCP tools (adapter will call this)."
+      },
+      "notionista.allowWrites": {
+        "type": "boolean",
+        "default": false,
+        "description": "When true, allows the extension to create/update Notion items. Keep false during development to prevent accidental writes."
+      },
+      "notionista.autoApplyWrites": {
+        "type": "boolean",
+        "default": false,
+        "description": "When true and writes are allowed, onboarding will apply changes without an interactive confirmation. Recommended for scripted deployments; keep false for interactive consent."
+      }
+    }
+  },
+  "scripts": {
+    "prepare": "husky install",
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "lint": "eslint . --ext .ts --fix",
+    "format": "prettier --write .",
+    "test:unit": "vitest",
+    "test": "pnpm run test:unit",
+    "check:ts": "tsc -p ./ --noEmit",
+    "sync-ids": "node ./scripts/sync-ids.js"
+  },
+  "devDependencies": {
+    "@eslint/css": "^0.14.1",
+    "@eslint/js": "^9.39.2",
+    "@eslint/json": "^0.14.0",
+    "@eslint/markdown": "^7.5.1",
+    "@playwright/test": "1.57.0",
+    "@types/node": "25.0.6",
+    "@types/vscode": "1.108.1",
+    "@typescript-eslint/eslint-plugin": "8.52.0",
+    "@typescript-eslint/parser": "8.52.0",
+    "eslint": "9.39.2",
+    "globals": "^17.0.0",
+    "husky": "9.1.7",
+    "jiti": "^2.6.1",
+    "prettier": "3.7.4",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.52.0",
+    "vitest": "4.0.16"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx,js,jsx,json,md}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "0.27.2"
+    }
+  },
+  "dependencies": {
+    "zod": "^4.3.5"
+  }
+}

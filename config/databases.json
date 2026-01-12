@@ -1,0 +1,25 @@
+{
+  "databases": {
+    "teams": { "id": null, "name": "Teams", "url": null },
+    "projects": { "id": null, "name": "Projects", "url": null },
+    "tasks": { "id": null, "name": "Tasks", "url": null },
+    "meetings": { "id": null, "name": "Meetings", "url": null },
+    "portfolio": { "id": null, "name": "Portfolio", "url": null },
+    "calendar": { "id": null, "name": "Calendar", "url": null }
+  },
+  "teamDatabases": {
+    "operations": { "projects": { "id": null }, "tasks": { "id": null } },
+    "product": { "projects": { "id": null }, "tasks": { "id": null } },
+    "design": { "projects": { "id": null }, "tasks": { "id": null } },
+    "engineering": { "projects": { "id": null }, "tasks": { "id": null } },
+    "marketing": { "projects": { "id": null }, "tasks": { "id": null } },
+    "research": { "courses": { "id": null }, "modules": { "id": null }, "leetcode": { "id": null } }
+  },
+  "publicDatabases": {
+    "sops": { "id": null },
+    "techStack": { "id": null },
+    "blog": { "id": null }
+  },
+  "safetyLimits": { "maxBatchSize": 50, "rateLimitPerSecond": 3, "requireApprovalForBulk": true },
+  "mcp": { "useVscodeMcp": true, "defaultTimeout": 30000, "maxRetries": 3 }
+}

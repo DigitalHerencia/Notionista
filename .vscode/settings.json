@@ -1,0 +1,119 @@
+{
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.associations": {
+    "*.agent.md": "markdown",
+    "*.instructions.md": "markdown",
+    "*.prompt.md": "markdown",
+    "*.skills.md": "markdown",
+    "*.mdx": "markdown"
+  },
+
+  "chat.instructionsFilesLocations": {
+    "workspace": true,
+    "global": true
+  },
+
+  "editor.wordWrap": "on",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false,
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+
+  "eslint.useFlatConfig": true,
+  "eslint.format.enable": true,
+  "eslint.codeActionsOnSave.mode": "all",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "json",
+    "jsonc"
+  ],
+
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "typescript.preferences.importModuleSpecifier": "shortest",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.suggest.autoImports": true,
+
+  "chat.agent.thinkingStyle": "collapsedPreview",
+  "chat.allowAnonymousAccess": true,
+  "chat.checkpoints.showFileChanges": true,
+  "chat.editor.wordWrap": "on",
+  "chat.edits2.enabled": true,
+  "chat.mcp.assisted.nuget.enabled": true,
+  "chat.mcp.autostart": "onlyNew",
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": true,
+    "cursor-global": true,
+    "windsurf": true,
+    "cursor-workspace": true
+  },
+  "chat.mcp.gallery.enabled": true,
+  "chat.renderRelatedFiles": true,
+  "chat.todoListTool.writeOnly": true,
+  "chat.tools.terminal.autoReplyToPrompts": true,
+  "chat.useNestedAgentsMdFiles": true,
+  "chat.customAgentInSubagent.enabled": true,
+
+  "inlineChat.enableV2": true,
+  "inlineChat.finishOnType": true,
+  "inlineChat.notebookAgent": true,
+
+  "github.copilot.chat.scopeSelection": true,
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.chat.alternateGptPrompt.enabled": true,
+  "github.copilot.chat.completionsFetcher": "node-fetch",
+  "github.copilot.chat.generateTests.codeLens": true,
+  "github.copilot.chat.languageContext.fix.typescript.enabled": true,
+  "github.copilot.chat.languageContext.inline.typescript.enabled": true,
+  "github.copilot.chat.languageContext.typescript.enabled": true,
+  "github.copilot.chat.languageContext.typescript.includeDocumentation": true,
+  "github.copilot.chat.newWorkspace.useContext7": true,
+  "github.copilot.chat.notebook.enhancedNextEditSuggestions.enabled": true,
+  "github.copilot.chat.notebook.followCellExecution.enabled": true,
+  "github.copilot.chat.anthropic.tools.websearch.enabled": true,
+  "github.copilot.chat.githubMcpServer.enabled": true,
+  "github.copilot.chat.nesFetcher": "node-fetch",
+  "github.copilot.chat.tools.memory.enabled": true,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "github.copilot.chat.cli.customAgents.enabled": true,
+
+  "material-icon-theme.folders.associations": {
+    "copilot": "prompts"
+  },
+  "githubPullRequests.experimental.useQuickChat": true,
+  "extensions.closeExtensionDetailsOnViewChange": true,
+
+  "npm.enableRunFromFolder": true,
+  "npm.scriptRunner": "pnpm",
+
+  "chat.useAgentSkills": true
+}
